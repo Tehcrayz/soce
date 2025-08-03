@@ -1,0 +1,1718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Intro To Corrections</title>
+  <style>
+    body {  
+      font-family: Arial, sans-serif;  
+      margin: 0;  
+      line-height: 1.6;  
+      background: #f4f8fb;  
+      padding-bottom: 70px;  
+    }
+    .question-header { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+    .question-text { font-size: 16px; margin-bottom: 10px; }
+    
+    /* New structure for choice rendering */
+    .choice-wrapper {
+      display: flex;
+      align-items: center;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      margin: 10px 0;
+      background: #ffffff;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .choice-wrapper:hover {
+      background: #e6f0ff;
+    }
+    .choice-wrapper.selected-wrapper { /* Applied to the wrapper when selected */
+      background: #d0ebff;
+      border-color: #3b82f6;
+    }
+    /* Styles for study mode feedback */
+    .choice-wrapper.study-correct {
+        background-color: #dcfce7;
+        border-color: #22c55e;
+    }
+    .choice-wrapper.study-incorrect {
+        background-color: #fee2e2;
+        border-color: #ef4444;
+    }
+
+
+    .choice-button-main-area { /* This is the label now */
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      padding-right: 10px; /* Space before the eye icon button */
+    }
+    .choice-button-main-area input[type="radio"] {
+      margin-right: 10px;  
+      -webkit-appearance: radio;  
+      -moz-appearance: radio;
+      appearance: radio;
+    }
+    .choice-text-container {
+        /* flex-grow: 1; */ /* No longer needed here, label is flex-grow */
+    }
+    .actual-choice-text-visually-obscured {  
+        opacity: 0.3;
+        text-decoration: line-through;
+    }
+    .toggle-visibility-btn {
+        background: none;
+        border: none;
+        font-size: 1em;  
+        cursor: pointer;
+        padding: 0 5px;
+        /* margin-left: auto; /* No longer needed due to flex on wrapper */
+        color: #555;
+        display: flex;  
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0; /* Prevent button from shrinking */
+    }
+    .toggle-visibility-btn svg {  
+        width: 20px;
+        height: 20px;
+    }
+    .toggle-visibility-btn:hover {
+        color: #000;
+    }
+
+    .correct { border: 2px solid green; background: #e0ffe0; padding: 10px; margin-bottom:10px; border-radius: 5px; }
+    .incorrect { border: 2px solid red; background: #ffe0e0; padding: 10px; margin-bottom:10px; border-radius: 5px; }
+    .explanation { font-style: italic; color: #555; margin-top: 10px; display: none;} /* Hidden by default */
+
+    .question-actions-bar {
+      display: flex;
+      justify-content: center;  
+      align-items: center;
+      flex-wrap: wrap;  
+      gap: 10px;  
+      padding: 15px 10px;  
+      margin-top: 20px;  
+      margin-bottom: 10px;  
+    }
+    .question-actions-bar button {
+      padding: 10px 15px;  
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      background-color: #fff;  
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .question-actions-bar button:hover {
+      background-color: #f8f9fa;
+      border-color: #bbb;
+    }
+    .question-actions-bar button#submitBtn {
+        background-color: #22c55e;  
+        color: white;
+        border-color: #22c55e;
+    }
+    .question-actions-bar button#submitBtn:hover {
+        background-color: #16a34a;
+    }
+    .review-actions-bar {  
+        text-align: center;
+        padding: 10px 0 20px 0;  
+    }
+    .review-actions-bar button {
+        padding: 10px 20px;  
+        font-size: 1rem;
+        cursor: pointer;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        margin: 5px;  
+    }
+    .review-actions-bar button:hover {
+        background-color: #0056b3;
+    }
+
+
+    .quiz-controls { /* Footer */
+      justify-content: center;  
+      align-items: center;
+      padding: 10px 20px;  
+      background: #dbeafe;
+      position: fixed;
+      bottom: 0;
+      left: 0;  
+      right: 0;  
+      display: flex;
+      z-index: 100;  
+      box-sizing: border-box;  
+    }
+    .quiz-controls .progress-info {  
+        display: flex;
+        align-items: center;
+        justify-content: space-between;  
+        width: 100%;
+    }
+    
+    #progressText { font-size: 16px; margin: 0 10px 0 0; }
+    /* .choice-button.selected is replaced by .choice-wrapper.selected-wrapper */
+    
+
+    #resultsScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #4a90e2;  
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;  
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .results-card {
+      display: flex;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      overflow: auto;  
+      width: 95%;  
+      max-width: 900px;  
+      max-height: 90vh;  
+      flex-direction: column;  
+    }
+
+    .results-left-panel {
+      flex-shrink: 0;  
+      background: #37474f;  
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      border-top-left-radius: 10px;  
+      border-top-right-radius: 10px;
+      border-bottom-left-radius: 0;
+    }
+
+    .results-right-panel {
+      flex-grow: 1;  
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      border-bottom-left-radius: 10px;  
+      border-bottom-right-radius: 10px;
+      border-top-right-radius: 0;
+    }
+     @media (min-width: 768px) {  
+      .results-card {
+        flex-direction: row;  
+        min-height: 400px;  
+        overflow: hidden;  
+      }
+      .results-left-panel {
+        border-top-right-radius: 0;
+        border-bottom-left-radius: 10px;
+        flex-basis: 300px;  
+      }
+      .results-right-panel {
+        border-top-right-radius: 10px;
+        border-bottom-left-radius: 0;
+      }
+    }
+
+
+    .score-circle {
+      width: 100px;  
+      height: 100px;
+      border-radius: 50%;
+      border: 6px solid #e0e0e0;  
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;  
+      font-weight: bold;
+      color: #4CAF50;  
+      margin-bottom: 15px;  
+      position: relative;
+    }
+
+    .score-circle::before {
+      content: '';
+      position: absolute;
+      top: -6px;  
+      left: -6px;
+      width: calc(100% + 12px);  
+      height: calc(100% + 12px);
+      border-radius: 50%;
+      border: 6px solid transparent;  
+      border-top-color: #4CAF50;  
+      border-right-color: #4CAF50;
+      transform: rotate(-45deg);  
+      box-sizing: border-box;
+    }
+
+    .upload-button {  
+      padding: 12px 25px;  
+      font-size: 16px;  
+      background-color: #4CAF50;  
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;  
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: background-color 0.3s ease;
+    }
+
+    .upload-button:hover {
+      background-color: #45a049;
+    }
+
+    .attention-message {
+      background: white;
+      padding: 15px;  
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-top: 15px;  
+      width: 90%;
+      max-width: 800px;
+      text-align: center;
+      font-size: 14px;  
+      color: #333;
+    }
+
+    #quizContentScrollable {
+      max-height: calc(100vh - 100px);  
+      overflow-y: auto;
+      padding: 10px 15px 0 0;  
+    }
+    
+    #mainQuizLayout {  
+        display: flex;
+        padding-top: 40px;  
+    }
+
+    #sidebar {
+      width: 60px;
+      background: #e3edf8;
+      position: fixed;
+      top: 40px;  
+      bottom: 50px;  
+      overflow-y: auto;  
+      z-index: 50;  
+      padding-top: 10px;  
+      padding-bottom: 10px;
+      transition: width 0.3s ease, opacity 0.3s ease, bottom 0.3s ease;
+    }
+
+    #sidebar::-webkit-scrollbar {
+      width: 0px;  
+      background: transparent;  
+    }
+    #sidebar::-webkit-scrollbar-thumb {
+      background: transparent;  
+    }
+
+    #questionNav {
+      list-style: none;
+      padding: 0;  
+      margin: 0;  
+      text-align: center;
+    }
+    
+    #quizFormContainer {  
+        margin-left: 75px;  
+        flex-grow: 1;
+        padding-right: 15px;  
+        transition: margin-left 0.3s ease;
+    }
+
+
+    .header-bar {  
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #1f2937;
+      color: white;
+      padding: 10px 20px;
+      font-size: 14px;
+      position: fixed;  
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;  
+      box-sizing: border-box;
+    }
+
+    .intro-screen-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #fbbf24;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      flex-direction: column;
+      padding: 15px;  
+      box-sizing: border-box;
+    }
+
+    .intro-card-container {
+      background: white;
+      padding: 20px;  
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      width: 90%;
+      max-width: 450px;  
+    }
+    .intro-card-container h2 {
+        font-size: 1.4rem;  
+        margin-bottom: 0.5em;
+    }
+    .intro-card-container p {
+        font-size: 0.85rem;  
+        margin-bottom: 1em;
+    }
+    .intro-buttons-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+
+    .intro-start-button {
+      /* margin-top: 15px;   */
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #10b981;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+
+    .question-count-select-container {
+      margin-top: 15px;  
+      margin-bottom: 15px; /* Added margin for spacing */
+    }
+
+    .question-count-label {
+      font-size: 1rem;  
+      margin-right: 8px;
+    }
+
+    .question-count-select {
+      padding: 8px 10px;  
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 1rem;  
+    }
+    
+    #homeBtn {
+      position: fixed;
+      bottom: 80px; 
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      background-color: #0d6efd;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      display: none; /* Hidden by default */
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      cursor: pointer;
+      z-index: 1001;
+      transition: background-color 0.3s ease;
+    }
+    #homeBtn:hover {
+      background-color: #0b5ed7;
+    }
+
+    #submitScreen {
+      display: none;  
+      position: fixed;  
+      top: 0;  
+      left: 0;  
+      width: 100%;  
+      height: 100%;  
+      background: rgba(0,0,0,0.6);  
+      z-index: 9998;  
+      align-items: center;
+      justify-content: center;
+      padding: 15px;
+      box-sizing: border-box;
+    }
+    .submit-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.25);  
+      width: 100%;
+      max-width: 550px;  
+      display: flex;
+      flex-direction: column;  
+    }
+    .submit-panel {
+      padding: 20px;
+      text-align: center;
+      flex: 1;
+    }
+    .submit-panel-left {
+      background: #f0f4f8;  
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;  
+    }
+    .submit-panel-right {
+      background: #ffffff;
+      border-bottom-left-radius: 10px;
+      border-bottom-right-radius: 10px;
+    }
+     .submit-panel button {
+        padding: 12px 22px;  
+        font-size: 1rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 15px;
+        transition: background-color 0.2s ease;
+    }
+    .submit-go-back-btn { background: #4b5563; color: white; }  
+    .submit-go-back-btn:hover { background: #374151; }
+    .submit-confirm-btn { background: #22c55e; color: white; }  
+    .submit-confirm-btn:hover { background: #16a34a; }
+
+
+    @media (min-width: 640px) {  
+        .submit-card {
+            flex-direction: row;  
+        }
+        .submit-panel-left {
+            border-top-right-radius: 0;
+            border-bottom-left-radius: 10px;
+        }
+        .submit-panel-right {
+            border-top-right-radius: 10px;  
+            border-bottom-left-radius: 0;  
+            border-bottom-right-radius: 10px;  
+        }
+    }
+    #confirmSubmitMessage {
+        color: red;
+        font-size: 0.9em;
+        margin-top: 10px;
+        min-height: 1.2em;  
+    }
+
+    @media (max-width: 767px) {
+        body {
+            padding-bottom: 60px;  
+        }
+        #sidebar {
+            display: none;  
+        }
+        #quizFormContainer {
+            margin-left: 15px;  
+            padding-right: 15px;
+        }
+        .choice-wrapper {  
+            padding: 10px;
+        }
+        .choice-button-main-area {  
+            font-size: 1rem;
+        }
+         .choice-button-main-area input[type="radio"] {
+            margin-right: 8px;
+        }
+        .toggle-visibility-btn {
+            padding: 0 2px;  
+        }
+        .quiz-controls {  
+            padding: 8px 10px;  
+        }
+        .quiz-controls .progress-info span {
+             font-size: 0.85rem;
+        }
+        
+         .header-bar {
+            padding: 10px 15px;
+        }
+        .header-bar div {
+            font-size: 0.85rem;  
+        }
+        #progressText {
+            font-size: 0.9rem;
+        }
+        .question-header { font-size: 1.1rem; }
+        .question-text { font-size: 0.95rem; }
+
+        #homeBtn {
+            bottom: 70px;
+            right: 15px;
+            width: 45px;
+            height: 45px;
+        }
+
+        .results-card { max-height: 85vh; }  
+        .score-circle { width: 90px; height: 90px; font-size: 28px; border-width: 5px; }
+        .score-circle::before { top: -5px; left: -5px; width: calc(100% + 10px); height: calc(100% + 10px); border-width: 5px;}
+        .upload-button { padding: 10px 20px; font-size: 1rem; }
+        .attention-message { font-size: 0.85rem; padding: 10px; }
+
+        .question-actions-bar button {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            flex-grow: 1;  
+            min-width: 80px;  
+        }
+         .question-actions-bar {
+            gap: 5px;  
+         }
+    }
+
+    @media (max-width: 480px) {  
+        .question-actions-bar button {
+            font-size: 0.85rem;
+        }
+        .intro-card-container h2 { font-size: 1.2rem; }
+        .intro-card-container p { font-size: 0.8rem; }
+        .question-count-label, .question-count-select { font-size: 0.9rem; }
+    }
+
+  </style>
+</head>
+<body>
+  <div id="introScreen" class="intro-screen-container">
+    <div class="intro-card-container">
+      <svg width="120" height="120" viewBox="0 0 200 200" style="margin-bottom: 15px; margin-left: auto; margin-right: auto;">
+        <defs>
+          <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#0284c7;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#38bdf8;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <path d="M 20 150 L 50 20 L 90 20 L 90 120 L 110 120 L 110 20 L 150 20 L 180 150 L 150 150 L 130 90 L 70 90 L 50 150 Z" fill="url(#grad1)"></path>
+        <rect x="55" y="25" width="30" height="90" fill="#1e293b" transform="skewX(-10)"></rect>
+        <rect x="115" y="25" width="30" height="90" fill="#0ea5e9" transform="skewX(-10)"></rect>
+        <text x="100" y="180" font-family="Arial, sans-serif" font-size="28" fill="#37474f" text-anchor="middle" font-weight="bold">BKRDI-FY</text>
+        <text x="100" y="200" font-family="Arial, sans-serif" font-size="14" fill="#6b7280" text-anchor="middle" font-weight="bold">TEST & STUDY</text>
+      </svg>
+      <h2>Do Not Start Until Instructed</h2>
+      <p>Activity conducted during this exam might actually matter.</p>
+      
+      <div class="question-count-select-container">
+        <label for="questionCount" class="question-count-label">Number of Questions:</label>
+        <select id="questionCount" class="question-count-select">
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <!-- "All Questions" option will be added here by JavaScript -->
+        </select>
+      </div>
+
+      <div class="intro-buttons-container">
+        <button onclick="startExam()" class="intro-start-button">Start Exam</button>
+        <button onclick="startStudy()" class="intro-start-button" style="background-color: #f59e0b;">Answer & Study</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="mainQuizContainer" style="display:none;">  
+    <div class="header-bar">  
+      <div><strong>Class 45</strong></div>
+      <div id="mainHeaderTitle"></div> 
+      <div><strong id="timer">30:00</strong></div>
+    </div>
+
+    <div id="mainQuizLayout">
+      <nav id="sidebar">
+        <ul id="questionNav"></ul>
+      </nav>
+      <div id="quizFormContainer">
+        <div id="quizContentScrollable">
+          <div id="progress" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-top:10px;">
+            <button type="button" onclick="flagQuestion()" id="flagButton" style="font-size: 14px; padding: 5px 10px;">🚩 Flag</button>
+            <span id="progressText"></span>
+          </div>
+          <div class="review-actions-bar" id="reviewActionsTop" style="display:none;"> <button onclick="returnToHome()">Retake Test</button>
+          </div>
+          <form id="quizForm"></form>
+          <div class="question-actions-bar">
+            <button id="prevBtn" type="button" onclick="prevQuestion()">⟵ Previous</button>
+            <button id="skipBtn" type="button" onclick="skipQuestion()">⏭ Skip</button>
+            <button id="submitBtn" type="button" onclick="showSubmitScreen()" style="display: none;">✅ Submit</button>
+            <button id="nextBtn" type="button" onclick="nextQuestion()">Next ⟶</button>
+          </div>
+          <div id="studyEndActions" class="review-actions-bar" style="display:none;">
+            <button id="nextSetBtn" onclick="startNextStudySet()">Next Set of Questions</button>
+            <button id="retryIncorrectBtn" onclick="retryIncorrectQuestions()">Retry Incorrect Questions</button>
+            <button onclick="returnToHome()">Return to Home</button>
+          </div>
+          <div class="review-actions-bar" id="reviewActionsBottom" style="display:none;"> <button onclick="returnToHome()">Retake Test</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="quiz-controls">  
+      <div class="progress-info">
+        <span id="progressTextBottom">Question 1 of 60</span>
+        <span style='font-size: 0.8em;'>BKRDIFY Version 2.1.87</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="submitScreen">  
+    <div class="submit-card">
+      <div class="submit-panel submit-panel-left">
+        <h2>Return to Exam</h2>
+        <p>By clicking this button, you will be directed back to the exam.</p>
+        <button onclick="hideSubmitScreen()" class="submit-go-back-btn">Go Back</button>
+      </div>
+      <div class="submit-panel submit-panel-right">
+        <h2>Exit Exam</h2>
+        <p>Click 'Submit Exam' to upload and close this exam file.</p>
+        <label style="margin: 20px 0; display: flex; align-items: center; justify-content: center; font-size: 14px;">
+          <input type="checkbox" id="confirmSubmit" style="margin-right: 10px; transform: scale(1.5);">
+          I confirm that I have completed my exam.
+        </label>
+        <button onclick="confirmAndSubmit()" class="submit-confirm-btn">Submit Exam</button>
+        <div id="confirmSubmitMessage"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="resultsScreen" style="display: none;">
+    <div class="results-card">
+      <div class="results-left-panel">
+        <svg width="100" height="100" viewBox="0 0 200 200">
+            <path d="M 20 150 L 50 20 L 90 20 L 90 120 L 110 120 L 110 20 L 150 20 L 180 150 L 150 150 L 130 90 L 70 90 L 50 150 Z" fill="#0ea5e9"></path>
+            <rect x="55" y="25" width="30" height="90" fill="#1e293b" transform="skewX(-10)"></rect>
+            <rect x="115" y="25" width="30" height="90" fill="#38bdf8" transform="skewX(-10)"></rect>
+            <text x="100" y="180" font-family="Arial, sans-serif" font-size="28" fill="#fff" text-anchor="middle" font-weight="bold">BKRDI-FY</text>
+        </svg>
+      </div>
+      <div class="results-right-panel">
+        <h3 style="font-size: 1.3rem; margin-bottom: 10px;">Preliminary Results</h3> <p style="font-size: 1rem; margin-bottom: 15px;">Objective Question Score *</p> <div class="score-circle">
+          <span id="finalScore">75%</span>
+        </div>
+        <p style="font-size: 0.8rem; color: #555; margin-top: 10px;">This is the score for the objective questions only and I'm not sure what objective means</p> <p style="font-size: 0.8rem; color: #555; margin-top: 5px;">Test ID: <span id="testIdDisplay"></span></p> <button class="upload-button" onclick="showReviewPage()">Review</button>
+      </div>
+    </div>
+    <div class="attention-message">
+      <p><strong>ATTENTION:</strong></p>
+      <p>You will be informed of your final score, which is this score, so yeah</p>
+    </div>
+  </div>
+
+  <button id="homeBtn" onclick="returnToHome()" title="Return to Home Screen" style="display: none;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+  </button>
+
+  <script>
+// Function to shuffle an array (Fisher-Yates algorithm)
+function shuffleArray(array) {
+  let newArray = [...array]; // Work on a copy
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}
+
+const newQuestionsFromUser = [ 
+{"q":"According to s. 943.10, Florida Statutes, what is the primary responsibility of a correctional officer?","c":["The supervision, protection, care, custody, and control, or investigation, of inmates.","The administrative, secretarial, and clerical duties within a correctional institution.","The professional training of other criminal justice personnel.","The enforcement of federal laws within a state correctional institution."],"a":"0","e":"The correct answer is The supervision, protection, care, custody, and control, or investigation, of inmates. The text provides this direct quote from s. 943.10, F.S. Page: 3"},
+{"q":"Which term does the text say is often mistakenly used for correctional officers and does a disservice to the profession?","c":["Warden","Deputy","Guard","Agent"],"a":"2","e":"The correct answer is Guard. The text states that correctional officers are often mistakenly referred to as guards, which does a disservice to the profession because they do far more than guard inmates. Page: 3"},
+{"q":"All of the following are duties of a correctional officer mentioned in the text EXCEPT:","c":["Acting as initial responders in emergency medical situations.","Performing basic law enforcement duties within the custodial environment.","Acting as role models for inmates.","Conducting criminal investigations outside the facility."],"a":"3","e":"The correct answer is Conducting criminal investigations outside the facility. The text lists acting as initial responders, performing law enforcement duties inside the facility, and acting as role models, but does not mention external criminal investigations. Page: 4"},
+{"q":"Which of the following is a personal characteristic supervisors look for in new officers?","c":["The ability to work alone with little or no supervision.","The ability to perform tasks without getting distracted.","The ability to independently make decisions and stand by them.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text lists the ability to work alone, perform tasks without distraction, and make independent decisions as personal characteristics supervisors look for. Page: 4"},
+{"q":"Which body of law oversees public regulatory agencies and governs officers who work for the Florida Department of Corrections?","c":["The Florida Model Jail Standards (FMJS)","The Florida Administrative Code (F.A.C.)","The U.S. Constitution","The Uniform Code of Military Justice (UCMJ)"],"a":"1","e":"The correct answer is The Florida Administrative Code (F.A.C.). The text specifies that officers working for the Department of Corrections are governed by the Florida Statutes and the F.A.C. Page: 4"},
+{"q":"Officers who work for county agencies and facilities are governed by the Florida Statutes and which other set of standards?","c":["The Florida Administrative Code (F.A.C.)","The American Correctional Association (ACA) Code of Ethics","The Florida Model Jail Standards (FMJS)","The Law Enforcement Officer Bill of Rights"],"a":"2","e":"The correct answer is The Florida Model Jail Standards (FMJS). The text contrasts state officers (governed by F.A.C.) with county officers, who are governed by the Florida Statutes and the FMJS. Page: 4"},
+{"q":"What is the purpose of the Criminal Justice Standards and Training Commission (CJSTC)?","c":["To prosecute officers who violate the law.","To set the daily operational procedures for all correctional facilities.","To oversee the certification, employment, training, and conduct of Florida criminal justice officers.","To lobby for higher pay and better benefits for correctional officers."],"a":"2","e":"The correct answer is To oversee the certification, employment, training, and conduct of Florida criminal justice officers. The text states the CJSTC was created for this specific purpose. Page: 4"},
+{"q":"According to the text, how often does the CJSTC meet?","c":["Monthly","Bi-annually","Annually","Quarterly"],"a":"3","e":"The correct answer is Quarterly. The text explicitly states that the CJSTC meets quarterly. Page: 4"},
+{"q":"Which division within the Florida Department of Law Enforcement (FDLE) supports and assists the CJSTC?","c":["The Division of Criminal Justice Information Systems","The Criminal Justice Professionalism (CJP) Division","The Division of Investigative and Forensic Services","The Capitol Police"],"a":"1","e":"The correct answer is The Criminal Justice Professionalism (CJP) Division. The text identifies the CJP as the division within FDLE that supports the CJSTC. Page: 5"},
+{"q":"According to s. 943.12, F.S., which of the following is a duty of the CJSTC?","c":["To establish uniform minimum standards for employment and training.","To certify officers who complete a training program.","To review and administer administrative sanctions.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text lists establishing standards, certifying officers, and administering sanctions as primary duties of the CJSTC. Page: 5"},
+{"q":"What is the minimum age requirement to become a certified correctional officer in Florida, according to s. 943.13, F.S.?","c":["18","19","20","21"],"a":"0","e":"The correct answer is 18. The text lists being at least 18 years of age as the minimum requirement. Page: 6"},
+{"q":"Which of the following is a minimum requirement and standard for officer certification under s. 943.13, F.S.?","c":["Must have a college degree.","Must be a U.S. citizen.","Must have prior military service.","Must be a resident of Florida for at least one year."],"a":"1","e":"The correct answer is Must be a U.S. citizen. The text explicitly lists being a U.S. citizen as a requirement. Page: 6"},
+{"q":"An officer certification applicant must not have been convicted of any felony or a misdemeanor involving what?","c":["Traffic violations","Perjury or a false statement","Disorderly conduct","Trespassing"],"a":"1","e":"The correct answer is Perjury or a false statement. The text specifies that a conviction for any felony, or a misdemeanor involving perjury or a false statement, is a disqualifier. Page: 6"},
+{"q":"What type of military discharge is a disqualifier for becoming a certified correctional officer in Florida?","c":["Honorable discharge","General discharge","Dishonorable discharge","Medical discharge"],"a":"2","e":"The correct answer is Dishonorable discharge. The text states that an applicant must not have received a dishonorable discharge from any of the Armed Forces. Page: 6"},
+{"q":"A recruit has how many years from the starting date of their basic recruit training to complete the certification process?","c":["One year","Two years","Three years","Four years"],"a":"3","e":"The correct answer is Four years. The text clearly states that a recruit has four years from the start of training to complete the entire certification process. Page: 6"},
+{"q":"To become certified, a recruit must complete basic training, pass the SOCE, and what other crucial step?","c":["Complete a one-year probationary period.","Become actively employed with a correctional facility.","Receive a letter of commendation from a supervisor.","Pass a psychological evaluation."],"a":"1","e":"The correct answer is Become actively employed with a correctional facility. The text lists meeting minimum requirements, completing training, passing the SOCE, and becoming actively employed as the necessary steps for certification. Page: 6"},
+{"q":"A recruit has a maximum of how many attempts to pass the State Officer Certification Examination (SOCE)?","c":["One","Two","Three","Four"],"a":"2","e":"The correct answer is Three. The text specifies that a recruit must pass the SOCE within three attempts. Page: 7"},
+{"q":"If a recruit begins basic training on July 1, 2024, by what date must they complete the entire certification process?","c":["July 1, 2025","June 30, 2026","July 1, 2027","June 30, 2028"],"a":"3","e":"The correct answer is June 30, 2028. The text uses this exact example to illustrate the four-year timeframe for completing certification. Page: 7"},
+{"q":"The CJSTC has the authority to impose discipline on an officer's certification if the officer fails to maintain what?","c":["A perfect attendance record","Required standards of conduct","A minimum physical fitness score","Membership in a professional organization"],"a":"1","e":"The correct answer is Required standards of conduct. The text states that the CJSTC can impose discipline if an officer fails to maintain the required standards of conduct. Page: 7"},
+{"q":"Which of the following actions can result in disciplinary action against an officer's certification by the CJSTC?","c":["Pleading nolo contendere to any felony.","Failing to maintain good moral character.","Testing positive for a controlled substance.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text lists pleading nolo contendere to a felony, failing to maintain good moral character, and testing positive for controlled substances as grounds for disciplinary action. Page: 7"},
+{"q":"What is the most severe penalty the CJSTC can impose on an officer's certification?","c":["A written reprimand","Probation for one year","Suspension for six months","Revocation of certification"],"a":"3","e":"The correct answer is Revocation of certification. The text lists the penalties as written reprimand, probation, suspension, or revocation, with revocation being the most severe. Page: 8"},
+{"q":"If the CJSTC revokes an officer's certification, what is the consequence for that individual?","c":["They must retake the SOCE within one year.","They can no longer work as a certified correctional officer in the state of Florida.","They are placed on administrative leave for two years.","They must attend a mandatory ethics course."],"a":"1","e":"The correct answer is They can no longer work as a certified correctional officer in the state of Florida. The text clearly states this is the result of a certification revocation. Page: 8"},
+{"q":"What are principles, standards, or qualities considered worthwhile or desirable that guide or motivate a person's attitude and actions?","c":["Ethics","Values","Orders","Regulations"],"a":"1","e":"The correct answer is Values. The text defines values as principles, standards, or qualities considered worthwhile or desirable that are core beliefs guiding attitudes and actions. Page: 9"},
+{"q":"What is defined as the moral principles that govern a person or group and are based on society's understanding of right and wrong?","c":["Values","Ethics","Character","Professionalism"],"a":"1","e":"The correct answer is Ethics. The text defines ethics as the moral principles that govern a person or group, based on society's understanding of right and wrong. Page: 9"},
+{"q":"For correctional officers, which values are considered especially important and should be practiced both on and off duty?","c":["Punctuality, strength, and obedience","Honesty, truthfulness, and fairness","Bravery, ambition, and creativity","Cynicism, detachment, and skepticism"],"a":"1","e":"The correct answer is Honesty, truthfulness, and fairness. The text highlights these three values as being especially important for correctional officers. Page: 9"},
+{"q":"What is described as principled, value-based decision-making that is practiced daily?","c":["Ethical behavior","Professionalism","Situational awareness","Chain of command"],"a":"0","e":"The correct answer is Ethical behavior. The text provides this exact definition for ethical behavior. Page: 9"},
+{"q":"According to the American Correctional Association's Code of Ethics, what do they expect from their members?","c":["Unfailing honesty.","Respect for the dignity and individuality of human beings.","A commitment to professional and compassionate service.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The preamble to the ACA Code of Ethics lists unfailing honesty, respect for dignity, and a commitment to service. Page: 10"},
+{"q":"The ACA Code of Ethics states that members shall refrain from using their positions to do what?","c":["Make public criticism of their colleagues.","Cooperate with other segments of the criminal justice system.","Secure personal privileges or advantages.","Share information with the public."],"a":"2","e":"The correct answer is Secure personal privileges or advantages. This is a specific principle listed in the ACA Code of Ethics. Page: 10"},
+{"q":"The ACA Code of Ethics requires members to report any corrupt or unethical behaviors to the appropriate authorities under what condition?","c":["Only if the behavior is committed by a supervisor.","Only if it directly involves an inmate.","When there is sufficient evidence to justify review.","Only after receiving permission from the agency head."],"a":"2","e":"The correct answer is When there is sufficient evidence to justify review. This principle requires that reports of unethical behavior be based on sufficient evidence. Page: 11"},
+{"q":"According to the text, which factors can influence an officer's ethics and decision-making?","c":["Family influences and childhood experiences.","Home life and peer influence.","Attitudes of co-workers and academy training.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text discusses family, peers, home life, co-workers, and academy training as factors that can influence ethical problem-solving. Page: 11"},
+{"q":"What is defined as judging a group of people who are different from you based on your own or others' opinions or encounters?","c":["Discrimination","Bias","Prejudice","Stereotyping"],"a":"3","e":"The correct answer is Stereotyping. The text provides this definition for stereotyping. Page: 12"},
+{"q":"What is defined as a strong belief or feeling about a person, group, or subject that is formed without reviewing all available facts?","c":["An assumption","A stereotype","Bias or prejudice","Discrimination"],"a":"2","e":"The correct answer is Bias or prejudice. The text defines bias or prejudice as a strong belief formed without reviewing all facts. Page: 12"},
+{"q":"What is the term for negative behavior toward a person or group that is based on color, race, sex, age, religion, or other protected status?","c":["Stereotyping","Prejudice","Assumption","Discrimination"],"a":"3","e":"The correct answer is Discrimination. The text defines discrimination as the negative behavior that occurs when people choose to act on their prejudices. Page: 12"},
+{"q":"What is defined as a notion, statement, or belief about a person, group, or event that may or may not be factual?","c":["An assumption","An ethic","A value","A prejudice"],"a":"0","e":"The correct answer is An assumption. The text defines an assumption as a belief about something that may or may not be true, made without proof. Page: 12"},
+{"q":"According to the Ethical Decision-Making Tool, what is the first question you should ask yourself?","c":["Will the result of my action be good?","Is my action legal?","Will what I plan to do actually work?","Is there a less harmful alternative?"],"a":"1","e":"The correct answer is Is my action legal? This is the first question in the tool, and if the answer is no, the process stops. Page: 13"},
+{"q":"In the Ethical Decision-Making Tool, if your action is legal, good, and will work, what is the next question you should ask?","c":["Does a good end ever justify a bad means?","Will I be able to justify my action if my decision is made public?","Is there a less harmful alternative?","Does it undermine some equal or more important value?"],"a":"2","e":"The correct answer is Is there a less harmful alternative? This is the fourth question in the assessment tool's sequence. Page: 13"},
+{"q":"What is the answer provided in the Ethical Decision-Making Tool to the question, \"Does a good end ever justify a bad means?\"","c":["Yes","No","Sometimes","It depends on the situation"],"a":"1","e":"The correct answer is No! The tool provides a definitive \"No!\" to this question. Page: 13"},
+{"q":"What is defined as behavior that demonstrates good character and is marked by pride in one's self and career?","c":["Ethics","Professionalism","Discipline","Authority"],"a":"1","e":"The correct answer is Professionalism. The text gives this specific definition for professionalism. Page: 14"},
+{"q":"All of the following are listed as characteristics of professionalism EXCEPT:","c":["Service, integrity, and respect.","Moral and ethical leadership.","Common sense and compassion.","Cynicism and detachment."],"a":"3","e":"The correct answer is Cynicism and detachment. The text lists service, integrity, respect, leadership, and common sense as examples, while cynicism and detachment are unprofessional traits. Page: 14"},
+{"q":"Having the right professional attitude can protect you from what?","c":["Difficult work assignments","Inmate manipulation","Long work hours","Disciplinary action for minor mistakes"],"a":"1","e":"The correct answer is Inmate manipulation. The text states that the right professional attitude can protect you from inmate manipulation and maintain safety. Page: 14"},
+{"q":"Which of the following is considered an example of professional behavior for a correctional officer?","c":["Reporting to your shift on time.","Wearing the proper uniform.","Being neat and clean.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text lists reporting on time, wearing the proper uniform, and being neat and clean as part of fulfilling your obligations professionally. Page: 14"},
+{"q":"The text states that a sense of professionalism should instill self-control to resist doing what?","c":["Working overtime","Abusing your authority","Communicating with inmates","Following lawful orders"],"a":"1","e":"The correct answer is Abusing your authority. The text explains that professionalism should instill the self-control to resist abusing one's authority. Page: 15"},
+{"q":"What is the term for the order of authority within an organization?","c":["Organizational chart","Rank structure","Chain of command","Command post"],"a":"2","e":"The correct answer is Chain of command. The text defines chain of command as the order of authority within an organization. Page: 15"},
+{"q":"What is the term for a diagram that visually represents an agency and the connection between each position and its rank?","c":["Chain of command","Flowchart","Organizational chart","Rank structure"],"a":"2","e":"The correct answer is an Organizational chart. This is the specific term used for the diagram that illustrates an agency's structure. Page: 15"},
+{"q":"In a typical correctional agency rank structure, which position is ranked highest?","c":["Captain","Major","Colonel or Chief of Security","Sheriff or Warden"],"a":"3","e":"The correct answer is Sheriff or Warden. The provided list of ranks shows Sheriff or Warden at the top (level 1). Page: 15"},
+{"q":"In a typical correctional agency rank structure, which position is ranked directly below a Lieutenant?","c":["Major","Captain","Sergeant","Corporal"],"a":"2","e":"The correct answer is Sergeant. The provided list shows Sergeant at level 7, directly below Lieutenant at level 6. Page: 15"},
+{"q":"Generally, where should an officer go first with questions or for information and assistance?","c":["To the Warden or Sheriff","Directly to the head of training","To their immediate supervisor","To a trusted senior officer"],"a":"2","e":"The correct answer is To their immediate supervisor. The text states that you should go to your immediate supervisor for information and assistance, as questions are typically answered at the lowest level possible. Page: 15"},
+{"q":"What is the term for a failure to follow lawful orders from supervisors in your chain of command?","c":["Insubordination","Negligence","Misconduct","Dereliction of duty"],"a":"0","e":"The correct answer is Insubordination. The text defines insubordination as a failure to follow lawful orders from supervisors. Page: 16"},
+{"q":"Under what circumstances must an officer NOT carry out an order from a supervisor?","c":["If the order is inconvenient.","If the officer personally disagrees with the order.","If the order is known to be illegal.","If the order requires staying past the end of a shift."],"a":"2","e":"The correct answer is If the order is known to be illegal. The text states that an order known to be illegal must not be carried out, but the officer must be absolutely certain it violates the law. Page: 16"},
+{"q":"The criminal justice system is composed of which three main components?","c":["Law enforcement, the courts, and corrections","Legislative, executive, and judicial branches","Federal, state, and county agencies","Police, prosecutors, and public defenders"],"a":"0","e":"The correct answer is Law enforcement, the courts, and corrections. The text identifies these as the three main components of the criminal justice system. Page: 17"},
+{"q":"Which component of the criminal justice system is responsible for the interpretation of federal and state laws?","c":["Law enforcement","The court system","Corrections","The legislature"],"a":"1","e":"The correct answer is The court system. The text defines the court system's responsibility as the interpretation of laws. Page: 17"},
+{"q":"Which component of the criminal justice system is responsible for the care, custody, and control of inmates and pretrial detainees?","c":["The court system","Law enforcement","Corrections","Probation and parole"],"a":"2","e":"The correct answer is Corrections. The text specifies that corrections is the part of the system responsible for the care, custody, and control of inmates. Page: 17"},
+{"q":"Which level of law enforcement agency is responsible for enforcing county ordinances and state laws and traditionally handles unincorporated areas and the county jail?","c":["Local or municipal","County","State","Federal"],"a":"1","e":"The correct answer is County. The text describes county law enforcement agencies (like a sheriff's office) as handling county ordinances, unincorporated areas, and the county jail. Page: 18"},
+{"q":"The Florida Highway Patrol and the Florida Fish and Wildlife Conservation Commission are examples of which level of law enforcement agency?","c":["Federal","State","County","Municipal"],"a":"1","e":"The correct answer is State. The text provides these as examples of state law enforcement agencies. Page: 18"},
+{"q":"The FBI and the U.S. Marshals Service are examples of which level of law enforcement agency?","c":["Federal","State","County","Municipal"],"a":"0","e":"The correct answer is Federal. The text provides these as examples of federal law enforcement agencies that enforce federal laws. Page: 18"},
+{"q":"What is the term for the types of cases in which a court can make decisions?","c":["Jurisdiction","Venue","Precedent","Mandate"],"a":"0","e":"The correct answer is Jurisdiction. The text defines jurisdiction as the types of cases in which the court can make decisions. Page: 18"},
+{"q":"How many levels make up the state court system in Florida?","c":["Two","Three","Four","Five"],"a":"2","e":"The correct answer is Four. The text identifies four levels in the Florida state court system. Page: 18"},
+{"q":"Florida's 67 county courts have limited jurisdiction and handle what type of criminal offenses?","c":["All felonies","Capital crimes","Major civil disputes","Minor criminal offenses (misdemeanors)"],"a":"3","e":"The correct answer is Minor criminal offenses (misdemeanors). The text states that county courts handle misdemeanors, which provide a maximum sentence of one year or less in a county jail. Page: 18"},
+{"q":"Which level of the Florida state court system handles major criminal offenses (felonies) and domestic relations cases like divorce?","c":["County Courts","Circuit Courts","District Courts of Appeal","Florida Supreme Court"],"a":"1","e":"The correct answer is Circuit Courts. The text lists domestic relations and major criminal offenses (felonies) as legal issues handled by Florida's 20 circuit courts. Page: 19"},
+{"q":"What is the highest court in the state of Florida?","c":["District Court of Appeal","Superior Court","Circuit Court","Florida Supreme Court"],"a":"3","e":"The correct answer is the Florida Supreme Court. The text identifies the Florida Supreme Court, consisting of seven justices, as the highest court in the state. Page: 19"},
+{"q":"What are the federal trial courts presided over by U.S. district judges called?","c":["U.S. Circuit Courts","U.S. District Courts","U.S. Courts of Appeal","U.S. Magistrate Courts"],"a":"1","e":"The correct answer is U.S. District Courts. The text identifies U.S. District Courts as the federal trial courts. Page: 19"},
+{"q":"What is the highest court in the United States and the chief authority in the judicial branch?","c":["The U.S. Court of Appeals","The U.S. District Court","The U.S. Supreme Court","The International Court of Justice"],"a":"2","e":"The correct answer is The U.S. Supreme Court. The text describes the U.S. Supreme Court as the highest court in the United States and the chief authority in the judicial branch. Page: 19"},
+{"q":"The power of the Supreme Court to invalidate federal and state laws when they conflict with the Constitution is known as:","c":["Judicial review","Judicial precedent","Judicial activism","Judicial restraint"],"a":"0","e":"The correct answer is judicial review. The text defines this power as judicial review, which enables the Court to invalidate laws that conflict with its interpretation of the Constitution. Page: 20"},
+{"q":"What type of correctional institution is maintained by federal and state governments for the confinement of convicted felons?","c":["County jails","Treatment and evaluation centers","Prisons","County and municipal holding facilities"],"a":"2","e":"The correct answer is Prisons. The text defines federal and state prisons as institutions for the confinement of convicted felons. Page: 20"},
+{"q":"What type of correctional facility is used for the temporary detention of defendants awaiting trial and for offenders sentenced to a year or less?","c":["State prisons","Federal prisons","County jails","Juvenile detention centers"],"a":"2","e":"The correct answer is County jails. The text states that county jails are used for temporary detention and for short-term sentences of a year or less. Page: 20"},
+{"q":"What is a court-ordered sentence that places a person under the supervision of an officer under specified court-ordered terms as an alternative to incarceration?","c":["Parole","Probation","Community control","Pretrial release"],"a":"1","e":"The correct answer is Probation. The text defines probation as a court-ordered sentence placing a person under supervision with specific terms. Page: 20"},
+{"q":"What is the release of an inmate from a correctional institution before their court-imposed sentence ends?","c":["Parole","Probation","Community control","Furlough"],"a":"0","e":"The correct answer is Parole. The text defines parole as the release of an inmate from a correctional institution before the end of their court-imposed sentence. Page: 20"},
+{"q":"Which community-based supervision is a form of closely monitored supervision that is more restrictive than probation or parole?","c":["Work release","Community control (house arrest)","Pretrial diversion","Day reporting"],"a":"1","e":"The correct answer is Community control (house arrest). The text defines community control as a more restrictive form of closely monitored community supervision. Page: 20"},
+{"q":"Which Florida state agency is the largest in the state and administers state prisons and state probation?","c":["The Florida Department of Law Enforcement (FDLE)","The Florida Department of Juvenile Justice (DJJ)","The Florida Department of Corrections","The Florida Highway Patrol (FHP)"],"a":"2","e":"The correct answer is The Florida Department of Corrections. The text identifies the Department of Corrections as Florida's largest state agency, responsible for state prisons and probation. Page: 21"},
+{"q":"Which office within the Florida Department of Corrections manages the facilities where inmates reside?","c":["The Office of Community Corrections","The Office of Institutions","The Office of the Inspector General","The Office of Human Resources"],"a":"1","e":"The correct answer is The Office of Institutions. The text specifies that the Office of Institutions manages facilities where inmates reside. Page: 21"},
+{"q":"The first 10 amendments to the U.S. Constitution are known collectively as the:","c":["Bill of Attainder","Declaration of Independence","Articles of Confederation","Bill of Rights"],"a":"3","e":"The correct answer is the Bill of Rights. The text states that the first 10 amendments to the U.S. Constitution are known as the Bill of Rights. Page: 22"},
+{"q":"Which amendment protects freedom of speech, of the press, and of religion?","c":["First Amendment","Second Amendment","Fourth Amendment","Fifth Amendment"],"a":"0","e":"The correct answer is the First Amendment. The text identifies the First Amendment as protecting freedom of speech, press, and religion. Page: 22"},
+{"q":"Which amendment prohibits unreasonable searches and seizures?","c":["First Amendment","Fourth Amendment","Fifth Amendment","Eighth Amendment"],"a":"1","e":"The correct answer is the Fourth Amendment. The text states that the Fourth Amendment prohibits unreasonable search and seizure. Page: 22"},
+{"q":"Which amendment is best known for prohibiting self-incrimination?","c":["First Amendment","Fourth Amendment","Fifth Amendment","Sixth Amendment"],"a":"2","e":"The correct answer is the Fifth Amendment. The text identifies the Fifth Amendment as being best known for prohibiting self-incrimination. Page: 22"},
+{"q":"Which amendment guarantees the right to a speedy and public trial and the right to counsel?","c":["Fourth Amendment","Fifth Amendment","Sixth Amendment","Eighth Amendment"],"a":"2","e":"The correct answer is the Sixth Amendment. The text lists the right to a speedy and public trial and the right to counsel as guarantees of the Sixth Amendment. Page: 23"},
+{"q":"Which amendment prohibits excessive bails and fines, and cruel and unusual punishment?","c":["Fifth Amendment","Sixth Amendment","Eighth Amendment","Fourteenth Amendment"],"a":"2","e":"The correct answer is the Eighth Amendment. The text identifies the Eighth Amendment as prohibiting excessive bails and fines, and cruel and unusual punishment. Page: 23"},
+{"q":"Which amendment expanded the application of the Bill of Rights to state and local governments?","c":["Eighth Amendment","Tenth Amendment","Twelfth Amendment","Fourteenth Amendment"],"a":"3","e":"The correct answer is the Fourteenth Amendment. The text states that the Fourteenth Amendment expanded the application of the Bill of Rights to state and local governments. Page: 23"},
+{"q":"In a correctional setting, what is the term for governmental intrusion into a place where a person has a reasonable expectation of privacy?","c":["A seizure","A search","An inspection","An interrogation"],"a":"1","e":"The correct answer is a search. The text defines a search as governmental intrusion into a place where a person has a reasonable expectation of privacy. Page: 23"},
+{"q":"What is defined as any unauthorized article or any authorized article in excessive quantities or altered from its intended purpose?","c":["Evidence","Property","Contraband","Instrumentalities"],"a":"2","e":"The correct answer is contraband. The text provides this specific definition for contraband. Page: 23"},
+{"q":"What is a fair probability or reasonable grounds to believe that a crime was committed based on the totality of the circumstances?","c":["Reasonable suspicion","Preponderance of the evidence","Probable cause","Beyond a reasonable doubt"],"a":"2","e":"The correct answer is probable cause. The text defines probable cause as a fair probability or reasonable grounds to believe a crime was committed based on the totality of circumstances. Page: 23"},
+{"q":"What is the act of taking possession of contraband or evidence for a violation of rule or law?","c":["A search","A seizure","A confiscation","An appropriation"],"a":"1","e":"The correct answer is seizure. The text defines seizure as the act of taking possession of contraband or evidence. Page: 23"},
+{"q":"If a visitor to a correctional facility refuses a search, what is the likely consequence?","c":["They will be immediately arrested.","They will be allowed to visit but will be under constant surveillance.","Refusal may result in denial or termination of current or future visits.","They must submit a written statement explaining their refusal."],"a":"2","e":"The correct answer is Refusal may result in denial or termination of current or future visits. The text states that while visitors can refuse a search, the consequence may be denial of the visit. Page: 23"},
+{"q":"What provides the protections of the Fifth Amendment right against self-incrimination to a suspect in custody during a criminal interrogation?","c":["The Bill of Rights","A Miranda warning","Habeas corpus","Due process"],"a":"1","e":"The correct answer is a Miranda warning. The text defines a Miranda warning as providing the protections of the Fifth Amendment right against self-incrimination in this context. Page: 24"},
+{"q":"If a crime occurs within a correctional facility, who should complete the interrogation of the individual?","c":["The first responding correctional officer","The shift supervisor","A law enforcement officer or prison inspector","The warden"],"a":"2","e":"The correct answer is a law enforcement officer or prison inspector. The text states that interrogation for a crime in a facility should be completed by law enforcement or a prison inspector. Page: 24"},
+{"q":"Inmates retain the right to freedom from excessive punishments and what other legal right?","c":["The right to vote","Access to courts","The right to unrestricted mail","The right to privacy in their cells"],"a":"1","e":"The correct answer is access to courts. The text lists freedom from excessive punishments and access to courts as rights retained by inmates. Page: 25"},
+{"q":"Which federal act sets privacy standards that make it a violation to knowingly disclose the protected health information of inmates?","c":["Prison Rape Elimination Act (PREA)","Americans with Disabilities Act (ADA)","Health Insurance Portability and Accountability Act (HIPAA)","First Step Act"],"a":"2","e":"The correct answer is the Health Insurance Portability and Accountability Act (HIPAA). The text identifies HIPAA as the act that sets these privacy standards. Page: 25"},
+{"q":"Under HIPAA, when can a correctional officer ask for an inmate's health information?","c":["At any time for any reason.","Only with the inmate's written consent.","When it is pertinent to the job or necessary to protect themselves or others.","Only if the inmate is unconscious."],"a":"2","e":"The correct answer is When it is pertinent to the job or necessary to protect themselves or others. The text states an officer is prohibited from asking for health information unless it is pertinent to the job or for safety reasons. Page: 26"},
+{"q":"Which act was created to develop and implement national standards for the detection, prevention, reduction, and punishment of prison rape?","c":["Health Insurance Portability and Accountability Act (HIPAA)","Violence Against Women Act (VAWA)","Prison Rape Elimination Act (PREA)","Civil Rights Act"],"a":"2","e":"The correct answer is the Prison Rape Elimination Act (PREA). The text states Congress enacted PREA to address the problem of sexual abuse in custody. Page: 26"},
+{"q":"What is the standard established by PREA for the incidence of rape in correctional facilities?","c":["A zero-tolerance standard","An acceptable-level standard","A data-driven standard","A state-by-state standard"],"a":"0","e":"The correct answer is a zero-tolerance standard. The text explicitly states that there is a zero-tolerance standard for the incidence of rape in correctional facilities. Page: 26"},
+{"q":"Communication between an inmate and their attorney is considered what?","c":["Public record","Hearsay evidence","Privileged communication","Confidential, but subject to monitoring"],"a":"2","e":"The correct answer is privileged communication. The text identifies the relationship between an inmate and an attorney as protected and considered privileged communication. Page: 26"},
+{"q":"Due to the attorney-client privilege, what is not permitted regarding their phone conversations?","c":["They may not be limited in duration.","They may not be recorded.","They must be conducted in English.","They may not discuss the details of the case."],"a":"1","e":"The correct answer is They may not be recorded. The text specifies that attorney-client phone conversations may not be recorded. Page: 27-28"},
+{"q":"According to ss. 944.47 and 951.22, F.S., all of the following are considered contraband EXCEPT:","c":["Currency or coins.","A bed sheet in its original, unaltered condition.","Firearms or dangerous weapons.","Cell phones or portable communication devices."],"a":"1","e":"The correct answer is A bed sheet in its original, unaltered condition. The text defines contraband as unauthorized articles or authorized articles in excessive quantities or altered from their intended purpose, implying a standard-issue bed sheet is not contraband. Page: 28"},
+{"q":"The introduction, taking, or sending of contraband into a correctional facility is what type of crime in Florida?","c":["A civil infraction","A misdemeanor","A felony","A rule violation only"],"a":"2","e":"The correct answer is a felony. The text states that the introduction of contraband is a felony crime as defined by s. 944.47, F.S. Page: 29"},
+{"q":"According to ss. 932.704 and 932.7055, F.S., how may confiscated contraband be disposed of?","c":["It may be destroyed.","It may be converted for inmate trust funds or charity.","It may be reused if it is a non-consumable item.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text states that contraband may be destroyed, converted, or reused, depending on the item and agency policy. Page: 29"},
+{"q":"What is the legal term for a violation of the law?","c":["A tort","A civil infraction","A criminal act","A rule violation"],"a":"2","e":"The correct answer is a criminal act. The text defines a criminal act as a violation of the law. Page: 30"},
+{"q":"According to s. 775.08, F.S., what is any criminal offense punishable under Florida law by death or imprisonment in a state facility for more than one year?","c":["A misdemeanor","A capital crime","A felony","An infraction"],"a":"2","e":"The correct answer is a felony. The text provides this specific definition for a felony in Florida. Page: 30"},
+{"q":"What is any criminal offense punishable under Florida law by imprisonment for less than one year in a county correctional facility?","c":["A felony","An infraction","A civil offense","A misdemeanor"],"a":"3","e":"The correct answer is a misdemeanor. The text provides this specific definition for a misdemeanor in Florida. Page: 30"},
+{"q":"Which of the following is listed as a common crime committed by inmates in a correctional setting?","c":["Assault and battery","Dealing in stolen property","Possession of contraband","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text includes petit theft, dealing in stolen property, assault, battery, and possession of contraband in its list of common crimes. Page: 30"},
+{"q":"The crime of assault or battery on a facility employee results in what change to the offense?","c":["It is reclassified to a more severe degree.","It is reduced to a lesser charge.","It is handled as an internal disciplinary matter only.","It is automatically dismissed if the employee is not injured."],"a":"0","e":"The correct answer is It is reclassified to a more severe degree. The text notes that this crime reclassifies the offense to a more severe degree, carrying a greater penalty. Page: 31"},
+{"q":"Introduction of contraband and sexual misconduct are listed as common crimes committed by whom in a correctional setting?","c":["Inmates only","Staff and visitors","Visitors only","Supervisory staff only"],"a":"1","e":"The correct answer is Staff and visitors. The text provides introduction of contraband, sexual misconduct, and bribery as examples of common staff and visitor criminal acts. Page: 31"},
+{"q":"What are the two basic elements necessary to convict a person of a crime?","c":["Proof of motive and proof of opportunity.","A confession from the suspect and physical evidence.","Proof that a crime has been committed and proof the person being charged committed it.","Testimony from a witness and a lack of an alibi."],"a":"2","e":"The correct answer is Proof that a crime has been committed and proof the person being charged committed it. The text identifies these two basic elements as necessary for a conviction. Page: 31"},
+{"q":"Purposely doing what the law declares to be a crime demonstrates what important legal concept?","c":["Criminal intent","Reckless disregard","Strict liability","Negligence"],"a":"0","e":"The correct answer is criminal intent. The text explains that by purposely committing a prohibited act, a person demonstrates criminal intent. Page: 31"},
+{"q":"What is the term for anything used to commit a crime, such as a homemade weapon or a threatening letter?","c":["Fruits of a crime","Evidence","Instrumentalities of a crime","Contraband"],"a":"2","e":"The correct answer is instrumentalities of a crime. The text defines instrumentalities of a crime as anything used to commit a crime. Page: 31"},
+{"q":"What is the term for anything gained or obtained by committing a crime?","c":["Fruits of a crime","Proceeds of a crime","Contraband","Evidence"],"a":"0","e":"The correct answer is the fruits of a crime. The text defines the fruits of a crime as anything gained or obtained by committing a crime. Page: 31"},
+{"q":"What is defined as anything that tends to prove or disprove a fact in a judicial case or disciplinary hearing?","c":["An assumption","Evidence","A statement","An inference"],"a":"1","e":"The correct answer is evidence. This is the specific definition provided in the text. Page: 31"},
+{"q":"Which type of evidence directly proves a fact without inference or assumption, such as an officer observing a stabbing?","c":["Physical evidence","Circumstantial evidence","Direct evidence","Testimonial evidence"],"a":"2","e":"The correct answer is direct evidence. The text defines direct evidence as something that directly proves a fact without inference, using an officer's observation as an example. Page: 32"},
+{"q":"Which type of evidence is based on an inference and not on personal knowledge through observation?","c":["Direct evidence","Physical evidence","Documentary evidence","Circumstantial or indirect evidence"],"a":"3","e":"The correct answer is circumstantial or indirect evidence. The text defines this type of evidence as being based on an inference rather than direct observation. Page: 32"},
+{"q":"Material objects, such as weapons, drugs, or money, are considered what type of evidence?","c":["Physical evidence","Testimonial evidence","Direct evidence","Documentary evidence"],"a":"0","e":"The correct answer is physical evidence. The text defines physical evidence as material objects like weapons, drugs, or money. Page: 32"},
+{"q":"Verbal evidence obtained from a witness, victim, or suspect is what type of evidence?","c":["Physical evidence","Testimonial evidence","Documentary evidence","Circumstantial evidence"],"a":"1","e":"The correct answer is testimonial evidence. The text defines testimonial evidence as verbal evidence from a witness, victim, or suspect. Page: 32"},
+{"q":"Printed or written evidence, such as a call log, written property receipt, or a letter, is known as what type of evidence?","c":["Physical evidence","Testimonial evidence","Documentary evidence","Direct evidence"],"a":"2","e":"The correct answer is documentary evidence. The text defines documentary evidence as printed or written evidence like a call log or letter. Page: 32"},
+{"q":"What is the documentation of every person who handled evidence, as well as when, why, and what changes were made to it?","c":["An evidence log","A property receipt","The chain of command","The chain of custody"],"a":"3","e":"The correct answer is the chain of custody. This is the specific definition provided in the text for the process of documenting evidence handling. Page: 32"},
+{"q":"Which component of the chain of custody answers the question about the location from which evidence was collected, transferred, or stored?","c":["Who","What","When","Where"],"a":"3","e":"The correct answer is Where. The text breaks down the components, with \"Where\" referring to the location of the evidence. Page: 32"},
+{"q":"Which two chapters of the Florida Statutes govern all use of force by a correctional officer?","c":["Chapters 775 and 943","Chapters 776 and 944","Chapters 943 and 951","Chapters 790 and 776"],"a":"1","e":"The correct answer is Chapters 776 and 944. The text explicitly states that these two chapters govern all use of force by a correctional officer. Page: 34"},
+{"q":"What is the type and amount of force that an officer reasonably believes is necessary to overcome resistance?","c":["Deadly force","Excessive force","Reasonable force","Maximum force"],"a":"2","e":"The correct answer is reasonable force. The text defines reasonable force as the type and amount of force the officer reasonably believes necessary to overcome resistance. Page: 34"},
+{"q":"In Graham v. Connor, the U.S. Supreme Court held that all law enforcement use of force cases are to be judged by what standard?","c":["Subjective belief","Objective reasonableness","Probable cause","Clear and convincing evidence"],"a":"1","e":"The correct answer is objective reasonableness. The text states the Supreme Court held that cases are to be judged by an objective reasonableness standard based on the Fourth Amendment. Page: 34"},
+{"q":"The objective reasonableness test requires an officer to answer which two questions about the level of force used?","c":["Was the action legal and was it approved by a supervisor?","Was the action effective and was it documented properly?","Was the action reasonable and necessary, and was the amount of force applied reasonable and necessary?","Was the suspect injured and did they pose a future threat?"],"a":"2","e":"The correct answer is Was the action reasonable and necessary, and was the amount of force applied reasonable and necessary? The text lists these two questions as the core of the objective reasonableness test. Page: 35"},
+{"q":"The U.S. Supreme Court case Hudson v. McMillan established that what factor determines reasonableness in use of force situations in correctional settings?","c":["The severity of the injury","The officer's intent","The inmate's criminal history","The time of day"],"a":"1","e":"The correct answer is the officer's intent. The text states that this case established that intent determines reasonableness and that officers must act in good faith, not for punishment or revenge. Page: 35"},
+{"q":"According to s. 944.35, F.S., an employee of the Department of Corrections is authorized to apply physical force to do which of the following?","c":["To defend himself or herself or another.","To prevent damage to property.","To quell a disturbance.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text lists self-defense, preventing property damage, and quelling a disturbance as justifications for applying physical force under this statute. Page: 35"},
+{"q":"An officer is authorized to apply physical force to overcome what?","c":["Verbal insults from an inmate.","An inmate's bad attitude.","Physical resistance to a lawful command.","An inmate's refusal to eat."],"a":"2","e":"The correct answer is Physical resistance to a lawful command. The text lists overcoming physical resistance to a lawful command as a justification for the use of force. Page: 35"},
+{"q":"Under what circumstances can force be used to administer medical treatment?","c":["Whenever an inmate refuses treatment.","Only by or under the supervision of a physician or their designee.","When the inmate is unconscious.","To administer any routine medications."],"a":"1","e":"The correct answer is Only by or under the supervision of a physician or his or her designee. The text specifies that force for medical treatment must be administered by or under the supervision of a physician. Page: 35"},
+{"q":"According to s. 776.07, F.S., a correctional officer is justified in using force, including deadly force, to prevent what?","c":["Any rule violation.","Damage to any property.","An inmate from starting a fight.","The escape from a penal institution."],"a":"3","e":"The correct answer is The escape from a penal institution. The text quotes this statute, which explicitly justifies the use of deadly force to prevent an escape. Page: 36"},
+{"q":"If the amount of force used by an officer is judged to be excessive, what penalties may the officer face?","c":["Criminal penalties","Civil penalties","Administrative penalties","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text states that if force is judged excessive, an officer may face criminal, civil, and administrative penalties. Page: 36"},
+{"q":"Losing one's job and being incarcerated are potential penalties for which type of liability?","c":["Criminal liability","Civil liability","Administrative liability","Both criminal and civil rights liability"],"a":"3","e":"The correct answer is Both criminal and civil rights liability. The table shows that job loss and incarceration can result from both criminal and civil rights violations. Page: 36"},
+{"q":"Which type of liability can result in a written reprimand, probation, suspension, and revocation of certification?","c":["Criminal","Civil","Civil Rights","Administrative"],"a":"3","e":"The correct answer is Administrative. The table on liabilities lists these penalties specifically under administrative liability. Page: 36"},
+{"q":"According to s. 944.35, F.S., what is required of an officer who uses, witnesses, or has reason to believe force was used?","c":["They must report the incident.","They must get a statement from the inmate.","They must notify the warden directly.","They must wait for a formal investigation to be launched."],"a":"0","e":"The correct answer is They must report the incident. The text states that if you use, witness, or have reason to believe force was used, you must report the incident. Page: 37"},
+{"q":"Any person who coerces or threatens another person to alter testimony or a written report where force was used commits what level of crime?","c":["A misdemeanor","A felony","A civil infraction","No crime, but an ethical violation"],"a":"1","e":"The correct answer is a felony. The text explicitly states that coercing or threatening someone to alter a use of force report is a felony. Page: 37"},
+{"q":"When is an officer found guilty of committing a crime?","c":["Civil liability","Criminal liability","Vicarious liability","Direct liability"],"a":"1","e":"The correct answer is criminal liability. The text defines criminal liability as when an officer is found guilty of committing a crime. Page: 38"},
+{"q":"What is defined as the failure to use due or reasonable care in a situation where an officer has a duty to act, resulting in harm?","c":["Insubordination","Liability","Negligence","A criminal act"],"a":"2","e":"The correct answer is negligence. The text provides this specific definition for negligence. Page: 38"},
+{"q":"Which of the following are the elements of negligence?","c":["A duty to act with care.","Failure to perform that duty.","Proof that the failure caused damages and actual damages resulted.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text lists a duty to act, failure to perform that duty, proof of causation, and actual damages as the elements of negligence. Page: 38"},
+{"q":"What type of damages are designed to compensate a victim for their injuries, damages, and property loss?","c":["Punitive damages","Compensatory damages","Nominal damages","Statutory damages"],"a":"1","e":"The correct answer is compensatory damages. The text defines compensatory damages as being designed to compensate a victim for their actual losses. Page: 39"},
+{"q":"What type of damages are awarded as a means to deter and punish a defendant for negligence, recklessness, malice, or deceit?","c":["Punitive damages","Compensatory damages","Consequential damages","Liquidated damages"],"a":"0","e":"The correct answer is punitive damages. The text defines punitive damages as those awarded to punish the defendant and deter others. Page: 39"},
+{"q":"An unlawful interference with the fundamental rights of another person, such as the right to due process, is known as a:","c":["Tort","Criminal act","Civil rights violation","Breach of contract"],"a":"2","e":"The correct answer is a civil rights violation. The text provides this definition for a civil rights violation. Page: 39"},
+{"q":"When an officer acts or claims to act in the performance of official duties under any law, ordinance, or regulation, they are acting under what?","c":["Sovereign immunity","Qualified immunity","Color of law","Good faith"],"a":"2","e":"The correct answer is color of law. The text defines acting under color of law as when an officer acts or purports to act in the performance of official duties. Page: 39"},
+{"q":"An employing agency can be held liable for an employee's wrongful acts through which types of liability?","c":["Direct or vicarious liability","Criminal or administrative liability","Personal or professional liability","Statutory or common law liability"],"a":"0","e":"The correct answer is direct or vicarious liability. The text explains that an agency can be held liable for damages through either direct or vicarious liability. Page: 39"},
+{"q":"An employing agency's negligent hiring, assignment, training, or retention of a problem employee is an example of what?","c":["Vicarious liability","Sovereign immunity","Direct liability","Qualified immunity"],"a":"2","e":"The correct answer is direct liability. The text defines direct liability in this context as the agency's negligence in hiring, training, or retaining an employee. Page: 39"},
+{"q":"Which Florida Statute protects officers charged with civil and criminal actions if those actions occurred within the scope and course of their employment?","c":["Chapter 776, F.S.","Chapter 944, F.S.","Chapter 111, F.S.","Chapter 768, F.S."],"a":"2","e":"The correct answer is Chapter 111, F.S. The text identifies Chapter 111, F.S., as providing these protections for officers. Page: 40"},
+{"q":"What refers to the range of reasonable and foreseeable activities that an officer does while carrying out the agency's business?","c":["Color of law","Scope of employment","Duty to act","Official capacity"],"a":"1","e":"The correct answer is scope of employment. The text defines acting within the scope of employment with this description. Page: 40"},
+{"q":"Which law, defined in s. 768.28, F.S., provides one of the most important protections for state and county correctional agencies and their employees against state civil actions?","c":["Qualified immunity","The emergency doctrine","Sovereign immunity","The Good Samaritan Act"],"a":"2","e":"The correct answer is sovereign immunity. The text identifies s. 768.28, F.S., as the law defining sovereign immunity. Page: 40"},
+{"q":"What protects government officials from liability for civil damages as long as their conduct does not violate clearly established statutory or constitutional rights?","c":["Sovereign immunity","The emergency doctrine","Good faith defense","Qualified immunity"],"a":"3","e":"The correct answer is qualified immunity. The text defines qualified immunity as protecting government officials from civil damages unless their conduct violates clearly established rights. Page: 40"},
+{"q":"When an officer is faithful to their duty and honestly intends to avoid taking undue advantage of others, they are said to be acting in:","c":["A reasonable manner","Good faith","Accordance with the emergency doctrine","The scope of employment"],"a":"1","e":"The correct answer is good faith. The text defines acting in good faith as being faithful to duty and honestly intending to avoid taking undue advantage of others. Page: 41"},
+{"q":"When an emergency requires spontaneous action and an officer is not required to use the same degree of judgment and care as under non-emergency conditions, what legal defense may apply?","c":["Qualified immunity","The good faith defense","The emergency doctrine","Sovereign immunity"],"a":"2","e":"The correct answer is the emergency doctrine. The text explains that the emergency doctrine applies when spontaneous action is required in an emergency. Page: 41"},
+{"q":"What is the most effective way for an officer to limit their liability?","c":["By purchasing professional liability insurance.","By following their agency's policies and procedures.","By refusing to work in high-risk areas.","By always deferring decisions to a supervisor."],"a":"1","e":"The correct answer is by following their agency's policies and procedures. The text states that by following agency policies, an officer may avoid liability for acts committed while on duty. Page: 41"},
+{"q":"What is the purpose of attending required and optional training for an officer?","c":["To fulfill a contractual obligation.","To qualify for promotion.","To stay current on the law and up-to-date practices to help avoid liability.","To network with officers from other agencies."],"a":"2","e":"The correct answer is To stay current on the law and up-to-date practices to help avoid liability. The text explains that attending training helps you stay current and avoid liability. Page: 41"},
+{"q":"If an officer intentionally violates their agency's policies and procedures, they may be regarded as doing what?","c":["Acting under color of law","Acting in good faith","Acting within the scope of employment","Acting outside the scope of employment"],"a":"3","e":"The correct answer is acting outside the scope of employment. The text notes that an officer intentionally violating policy may be regarded as acting outside the scope of employment, thus losing certain legal protections. Page: 40"},
+{"q":"A correctional officer's profession is governed by federal and state law, state rules, and what other regulations for county officers?","c":["Agency and facility policies and procedures","Local regulations","Both local regulations and agency and facility policies and procedures","The Florida Model Jail Standards only"],"a":"2","e":"The correct answer is Both local regulations and agency and facility policies and procedures. The text states the profession is governed by federal/state law, state rules, local regulations (for county officers), and agency/facility policies. Page: 3"},
+{"q":"Which action is NOT considered a personal characteristic supervisors look for in new officers?","c":["The ability to adapt to change without undue stress","The ability to be responsible for actions taken as well as the consequences of inaction","The ability to follow an established routine without deviation","The ability to learn new techniques and procedures"],"a":"2","e":"The correct answer is The ability to follow an established routine without deviation. The text lists the ability to adapt to change as a desirable characteristic, which is the opposite of inflexibly following a routine. Page: 4"},
+{"q":"What system does the Criminal Justice Professionalism (CJP) Division maintain for all officer records?","c":["The Officer Certification and Training System (OCTS)","The Automated Training Management System (ATMS)","The Florida Law Enforcement Record Exchange (FLERE)","The Criminal Justice Information System (CJIS)"],"a":"1","e":"The correct answer is the Automated Training Management System (ATMS). The text explicitly states that CJP maintains the ATMS for all officer records. Page: 5"},
+{"q":"What is the term for a plea where a person does not accept or deny responsibility for charges but agrees to accept punishment?","c":["Guilty","Not guilty","No contest","Nolo contendere"],"a":"3","e":"The correct answer is nolo contendere. The text provides this specific definition for a plea of nolo contendere. Page: 6"},
+{"q":"Before being hired, an agency will conduct a thorough background investigation to determine an applicant's:","c":["Physical fitness","Moral character","Financial stability","Political affiliation"],"a":"1","e":"The correct answer is moral character. The text states that the hiring agency will conduct a background investigation to determine the applicant's moral character. Page: 7"},
+{"q":"Engaging in sexual harassment involving physical contact or misuse of official position can lead to what?","c":["A verbal warning","A mandatory training class","Disciplinary action against an officer's certification","A transfer to a different facility"],"a":"2","e":"The correct answer is disciplinary action against an officer's certification. This is listed as one of the specific offenses for which the CJSTC may take action against a certification. Page: 8"},
+{"q":"An unprofessional relationship with an inmate that includes written or oral communication intended to facilitate prohibited conduct is grounds for:","c":["Immediate termination only","Criminal charges only","Disciplinary action by the CJSTC","A civil lawsuit by the inmate"],"a":"2","e":"The correct answer is disciplinary action by the CJSTC. The text lists having unprofessional relationships with an inmate as a violation for which the CJSTC may impose discipline. Page: 8"},
+{"q":"What is the term for conduct that undermines or attempts to undermine the State Officer Certification Examination (SOCE) process?","c":["Cheating","Subverting","Plagiarizing","Falsifying"],"a":"1","e":"The correct answer is subverting. The text uses the specific term \"subverts or attempts to subvert\" when describing conduct that undermines the SOCE process. Page: 8"},
+{"q":"In a correctional setting, what are core beliefs or desires that guide or motivate a person's attitude and actions?","c":["Ethics","Procedures","Values","Orders"],"a":"2","e":"The correct answer is Values. The text defines values as core beliefs or desires that guide or motivate attitudes and actions. Page: 9"},
+{"q":"Ethical violations by a correctional officer can result in which of the following?","c":["Disciplinary action by the agency","Termination of employment","Decertification by the CJSTC","All answers listed"],"a":"3","e":"The correct answer is All answers listed. The text states that ethical violations can result in disciplinary action, termination, and decertification. Page: 9"},
+{"q":"The American Correctional Association (ACA) Code of Ethics preamble states that the ACA expects its members to have a commitment to what kind of service?","c":["Strict and punitive service","Efficient and cost-effective service","Professional and compassionate service","Minimal and non-interfering service"],"a":"2","e":"The correct answer is professional and compassionate service. The preamble to the ACA Code of Ethics explicitly states a commitment to \"professional and compassionate service.\" Page: 10"},
+{"q":"According to the ACA Code of Ethics, members shall make public criticism of colleagues or their agencies only when it is:","c":["Anonymous and unverifiable","Warranted, verifiable, and constructive","Approved by a supervisor","Guaranteed to lead to change"],"a":"1","e":"The correct answer is warranted, verifiable, and constructive. This principle sets a high standard for making public criticism. Page: 10"},
+{"q":"The ACA Code of Ethics requires members to differentiate between personal views and statements made on behalf of whom?","c":["Their family","Other colleagues","The agency or Association","The public"],"a":"2","e":"The correct answer is the agency or Association. The text states members shall clearly differentiate between personal views and official statements made on behalf of the agency or Association. Page: 10"},
+{"q":"According to the ACA Code of Ethics, members must refrain from discriminating against any individual based on race, gender, creed, national origin, religious affiliation, age, or what else?","c":["Political affiliation","Socioeconomic status","Disability","Criminal history"],"a":"2","e":"The correct answer is disability. The text includes disability in the list of prohibited grounds for discrimination. Page: 11"},
+{"q":"The ACA Code of Ethics states that members shall respect, promote, and contribute to a workplace that is safe, healthy, and free of what?","c":["Inmate interaction","Stress in any form","Harassment in any form","Overtime requirements"],"a":"2","e":"The correct answer is harassment in any form. The final principle listed in the Code of Ethics is contributing to a workplace free of harassment. Page: 11"},
+{"q":"A notion, statement, or belief about a person that may or may not be factual is an example of:","c":["A prejudice","An assumption","A value","An ethic"],"a":"1","e":"The correct answer is an assumption. The text defines an assumption as a notion or belief that may or may not be factual. Page: 12"},
+{"q":"According to the text, what is an example of an often false assumption made about inmates?","c":["Young inmates are disrespectful to elders and authority.","Older inmates pose less threat to officers.","Both Young inmates are disrespectful to elders and authority. and Older inmates pose less threat to officers.","Inmates with life sentences are the most dangerous."],"a":"2","e":"The correct answer is Both Young inmates are disrespectful to elders and authority and Older inmates pose less threat to officers. The text lists both of these as examples of often false assumptions. Page: 12"},
+{"q":"What type of behavior requires you to think, plan a response, and act appropriately using verbal and non-verbal skills?","c":["Reactive behavior","Responsive behavior","Reflexive behavior","Aggressive behavior"],"a":"1","e":"The correct answer is Responsive behavior. The text contrasts acting on emotions with responsive behavior, which requires thought and planning. Page: 12"},
+{"q":"What behavior is marked by pride in one's self and career and demonstrates good character?","c":["Ambition","Professionalism","Confidence","Authority"],"a":"1","e":"The correct answer is Professionalism. The text defines professionalism as behavior that demonstrates good character and is marked by pride in oneself and one's career. Page: 14"},
+{"q":"Professionalism requires that you respect the people you serve and maintain a personal commitment to what?","c":["The agency's mission statement","The continued development of your skills in the job","A strict separation between your personal and professional life","The opinions of your supervisors"],"a":"1","e":"The correct answer is the continued development of your skills in the job. The text states that professionalism requires a personal commitment to the continued development of your skills. Page: 14"},
+{"q":"Which of the following is NOT listed as an example of professional behavior?","c":["Gossiping about co-workers","Taking responsibility for your actions","Admitting and correcting your mistakes","Maintaining accountability"],"a":"0","e":"The correct answer is Gossiping about co-workers. The text explicitly lists gossiping as an unprofessional behavior to be avoided. Page: 15"},
+{"q":"What establishes boundaries between the different levels within an organization?","c":["The organizational chart","Rank structure","The chain of command","The agency's policy manual"],"a":"1","e":"The correct answer is rank structure. The text defines rank structure as what establishes boundaries between the different levels within the organization. Page: 15"},
+{"q":"In what situation might it be necessary to bypass the chain of command?","c":["When you disagree with a supervisor's order.","When your direct supervisor is unavailable in an emergency situation.","When you want to report a minor issue to a higher-ranking officer.","When you are at the end of your shift."],"a":"1","e":"The correct answer is When your direct supervisor is unavailable in an emergency situation. The text provides this as an example of when it may be necessary to bypass the chain of command. Page: 16"},
+{"q":"If you must bypass the chain of command, what should you do as soon as possible?","c":["Document the reason in your report.","Inform your colleagues of your action.","Contact your supervisor.","Consult with the agency's legal counsel."],"a":"2","e":"The correct answer is contact your supervisor. The text advises that if you bypass the chain of command, you should contact your supervisor as soon as possible. Page: 16"},
+{"q":"A correctional officer's ability to interact effectively within the organizational network directly affects what?","c":["Their chances for promotion.","Their job performance.","Their pay and benefits.","Their relationship with inmates."],"a":"1","e":"The correct answer is their job performance. The text states that an officer's ability to interact effectively within the organizational network directly affects their job performance. Page: 17"},
+{"q":"Which level of law enforcement agency enforces the ordinances of a municipality as well as state laws within its jurisdiction?","c":["Federal","State","County","Local or municipal"],"a":"3","e":"The correct answer is Local or municipal. The text defines local or municipal law enforcement agencies as enforcing the ordinances of the municipality and state laws within their jurisdiction. Page: 18"},
+{"q":"How are state judges in Florida selected?","c":["They are elected or appointed by the governor.","They are appointed by the president.","They are elected by the Florida Legislature.","They are appointed by the Florida Supreme Court."],"a":"0","e":"The correct answer is They are elected or appointed by the governor. The text states that state judges in Florida are either elected or appointed by the governor. Page: 18"},
+{"q":"Which Florida state courts handle civil cases involving amounts of $50,000 or less?","c":["Circuit Courts","District Courts of Appeal","County Courts","Small Claims Courts"],"a":"2","e":"The correct answer is County Courts. The text specifies that county courts handle civil cases involving amounts of $50,000 or less. Page: 19"},
+{"q":"Which Florida state courts decide appeals from circuit courts in most criminal and civil cases?","c":["County Courts","Circuit Courts","District Courts of Appeal","The Florida Supreme Court"],"a":"2","e":"The correct answer is the District Courts of Appeal. The text states that the five DCAs decide appeals from circuit courts. Page: 19"},
+{"q":"The U.S. Supreme Court's decisions can be changed only by what?","c":["A subsequent Supreme Court ruling","An act of Congress","A presidential executive order","A constitutional amendment"],"a":"3","e":"The correct answer is a constitutional amendment. The text states that the Court's decisions can be changed only by a constitutional amendment. Page: 19"},
+{"q":"Which type of correctional facility provides a place for detainees to stay while booking procedures are completed?","c":["County jails","State prisons","County and municipal holding facilities","Treatment and evaluation centers"],"a":"2","e":"The correct answer is County and municipal holding facilities. The text defines these facilities as providing a place for detainees during booking or until transport to a county jail. Page: 20"},
+{"q":"Which type of correctional facility is designed to meet the special needs of offenders who misuse substances or are mentally ill?","c":["County jails","State prisons","County and municipal holding facilities","Treatment and evaluation centers"],"a":"3","e":"The correct answer is Treatment and evaluation centers. The text describes these centers as being designed to meet the special needs of particular offenders, such as those who misuse substances or are mentally ill. Page: 20"},
+{"q":"The Florida Department of Corrections has two main divisions: the Office of Institutions and the:","c":["Office of Professionalism","Office of the Warden","Office of Community Corrections","Office of Legal Affairs"],"a":"2","e":"The correct answer is the Office of Community Corrections. The text identifies the two main divisions as the Office of Institutions and the Office of Community Corrections. Page: 21"},
+{"q":"In a correctional setting, the First Amendment is limited to access to the press and what other right?","c":["The right to peacefully assemble","The right to protest facility conditions","Access to religious practice","Unrestricted freedom of speech"],"a":"2","e":"The correct answer is access to religious practice. The text explains that in a correctional setting, the First Amendment is limited to access to religious practice and the press. Page: 22"},
+{"q":"Why is there a diminished expectation of privacy in a correctional setting under the Fourth Amendment?","c":["Because inmates have waived their rights upon conviction.","Because correctional facilities are not considered private property.","Because there is no general requirement for a search warrant.","Because the Constitution does not apply to inmates."],"a":"2","e":"The correct answer is Because there is no general requirement for a search warrant. The text explains that in a correctional setting, there is a diminished expectation of privacy and no general requirement for a search warrant. Page: 22"},
+{"q":"The Fifth Amendment requires a notice and a hearing, which is generally known as what?","c":["Due process of law","Equal protection","Probable cause","Reasonable suspicion"],"a":"0","e":"The correct answer is due process of law. The text states that the Fifth Amendment prohibits the deprivation of life, liberty, or property without due process of law, which generally requires a notice and a hearing. Page: 23"},
+{"q":"Excessive use of force or withholding meals is prohibited under which Amendment?","c":["First Amendment","Fourth Amendment","Sixth Amendment","Eighth Amendment"],"a":"3","e":"The correct answer is the Eighth Amendment. The text provides excessive use of force or withholding meals as examples of actions prohibited under this amendment's ban on cruel and unusual punishment. Page: 23"},
+{"q":"Which of the following is NOT a type of search mentioned for visitors entering a correctional facility?","c":["Pat search","Canine search","Strip search","Body scan"],"a":"2","e":"The correct answer is Strip search. The text lists pat search, canine, drug, body scan, and metal detector as types of searches for visitors, but not strip search. Page: 23"},
+{"q":"An officer's duty to report information concerning criminal acts applies even if the information is provided by an inmate regarding a case that occurred:","c":["Inside the facility only","Outside the facility","More than one year ago","Without any physical evidence"],"a":"1","e":"The correct answer is Outside the facility. The text states an officer may encounter information regarding an ongoing criminal case that occurred outside the facility and has a duty to report it. Page: 24"},
+{"q":"Inmates retain the right to freedom of expression, freedom from overcrowded conditions, and what other freedom?","c":["Freedom from unreasonable search and seizure","Freedom of association","Freedom to refuse work assignments","Freedom from any form of discipline"],"a":"0","e":"The correct answer is freedom from unreasonable search and seizure. The text lists this among the rights retained by inmates. Page: 25"},
+{"q":"What information can an officer who was injured in a fight with an inmate receive about that inmate under HIPAA?","c":["The inmate's entire medical history.","Information regarding the inmate's bloodborne pathogens or transmittable disease status.","The inmate's psychological evaluation records.","Information about the inmate's family medical history."],"a":"1","e":"The correct answer is Information regarding the inmate's bloodborne pathogens or transmittable disease status. The text uses this specific example, stating an officer can be told if the inmate has HIV or hepatitis, but not their blood pressure. Page: 26"},
+{"q":"What is the purpose of PREA?","c":["To ensure all prisons are accredited by the American Correctional Association.","To make rape prevention and awareness in a correctional setting a top priority.","To establish mandatory minimum sentences for sexual offenders.","To provide funding for inmate rehabilitation programs."],"a":"1","e":"The correct answer is to make rape prevention and awareness in a correctional setting a top priority. The text states this is the purpose of PREA. Page: 26"},
+{"q":"What is the status of attorney-client visits in a correctional facility?","c":["They must conform to normal visiting hours.","They must be within sight and hearing of an officer.","They do not have to conform to normal visiting hours and may be out of an officer's hearing.","They can be recorded for security purposes."],"a":"2","e":"The correct answer is They do not have to conform to normal visiting hours and may be out of an officer's hearing. The text specifies that these visits do not have to follow normal hours and may be within sight but not hearing. Page: 28"},
+{"q":"Why is contraband a problem in correctional facilities?","c":["It can increase violence and crime.","It can provide wealth and power to inmates.","It can be used to organize escapes or order crimes outside the facility.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text states that contraband places everyone in danger, increases violence and crime, provides wealth and power to inmates, and can be used to organize other criminal acts. Page: 28"},
+{"q":"The Florida Model Jail Standards (FMJS) provide for whom to list the articles or items that inmates are allowed to possess?","c":["The Sheriff","The facility's officer in charge","The Florida Department of Corrections","The Criminal Justice Standards and Training Commission"],"a":"1","e":"The correct answer is the facility's officer in charge. The text states that the FMJS provide for a facility's officer in charge to list acceptable items. Page: 28"},
+{"q":"Where can inmates generally find information about acceptable items they are allowed to possess?","c":["The Florida Statutes","The facility's inmate handbook","The law library","Posted notices in the dayroom"],"a":"1","e":"The correct answer is the facility's inmate handbook. The text states that a facility's inmate handbook generally includes information about acceptable items. Page: 29"},
+{"q":"Who might introduce contraband into a facility?","c":["Attorneys and visitors","Contractors","Staff","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text states that anyone may introduce contraband, including attorneys, visitors, contractors, and even staff. Page: 29"},
+{"q":"When contraband is confiscated, what must be done with its disposition?","c":["It must be photographed.","It must be documented.","It must be shown to the inmate's family.","It must be stored for one year."],"a":"1","e":"The correct answer is It must be documented. The text explicitly states that the disposition of contraband must be documented. Page: 29"},
+{"q":"In Florida, a crime is designated as either a felony or a:","c":["Tort","Misdemeanor","Infraction","Violation"],"a":"1","e":"The correct answer is a misdemeanor. The text states that in Florida, a crime is designated as either a felony or a misdemeanor. Page: 30"},
+{"q":"An inmate may spend more than one year in a county facility under what circumstance?","c":["If they are awaiting trial for a capital felony.","If they receive consecutive sentences for multiple charges.","If the state prison is overcrowded.","If they are classified as a maximum-security risk."],"a":"1","e":"The correct answer is If they receive consecutive sentences for multiple charges. The text explains that an inmate can serve more than a year in a county facility if they receive consecutive sentences. Page: 30"},
+{"q":"Throwing, tossing, or expelling blood, saliva, or urine at a correctional facility employee is considered what crime?","c":["Assault","Battery","Criminal mischief","Disorderly conduct"],"a":"1","e":"The correct answer is Battery. The text includes this specific action in the definition of battery against a correctional facility employee. Page: 31"},
+{"q":"In addition to proving a crime was committed and the person charged committed it, what must the prosecution also show?","c":["The person had a clear motive.","The person acted knowingly or intentionally.","The person had prior convictions.","The person had access to the instrumentalities of the crime."],"a":"1","e":"The correct answer is The person acted knowingly or intentionally. The text states the prosecution must show the person acted knowingly or intentionally to demonstrate criminal intent. Page: 31"},
+{"q":"In a correctional setting, what are common examples of the fruits of a crime?","c":["Weapons and drugs","Money and canteen or commissary items","Cell phones and chargers","Escape plans and maps"],"a":"1","e":"The correct answer is Money and canteen or commissary items. The text gives these as common examples of the fruits of a crime in a correctional setting. Page: 31"},
+{"q":"What legal principle is based on the totality of the circumstances and an officer's perception at the time of an event?","c":["Reasonable force","Probable cause","Due process","Criminal intent"],"a":"0","e":"The correct answer is reasonable force. The text defines reasonable force as being based on the totality of circumstances and the officer's perception at the time. Page: 34"},
+{"q":"In Graham v. Connor, the court considered that officers often have to make split-second decisions in circumstances that are:","c":["Calm, predictable, and slow-moving.","Tense, uncertain, and rapidly evolving.","Ambiguous, controversial, and politically charged.","Clearly defined by agency policy."],"a":"1","e":"The correct answer is tense, uncertain, and rapidly evolving. The text quotes the court's consideration of these specific circumstances. Page: 34"},
+{"q":"Correctional officers may be required to act in defense of others in situations where the average person has what?","c":["The same duty to intervene.","No duty to intervene.","A duty to record the incident.","A duty to report the incident."],"a":"1","e":"The correct answer is no duty to intervene. The text explains that officers may have to act where an average person has no duty to intervene. Page: 35"},
+{"q":"If an officer fails to document and report a justifiable use of force, what could be the consequence?","c":["A commendation for de-escalating the situation.","The inmate could be charged with a more serious offense.","The officer may face discipline.","The incident will be disregarded."],"a":"2","e":"The correct answer is the officer may face discipline. The text warns that even if force is justifiable, failure to document it may lead to officer discipline. Page: 37"},
+{"q":"What is the failure to do an act that an officer has a duty to perform, which results in injury or damages?","c":["Criminal liability","Civil liability","Administrative liability","Professional liability"],"a":"1","e":"The correct answer is civil liability. The text defines civil liability as responsibility for a wrongful act or the failure to do an act that an officer has a duty to perform. Page: 38"},
+{"q":"If an officer's negligence was 'gross,' meaning they knew or should have known their action could cause serious bodily injury or death, what might they be charged with?","c":["A civil rights violation","A tort","A crime","An administrative infraction"],"a":"2","e":"The correct answer is a crime. The text specifies that an officer may be charged with a crime due to 'gross' negligence. Page: 38"},
+{"q":"An officer who acts with willful or wanton disregard of someone's rights may not be protected by which legal principle?","c":["Qualified immunity","The emergency doctrine","Sovereign immunity","The good faith defense"],"a":"2","e":"The correct answer is sovereign immunity. The text states that an officer will not be held personally liable under sovereign immunity unless they act with willful or wanton disregard. Page: 40"},
+{"q":"When an officer performs their duties correctly, without malice, ill will, or the intent to unjustly harm anyone, they are said to be acting:","c":["Under color of law","In a reasonable manner","In good faith","Within the scope of employment"],"a":"2","e":"The correct answer is in good faith. The text defines acting in good faith as performing duties correctly and without malice. Page: 41"},
+{"q":"Reasonableness in an officer's actions is judged objectively, based on what standard?","c":["What the officer personally believed was right.","What the agency's policy allows.","What a reasonable officer in the same situation would have done.","What the outcome of the action was."],"a":"2","e":"The correct answer is what a reasonable officer in the same situation would have done. The text states that reasonableness is judged objectively based on this standard. Page: 41"},
+{"q":"Chapter 870, F.S., provides for the use of force in what specific situation?","c":["Self-defense","Defense of others","Riots","Escapes"],"a":"2","e":"The correct answer is riots. The text cites Chapter 870, F.S., as providing for the use of force in riots. Page: 41"}
+
+];
+
+function processAndCleanQuestions(questionArray) {
+    // Filter out any null or undefined entries from the initial array
+    const initialCleanedArray = questionArray.filter(q => q && typeof q === 'object');
+
+    return initialCleanedArray.map((q_orig, index) => {
+        // Deep copy the question object to avoid modifying the original
+        let q = JSON.parse(JSON.stringify(q_orig)); 
+        q.originalIndex = index; // Store original index
+
+        // Convert answer to a number if it's a string
+        if (typeof q.a === 'string') {
+          q.a = parseInt(q.a, 10);
+        }
+
+        // Convert letter-based answer (a_letter) to numeric index (a)
+        if (q.a_letter) { 
+            const letterMap = { A: 0, B: 1, C: 2, D: 3 };
+            q.a = letterMap[q.a_letter.toUpperCase()]; // Ensure uppercase for consistency
+            delete q.a_letter; 
+        }
+
+        // Validate the answer index; default to 0 if invalid
+        if (q.a === undefined || q.a < 0 || q.a >= q.c.length) {
+            console.warn("Initial invalid answer index for question:", q.q, "Original index:", q_orig.a, "Defaulting to 0.");
+            q.a = 0; 
+        }
+        
+        // Store the correct answer text before shuffling choices
+        let correctAnswerText = q.c[q.a]; 
+
+        // Standardize "All of the above." to "All answers Listed"
+        q.c = q.c.map(choice => choice === "All of the above." ? "(All answers listed)" : choice);
+        if (correctAnswerText === "All of the above.") {
+            correctAnswerText = "(All answers listed)";
+        }
+        
+        // Shuffle the choices
+        let shuffledChoices = shuffleArray([...q.c]); 
+        // Find the new index of the correct answer after shuffling
+        let newCorrectIndex = shuffledChoices.indexOf(correctAnswerText);
+
+        // Handle cases where the correct answer text might not be found after shuffling (should be rare)
+        if (newCorrectIndex === -1) {
+            console.error("CRITICAL ERROR: Correct answer text '"+ correctAnswerText +"' not found after shuffling for question:", q.q, "Shuffled choices:", shuffledChoices, "Original choices were:", q.c);
+            // Fallback: try to find it in the original, unshuffled choices
+            newCorrectIndex = q.c.indexOf(correctAnswerText); 
+            if (newCorrectIndex !== -1) {
+                q.a = newCorrectIndex; 
+            } else {
+                q.a = 0; 
+                console.error("ABSOLUTE FALLBACK: Could not find '"+ correctAnswerText +"' even in original choices for q: " + q.q + ". Using original choices and index 0.");
+            }
+        } else {
+            q.c = shuffledChoices; 
+            q.a = newCorrectIndex; 
+        }
+        return q;
+    });
+}
+
+// Process the questions and store them in the questionPool
+const questionPool = processAndCleanQuestions(newQuestionsFromUser);
+
+
+let selectedQuestions = []; 
+let currentIndex = 0;
+const skipped = []; 
+const flagged = []; 
+let answers = []; 
+let choiceVisibility = {}; 
+let testId = ''; 
+let timerSeconds = 1800; 
+let isReviewMode = false;
+let isStudyMode = false;
+let incorrectlyAnswered = [];
+let usedQuestionIndicesInPool = [];
+let currentStudySetSize = 10;
+var timerInterval;
+
+function selectRandomQuestionsFromPool(pool, count) {
+  const shuffledFullPool = shuffleArray([...pool]); 
+  return shuffledFullPool.slice(0, count);
+}
+
+function renderQuiz() {
+  const form = document.getElementById("quizForm");
+  form.innerHTML = ''; 
+
+  if (selectedQuestions.length === 0 ) {
+    if(isStudyMode) showStudyEndActions();
+    return;
+  }
+  if (!selectedQuestions[currentIndex]){
+      // This can happen if we run out of incorrect questions to retry
+      showStudyEndActions();
+      return;
+  }
+
+  const q = selectedQuestions[currentIndex]; 
+  const questionDiv = document.createElement("div"); 
+  questionDiv.classList.add("question");
+  questionDiv.innerHTML = `<div class='question-header'>Question ${currentIndex + 1}</div><div class='question-text'>${q.q}</div>`;
+  
+  const hasBeenAnsweredInStudy = isStudyMode && answers[currentIndex] !== null;
+
+  q.c.forEach((choice, i) => {
+    const choiceKey = `q${currentIndex}_c${i}`;
+    const isVisuallyObscured = choiceVisibility[choiceKey] === true; 
+    const isSelected = answers[currentIndex] === i;
+    
+    const eyeIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+    const eyeOffIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+
+    const choiceWrapper = document.createElement('div');
+    choiceWrapper.className = 'choice-wrapper';
+    if (isSelected && !isStudyMode) {
+        choiceWrapper.classList.add('selected-wrapper');
+    }
+    
+    const radioId = `${choiceKey}_radio`;
+    choiceWrapper.innerHTML = `
+        <label class="choice-button-main-area" for="${radioId}">
+            <input type="radio" id="${radioId}" name="q${currentIndex}" value="${i}" ${isSelected ? 'checked' : ''} onclick="recordAnswer(${i})">
+            <span class="choice-text-container">
+              ${String.fromCharCode(65 + i)}. <span class="actual-choice-text ${isVisuallyObscured ? 'actual-choice-text-visually-obscured' : ''}">${choice}</span>
+            </span>
+        </label>
+        <button type="button" class="toggle-visibility-btn" onclick="toggleChoiceVisibility(${currentIndex}, ${i}, event)">
+          ${isVisuallyObscured ? eyeOffIconSVG : eyeIconSVG}
+        </button>
+    `;
+    questionDiv.appendChild(choiceWrapper);
+    
+    if (hasBeenAnsweredInStudy) {
+        const selectedAnswer = answers[currentIndex];
+        const isCorrect = selectedAnswer === q.a;
+        if (i === selectedAnswer) {
+            choiceWrapper.classList.add(isCorrect ? 'study-correct' : 'study-incorrect');
+        }
+        if (i === q.a) {
+            choiceWrapper.classList.add('study-correct');
+        }
+    }
+  });
+  
+  const explanationDiv = document.createElement('div');
+  explanationDiv.className = 'explanation';
+  explanationDiv.id = `explanation-${currentIndex}`;
+  explanationDiv.innerHTML = q.e;
+  if(hasBeenAnsweredInStudy) {
+      explanationDiv.style.display = 'block';
+  }
+  questionDiv.appendChild(explanationDiv);
+  
+  form.appendChild(questionDiv);
+  
+  document.getElementById("progressText").textContent = `Question ${currentIndex + 1} of ${selectedQuestions.length}`; 
+  document.getElementById("progressTextBottom").textContent = `Question ${currentIndex + 1} of ${selectedQuestions.length}`; 
+  
+  document.getElementById("submitBtn").style.display = answers.every(a => a !== null) && !isStudyMode ? 'inline-block' : 'none';
+
+  const flagButton = document.getElementById("flagButton");
+  if (flagButton) { 
+      flagButton.style.display = isStudyMode ? 'none' : 'inline-block';
+    if (flagged.includes(currentIndex)) {
+      flagButton.innerHTML = '✅ Unflag';
+    } else {
+      flagButton.innerHTML = '🚩 Flag';
+    }
+  }
+  highlightNavItem(currentIndex); 
+}
+
+function toggleChoiceVisibility(qIndex, cIndex, event) {
+    event.stopPropagation(); 
+    const choiceKey = `q${qIndex}_c${cIndex}`;
+    choiceVisibility[choiceKey] = !choiceVisibility[choiceKey]; 
+    
+    const buttonClicked = event.currentTarget; 
+    const choiceWrapper = buttonClicked.closest('.choice-wrapper');
+    if (!choiceWrapper) return;
+
+    const textSpan = choiceWrapper.querySelector('.actual-choice-text');
+    if (!textSpan) return;
+    
+    const eyeIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+    const eyeOffIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+
+    if (choiceVisibility[choiceKey]) { 
+        textSpan.classList.add('actual-choice-text-visually-obscured');
+        buttonClicked.innerHTML = eyeOffIconSVG;
+    } else {
+        textSpan.classList.remove('actual-choice-text-visually-obscured');
+        buttonClicked.innerHTML = eyeIconSVG;
+    }
+}
+
+
+function recordAnswer(selectedIndex) {
+    const alreadySelectedAndAnswered = answers[currentIndex] !== null;
+
+    if (alreadySelectedAndAnswered) {
+        if (isStudyMode) {
+            nextQuestion();
+        } else if (selectedIndex !== answers[currentIndex]) {
+            answers[currentIndex] = selectedIndex;
+            renderQuiz(); 
+            generateSidebar();
+        } else {
+             nextQuestion();
+        }
+        return;
+    }
+    
+    answers[currentIndex] = selectedIndex;
+
+    const idxInSkipped = skipped.indexOf(currentIndex);
+    if (idxInSkipped > -1) {
+        skipped.splice(idxInSkipped, 1);
+    }
+    
+    const questionDiv = document.getElementById("quizForm").querySelector(".question");
+    
+    if (isStudyMode) {
+        const q = selectedQuestions[currentIndex];
+        const isCorrect = selectedIndex === q.a;
+        const choiceWrappers = questionDiv.querySelectorAll('.choice-wrapper');
+
+        choiceWrappers.forEach((wrapper, i) => {
+            if (i === selectedIndex) {
+                wrapper.classList.add(isCorrect ? 'study-correct' : 'study-incorrect');
+            }
+            if (i === q.a) {
+                wrapper.classList.add('study-correct');
+            }
+        });
+        document.getElementById(`explanation-${currentIndex}`).style.display = 'block';
+
+        if (!isCorrect) {
+            if (!incorrectlyAnswered.some(item => item.originalIndex === q.originalIndex)) {
+                incorrectlyAnswered.push(q);
+            }
+        }
+        
+        if (currentIndex === selectedQuestions.length - 1) {
+            showStudyEndActions();
+        }
+    } else { 
+        if (questionDiv) {
+            const currentQuestionChoiceWrappers = questionDiv.querySelectorAll('.choice-wrapper');
+            currentQuestionChoiceWrappers.forEach((wrapper, idx) => {
+                wrapper.classList.remove('selected-wrapper');
+                if (idx === selectedIndex) {
+                    wrapper.classList.add('selected-wrapper');
+                }
+            });
+        }
+        document.getElementById("submitBtn").style.display = answers.every(a => a !== null) ? 'inline-block' : 'none';
+    }
+    
+    generateSidebar(); 
+}
+
+function showStudyEndActions() {
+    document.querySelector('.question-actions-bar').style.display = 'none';
+    const studyEndActions = document.getElementById('studyEndActions');
+    studyEndActions.style.display = 'block';
+
+    const retryBtn = document.getElementById('retryIncorrectBtn');
+    retryBtn.style.display = incorrectlyAnswered.length > 0 ? 'inline-block' : 'none';
+
+    const nextSetBtn = document.getElementById('nextSetBtn');
+    const remainingQuestions = questionPool.length - usedQuestionIndicesInPool.length;
+    nextSetBtn.style.display = remainingQuestions >= currentStudySetSize ? 'inline-block' : 'none';
+}
+
+function startNextStudySet() {
+    setupSession(true); // Call setupSession again, indicating it's the next set
+}
+
+function retryIncorrectQuestions() {
+    selectedQuestions = shuffleArray([...incorrectlyAnswered]);
+    currentIndex = 0;
+    answers = new Array(selectedQuestions.length).fill(null);
+    incorrectlyAnswered = [];
+    flagged.length = 0;
+    skipped.length = 0;
+
+    document.getElementById('studyEndActions').style.display = 'none';
+    document.querySelector('.question-actions-bar').style.display = 'flex';
+    document.getElementById('nextBtn').style.display = 'inline-block';
+    document.getElementById('prevBtn').style.display = 'inline-block';
+
+    renderQuiz();
+    generateSidebar();
+}
+
+function skipQuestion() {
+  const questionToSkip = currentIndex;
+  if (!skipped.includes(questionToSkip)) {
+    skipped.push(questionToSkip);
+  }
+  nextQuestion(); 
+}
+
+function flagQuestion() {
+  const indexInFlagged = flagged.indexOf(currentIndex);
+  if (indexInFlagged > -1) {
+    flagged.splice(indexInFlagged, 1); 
+  } else {
+    flagged.push(currentIndex); 
+  }
+  renderQuiz(); 
+  generateSidebar(); 
+}
+
+function nextQuestion() {
+  let potentialNextIndex = currentIndex + 1;
+
+  if (potentialNextIndex >= selectedQuestions.length) { 
+    if (isStudyMode) {
+      showStudyEndActions();
+      return;
+    }
+    potentialNextIndex = -1; 
+
+    for (const skippedIdx of skipped) {
+      if (answers[skippedIdx] === null) {
+        potentialNextIndex = skippedIdx;
+        break;
+      }
+    }
+
+    if (potentialNextIndex === -1) {
+      for (let i = 0; i < selectedQuestions.length; i++) {
+        if (answers[i] === null) {
+          potentialNextIndex = i;
+          break;
+        }
+      }
+    }
+    
+    if (potentialNextIndex === -1) {
+      potentialNextIndex = currentIndex; 
+    }
+  }
+  currentIndex = potentialNextIndex;
+  renderQuiz();
+  generateSidebar(); 
+}
+
+function prevQuestion() {
+  if (currentIndex > 0) {
+    currentIndex--;
+  }
+  renderQuiz();
+  generateSidebar(); 
+}
+
+function displayReview() {
+  isReviewMode = true; // Set review mode
+  choiceVisibility = {}; 
+  const form = document.getElementById("quizForm");
+  form.innerHTML = ''; 
+  let correctCount = 0;
+
+  const reviewActionsTop = document.getElementById("reviewActionsTop");
+  if(reviewActionsTop) reviewActionsTop.style.display = 'block';
+
+
+  selectedQuestions.forEach((q, i) => { 
+    const div = document.createElement("div");
+    div.id = `review-q-${i}`; // Add ID for scrolling
+    const isCorrect = answers[i] === q.a;
+    const statusClass = isCorrect ? 'correct' : 'incorrect';
+    const chosenAnswerText = (answers[i] !== null && q.c[answers[i]] !== undefined) ? q.c[answers[i]] : '<em>No answer provided</em>';
+    const correctAnswerText = (q.a !== undefined && q.c[q.a] !== undefined) ? q.c[q.a] : '<em>Error: Correct answer not found</em>';
+    
+    div.className = statusClass; 
+    div.innerHTML = `<div class='question-header'>Question ${i + 1}</div>` +
+                      `<div class='question-text'>${q.q}</div>` +
+                      `<p>Your Answer: ${chosenAnswerText}</p>` +
+                      `<p>Correct Answer: ${correctAnswerText}</p>` +
+                      `<div class='explanation' style="display:block;">${q.e}</div><hr>`;
+    if (isCorrect) correctCount++;
+    form.appendChild(div);
+  });
+  
+  const scoreHeader = document.createElement("h2");
+  scoreHeader.id = "reviewSummaryHeader"; 
+  scoreHeader.style.textAlign = "center";
+  scoreHeader.innerHTML = `Review Summary<br>You answered ${correctCount} out of ${selectedQuestions.length} correctly.`; 
+  
+  const quizContentScrollable = document.getElementById("quizContentScrollable");
+  const referenceNodeForHeader = document.getElementById("quizForm"); 
+
+  if (reviewActionsTop && reviewActionsTop.parentNode === quizContentScrollable) {
+      quizContentScrollable.insertBefore(scoreHeader, reviewActionsTop.nextSibling);
+  } else if (referenceNodeForHeader && referenceNodeForHeader.parentNode === quizContentScrollable) {
+      quizContentScrollable.insertBefore(scoreHeader, referenceNodeForHeader);
+  } else {
+      const progressDiv = document.getElementById('progress');
+      if (progressDiv && progressDiv.parentNode === quizContentScrollable) {
+          quizContentScrollable.insertBefore(scoreHeader, progressDiv.nextSibling);
+      } else {
+          quizContentScrollable.prepend(scoreHeader); 
+      }
+  }
+  
+  document.getElementById("progressText").textContent = "Review Mode";
+  document.getElementById("progressTextBottom").textContent = "Review Mode";
+  
+  const questionActionsBar = document.querySelector(".question-actions-bar");
+  if(questionActionsBar) questionActionsBar.style.display = 'none';
+  document.getElementById("flagButton").style.display = 'none';
+  
+  const reviewActionsBottom = document.getElementById("reviewActionsBottom");
+  if(reviewActionsBottom) reviewActionsBottom.style.display = 'block';
+  generateSidebar(); // Refresh sidebar with review colors
+}
+
+function returnToHome() {
+    isReviewMode = false; // Exit review mode
+    isStudyMode = false;
+    const reviewActionsTop = document.getElementById("reviewActionsTop");
+    if(reviewActionsTop) reviewActionsTop.style.display = 'none';
+    const reviewActionsBottom = document.getElementById("reviewActionsBottom");
+    if(reviewActionsBottom) reviewActionsBottom.style.display = 'none';
+    const studyEndActions = document.getElementById("studyEndActions");
+    if(studyEndActions) studyEndActions.style.display = 'none';
+    
+    const scoreHeader = document.getElementById("reviewSummaryHeader");
+    if (scoreHeader) {
+        scoreHeader.remove();
+    }
+    
+    document.getElementById('mainQuizContainer').style.display = 'none';
+    document.getElementById('resultsScreen').style.display = 'none'; 
+    document.getElementById('introScreen').style.display = 'flex';
+    document.getElementById('homeBtn').style.display = 'none'; 
+
+    const timerDisplay = document.getElementById('timer');
+    if(timerDisplay) timerDisplay.textContent = "30:00"; 
+    
+    currentIndex = 0;
+    answers = [];
+    skipped.length = 0; 
+    flagged.length = 0;
+    choiceVisibility = {};
+    selectedQuestions = []; 
+    incorrectlyAnswered = [];
+    usedQuestionIndicesInPool = [];
+}
+
+
+function submitAll() {
+  let correct = 0;
+  selectedQuestions.forEach((q, i) => { 
+    if (answers[i] === q.a) correct++;
+  });
+  const scorePercentage = selectedQuestions.length > 0 ? (correct / selectedQuestions.length) * 100 : 0;
+
+  document.getElementById("mainQuizContainer").style.display = "none";
+  document.getElementById("resultsScreen").style.display = "flex";
+  document.getElementById("finalScore").textContent = `${scorePercentage.toFixed(0)}%`;
+  document.getElementById("testIdDisplay").textContent = testId; 
+
+  clearInterval(timerInterval); 
+  const timerDisplay = document.getElementById('timer');
+  if(timerDisplay) timerDisplay.textContent = "00:00"; 
+}
+
+function showReviewPage() {
+  isReviewMode = true; // Set review mode
+  document.getElementById("resultsScreen").style.display = "none";
+  document.getElementById("submitScreen").style.display = "none"; 
+  document.getElementById("mainQuizContainer").style.display = "block"; 
+  
+  const questionActionsBar = document.querySelector(".question-actions-bar");
+  if(questionActionsBar) questionActionsBar.style.display = 'none'; 
+  document.getElementById("flagButton").style.display = 'none'; 
+
+  displayReview(); 
+}
+
+function startExam() {
+    isStudyMode = false;
+    isReviewMode = false;
+    usedQuestionIndicesInPool = []; // Reset used questions for a new exam
+    setupSession();
+}
+
+function startStudy() {
+    isStudyMode = true;
+    isReviewMode = false;
+    usedQuestionIndicesInPool = []; // Reset used questions for a new study session
+    setupSession();
+}
+
+function setupSession(isNextSet = false) {
+    if(!isNextSet) {
+        usedQuestionIndicesInPool = [];
+    }
+  document.getElementById('introScreen').style.display = 'none';
+  document.getElementById('mainQuizContainer').style.display = 'block'; 
+  document.getElementById('homeBtn').style.display = 'flex';
+  
+  const mainHeader = document.getElementById('mainHeaderTitle');
+  const timerDisplay = document.getElementById('timer');
+  const questionActionsBar = document.querySelector(".question-actions-bar");
+  const flagButton = document.getElementById("flagButton");
+  const studyEndActions = document.getElementById("studyEndActions");
+
+  studyEndActions.style.display = 'none';
+  questionActionsBar.style.display = 'flex'; 
+
+  if (isStudyMode) {
+      mainHeader.textContent = "Answer & Study";
+      timerDisplay.style.display = 'none';
+      document.getElementById('submitBtn').style.display = 'none';
+      document.getElementById('skipBtn').style.display = 'none';
+  } else {
+      mainHeader.textContent = 'Exam';
+      timerDisplay.style.display = 'block';
+      document.getElementById('submitBtn').style.display = 'none';
+      document.getElementById('skipBtn').style.display = 'inline-block';
+  }
+
+
+  const reviewActionsTop = document.getElementById("reviewActionsTop");
+  if(reviewActionsTop) reviewActionsTop.style.display = 'none';
+  const reviewActionsBottom = document.getElementById("reviewActionsBottom");
+  if(reviewActionsBottom) reviewActionsBottom.style.display = 'none';
+  
+  const oldScoreHeader = document.getElementById("reviewSummaryHeader");
+  if (oldScoreHeader) oldScoreHeader.remove();
+
+  if(flagButton) flagButton.style.display = isStudyMode ? 'none' : 'inline-block';
+
+  const questionCountSelect = document.getElementById('questionCount');
+  let numberOfQuestions;
+
+  if (questionCountSelect && questionCountSelect.value === 'all') {
+    numberOfQuestions = questionPool.length;
+  } else if (questionCountSelect) {
+    numberOfQuestions = parseInt(questionCountSelect.value, 10);
+  } else {
+    numberOfQuestions = 10; // Fallback
+  }
+  currentStudySetSize = numberOfQuestions;
+
+  // Select questions for the session
+    let availableQuestions = questionPool.filter(q => !usedQuestionIndicesInPool.includes(q.originalIndex));
+    let shuffled = shuffleArray(availableQuestions);
+    selectedQuestions = shuffled.slice(0, currentStudySetSize);
+    selectedQuestions.forEach(q => usedQuestionIndicesInPool.push(q.originalIndex));
+
+  
+  answers = new Array(selectedQuestions.length).fill(null); 
+  choiceVisibility = {}; 
+  testId = `TEST-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  currentIndex = 0;
+  skipped.length = 0; 
+  flagged.length = 0;
+  incorrectlyAnswered = [];
+
+  adjustFooterPadding(); 
+
+  generateSidebar(); 
+  renderQuiz(); 
+
+  if (!isStudyMode) {
+    timerSeconds = numberOfQuestions * 60; 
+    const initialMin = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+    const initialSec = String(timerSeconds % 60).padStart(2, '0');
+    if(timerDisplay) timerDisplay.textContent = `${initialMin}:${initialSec}`;
+
+    clearInterval(timerInterval); 
+    timerInterval = setInterval(() => {
+      if (timerSeconds > 0) {
+        timerSeconds--;
+        const min = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+        const sec = String(timerSeconds % 60).padStart(2, '0');
+        if(timerDisplay) timerDisplay.textContent = `${min}:${sec}`;
+      } else {
+        submitAll(); 
+        clearInterval(timerInterval);
+      }
+    }, 1000);
+  }
+}
+
+function showSubmitScreen() {
+  document.getElementById("submitScreen").style.display = "flex"; 
+}
+function hideSubmitScreen() {
+  document.getElementById("submitScreen").style.display = "none";
+}
+function confirmAndSubmit() {
+  const confirmMessageDiv = document.getElementById("confirmSubmitMessage");
+  const confirmSubmitCheckbox = document.getElementById("confirmSubmit");
+
+  if (confirmSubmitCheckbox && confirmSubmitCheckbox.checked) {
+    if(confirmMessageDiv) confirmMessageDiv.textContent = ""; 
+    submitAll();
+  } else {
+    if(confirmMessageDiv) confirmMessageDiv.textContent = "Please confirm you have completed the exam.";
+    setTimeout(() => { 
+        if(confirmMessageDiv) confirmMessageDiv.textContent = ""; 
+    }, 3000);
+  }
+}
+
+function generateSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  if (sidebar && getComputedStyle(sidebar).display === 'none' && window.innerWidth <= 767) {
+      return; 
+  }
+
+  const ul = document.getElementById("questionNav");
+  if (!ul) return; 
+  ul.innerHTML = ''; 
+  for (let i = 0; i < selectedQuestions.length; i++) {
+    const li = document.createElement("li");
+    li.innerHTML = `<button ondblclick="jumpToQuestion(${i})" onclick="jumpToQuestion(${i})" id="nav-${i}" style="width: 40px; height: 40px; margin: 5px auto; border-radius: 50%; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;">${i + 1}</button>`;
+    ul.appendChild(li);
+    highlightNavItem(i); 
+  }
+}
+
+function jumpToQuestion(index) {
+  currentIndex = index; // Always update the current index
+
+  if (isReviewMode) {
+    const element = document.getElementById(`review-q-${index}`);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  } else {
+    renderQuiz();
+  }
+  generateSidebar(); // Update sidebar for both modes
+}
+
+function highlightNavItem(index) {
+    const btn = document.getElementById(`nav-${index}`);
+    if (!btn) return;
+
+    const isCurrent = index === currentIndex;
+    let bg, color, border, iconText;
+    iconText = `${index + 1}`;
+    border = '2px solid transparent';
+
+    const mode = isReviewMode || (isStudyMode && answers[index] !== null) ? 'review' : 'quiz';
+
+    switch (mode) {
+        case 'review':
+            const isCorrect = answers[index] === selectedQuestions[index].a;
+            if (answers[index] === null) {
+                bg = '#6b7280'; // Gray for unanswered/skipped in review
+                color = '#fff';
+            } else if (isCorrect) {
+                bg = '#22c55e'; // Green for correct
+                color = '#fff';
+            } else {
+                bg = '#ef4444'; // Red for incorrect
+                color = '#fff';
+            }
+            break;
+        case 'quiz':
+        default:
+            const isAnswered = answers[index] !== null;
+            const isSkipped = skipped.includes(index);
+            const isFlagged = flagged.includes(index);
+
+            bg = '#d0d0d0';
+            color = '#000';
+
+            if (isAnswered) {
+                bg = '#3b82f6';
+                color = '#fff';
+            } else if (isSkipped) {
+                bg = '#6b7280';
+                color = '#fff';
+                iconText += ' ⏸';
+            }
+
+            if (isFlagged) {
+                iconText += ' 🚩';
+            }
+            break;
+    }
+
+    if (isCurrent) {
+        border = '2px solid #1d4ed8'; // Highlight current item in both modes
+        if (!isReviewMode && !isStudyMode && answers[index] === null && !skipped.includes(index)) {
+            bg = '#e5e7eb';
+            color = '#000';
+        }
+    }
+
+    btn.style.background = bg;
+    btn.style.color = color;
+    btn.style.border = border;
+    btn.innerHTML = iconText.trim();
+
+    if (isCurrent && !isReviewMode && !isStudyMode && btn.scrollIntoView) {
+        btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+
+function adjustFooterPadding() {
+    const footer = document.querySelector('.quiz-controls');
+    const sidebar = document.getElementById('sidebar');
+    if (footer && getComputedStyle(footer).position === 'fixed') {
+        let footerHeight = footer.offsetHeight;
+        document.body.style.paddingBottom = footerHeight + 'px';
+        if (sidebar && getComputedStyle(sidebar).display !== 'none') { 
+            sidebar.style.bottom = footerHeight + 'px';
+        }
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    adjustFooterPadding(); 
+    window.addEventListener('resize', adjustFooterPadding); 
+
+    if (document.getElementById('introScreen').style.display !== 'none') {
+        const mainQuizContainer = document.getElementById('mainQuizContainer');
+        if (mainQuizContainer) mainQuizContainer.style.display = 'none';
+    }
+
+    const questionCountSelect = document.getElementById('questionCount');
+    if (questionCountSelect) {
+        questionCountSelect.innerHTML = ''; // Clear existing options
+
+        const options = [10, 25, 50]; // Define standard options
+        options.forEach(num => {
+            if (questionPool.length >= num) { // Only add option if there are enough questions
+                const option = document.createElement('option');
+                option.value = num;
+                option.textContent = num;
+                questionCountSelect.appendChild(option);
+            }
+        });
+
+        // Set a default selected value
+        if (questionCountSelect.options.length > 0) {
+            const defaultOption = questionCountSelect.querySelector('option[value="50"]') || questionCountSelect.options[questionCountSelect.options.length - 1];
+            if(defaultOption) defaultOption.selected = true;
+        }
+
+        // Add the "All Questions" option
+        const allQuestionsOption = document.createElement('option');
+        allQuestionsOption.value = 'all';
+        allQuestionsOption.textContent = `All (${questionPool.length} Questions)`;
+        questionCountSelect.appendChild(allQuestionsOption);
+    }
+});
+
+</script>
+</body>
+</html>

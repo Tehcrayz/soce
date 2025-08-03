@@ -1,0 +1,1761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title> Supervising In a Correctional Facility</title>
+  <style>
+    body {  
+      font-family: Arial, sans-serif;  
+      margin: 0;  
+      line-height: 1.6;  
+      background: #f4f8fb;  
+      padding-bottom: 70px;  
+    }
+    .question-header { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+    .question-text { font-size: 16px; margin-bottom: 10px; }
+    
+    /* New structure for choice rendering */
+    .choice-wrapper {
+      display: flex;
+      align-items: center;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      margin: 10px 0;
+      background: #ffffff;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .choice-wrapper:hover {
+      background: #e6f0ff;
+    }
+    .choice-wrapper.selected-wrapper { /* Applied to the wrapper when selected */
+      background: #d0ebff;
+      border-color: #3b82f6;
+    }
+    /* Styles for study mode feedback */
+    .choice-wrapper.study-correct {
+        background-color: #dcfce7;
+        border-color: #22c55e;
+    }
+    .choice-wrapper.study-incorrect {
+        background-color: #fee2e2;
+        border-color: #ef4444;
+    }
+
+
+    .choice-button-main-area { /* This is the label now */
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      padding-right: 10px; /* Space before the eye icon button */
+    }
+    .choice-button-main-area input[type="radio"] {
+      margin-right: 10px;  
+      -webkit-appearance: radio;  
+      -moz-appearance: radio;
+      appearance: radio;
+    }
+    .choice-text-container {
+        /* flex-grow: 1; */ /* No longer needed here, label is flex-grow */
+    }
+    .actual-choice-text-visually-obscured {  
+        opacity: 0.3;
+        text-decoration: line-through;
+    }
+    .toggle-visibility-btn {
+        background: none;
+        border: none;
+        font-size: 1em;  
+        cursor: pointer;
+        padding: 0 5px;
+        /* margin-left: auto; /* No longer needed due to flex on wrapper */
+        color: #555;
+        display: flex;  
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0; /* Prevent button from shrinking */
+    }
+    .toggle-visibility-btn svg {  
+        width: 20px;
+        height: 20px;
+    }
+    .toggle-visibility-btn:hover {
+        color: #000;
+    }
+
+    .correct { border: 2px solid green; background: #e0ffe0; padding: 10px; margin-bottom:10px; border-radius: 5px; }
+    .incorrect { border: 2px solid red; background: #ffe0e0; padding: 10px; margin-bottom:10px; border-radius: 5px; }
+    .explanation { font-style: italic; color: #555; margin-top: 10px; display: none;} /* Hidden by default */
+
+    .question-actions-bar {
+      display: flex;
+      justify-content: center;  
+      align-items: center;
+      flex-wrap: wrap;  
+      gap: 10px;  
+      padding: 15px 10px;  
+      margin-top: 20px;  
+      margin-bottom: 10px;  
+    }
+    .question-actions-bar button {
+      padding: 10px 15px;  
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      background-color: #fff;  
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .question-actions-bar button:hover {
+      background-color: #f8f9fa;
+      border-color: #bbb;
+    }
+    .question-actions-bar button#submitBtn {
+        background-color: #22c55e;  
+        color: white;
+        border-color: #22c55e;
+    }
+    .question-actions-bar button#submitBtn:hover {
+        background-color: #16a34a;
+    }
+    .review-actions-bar {  
+        text-align: center;
+        padding: 10px 0 20px 0;  
+    }
+    .review-actions-bar button {
+        padding: 10px 20px;  
+        font-size: 1rem;
+        cursor: pointer;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        margin: 5px;  
+    }
+    .review-actions-bar button:hover {
+        background-color: #0056b3;
+    }
+
+
+    .quiz-controls { /* Footer */
+      justify-content: center;  
+      align-items: center;
+      padding: 10px 20px;  
+      background: #dbeafe;
+      position: fixed;
+      bottom: 0;
+      left: 0;  
+      right: 0;  
+      display: flex;
+      z-index: 100;  
+      box-sizing: border-box;  
+    }
+    .quiz-controls .progress-info {  
+        display: flex;
+        align-items: center;
+        justify-content: space-between;  
+        width: 100%;
+    }
+    
+    #progressText { font-size: 16px; margin: 0 10px 0 0; }
+    /* .choice-button.selected is replaced by .choice-wrapper.selected-wrapper */
+    
+
+    #resultsScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #4a90e2;  
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;  
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .results-card {
+      display: flex;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      overflow: auto;  
+      width: 95%;  
+      max-width: 900px;  
+      max-height: 90vh;  
+      flex-direction: column;  
+    }
+
+    .results-left-panel {
+      flex-shrink: 0;  
+      background: #37474f;  
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      border-top-left-radius: 10px;  
+      border-top-right-radius: 10px;
+      border-bottom-left-radius: 0;
+    }
+
+    .results-right-panel {
+      flex-grow: 1;  
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      border-bottom-left-radius: 10px;  
+      border-bottom-right-radius: 10px;
+      border-top-right-radius: 0;
+    }
+     @media (min-width: 768px) {  
+      .results-card {
+        flex-direction: row;  
+        min-height: 400px;  
+        overflow: hidden;  
+      }
+      .results-left-panel {
+        border-top-right-radius: 0;
+        border-bottom-left-radius: 10px;
+        flex-basis: 300px;  
+      }
+      .results-right-panel {
+        border-top-right-radius: 10px;
+        border-bottom-left-radius: 0;
+      }
+    }
+
+
+    .score-circle {
+      width: 100px;  
+      height: 100px;
+      border-radius: 50%;
+      border: 6px solid #e0e0e0;  
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;  
+      font-weight: bold;
+      color: #4CAF50;  
+      margin-bottom: 15px;  
+      position: relative;
+    }
+
+    .score-circle::before {
+      content: '';
+      position: absolute;
+      top: -6px;  
+      left: -6px;
+      width: calc(100% + 12px);  
+      height: calc(100% + 12px);
+      border-radius: 50%;
+      border: 6px solid transparent;  
+      border-top-color: #4CAF50;  
+      border-right-color: #4CAF50;
+      transform: rotate(-45deg);  
+      box-sizing: border-box;
+    }
+
+    .upload-button {  
+      padding: 12px 25px;  
+      font-size: 16px;  
+      background-color: #4CAF50;  
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;  
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: background-color 0.3s ease;
+    }
+
+    .upload-button:hover {
+      background-color: #45a049;
+    }
+
+    .attention-message {
+      background: white;
+      padding: 15px;  
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-top: 15px;  
+      width: 90%;
+      max-width: 800px;
+      text-align: center;
+      font-size: 14px;  
+      color: #333;
+    }
+
+    #quizContentScrollable {
+      max-height: calc(100vh - 100px);  
+      overflow-y: auto;
+      padding: 10px 15px 0 0;  
+    }
+    
+    #mainQuizLayout {  
+        display: flex;
+        padding-top: 40px;  
+    }
+
+    #sidebar {
+      width: 60px;
+      background: #e3edf8;
+      position: fixed;
+      top: 40px;  
+      bottom: 50px;  
+      overflow-y: auto;  
+      z-index: 50;  
+      padding-top: 10px;  
+      padding-bottom: 10px;
+      transition: width 0.3s ease, opacity 0.3s ease, bottom 0.3s ease;
+    }
+
+    #sidebar::-webkit-scrollbar {
+      width: 0px;  
+      background: transparent;  
+    }
+    #sidebar::-webkit-scrollbar-thumb {
+      background: transparent;  
+    }
+
+    #questionNav {
+      list-style: none;
+      padding: 0;  
+      margin: 0;  
+      text-align: center;
+    }
+    
+    #quizFormContainer {  
+        margin-left: 75px;  
+        flex-grow: 1;
+        padding-right: 15px;  
+        transition: margin-left 0.3s ease;
+    }
+
+
+    .header-bar {  
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #1f2937;
+      color: white;
+      padding: 10px 20px;
+      font-size: 14px;
+      position: fixed;  
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;  
+      box-sizing: border-box;
+    }
+
+    .intro-screen-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #fbbf24;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      flex-direction: column;
+      padding: 15px;  
+      box-sizing: border-box;
+    }
+
+    .intro-card-container {
+      background: white;
+      padding: 20px;  
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      width: 90%;
+      max-width: 450px;  
+    }
+    .intro-card-container h2 {
+        font-size: 1.4rem;  
+        margin-bottom: 0.5em;
+    }
+    .intro-card-container p {
+        font-size: 0.85rem;  
+        margin-bottom: 1em;
+    }
+    .intro-buttons-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+
+    .intro-start-button {
+      /* margin-top: 15px;   */
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #10b981;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+
+    .question-count-select-container {
+      margin-top: 15px;  
+      margin-bottom: 15px; /* Added margin for spacing */
+    }
+
+    .question-count-label {
+      font-size: 1rem;  
+      margin-right: 8px;
+    }
+
+    .question-count-select {
+      padding: 8px 10px;  
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 1rem;  
+    }
+    
+    #homeBtn {
+      position: fixed;
+      bottom: 80px; 
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      background-color: #0d6efd;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      display: none; /* Hidden by default */
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      cursor: pointer;
+      z-index: 1001;
+      transition: background-color 0.3s ease;
+    }
+    #homeBtn:hover {
+      background-color: #0b5ed7;
+    }
+
+    #submitScreen {
+      display: none;  
+      position: fixed;  
+      top: 0;  
+      left: 0;  
+      width: 100%;  
+      height: 100%;  
+      background: rgba(0,0,0,0.6);  
+      z-index: 9998;  
+      align-items: center;
+      justify-content: center;
+      padding: 15px;
+      box-sizing: border-box;
+    }
+    .submit-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.25);  
+      width: 100%;
+      max-width: 550px;  
+      display: flex;
+      flex-direction: column;  
+    }
+    .submit-panel {
+      padding: 20px;
+      text-align: center;
+      flex: 1;
+    }
+    .submit-panel-left {
+      background: #f0f4f8;  
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;  
+    }
+    .submit-panel-right {
+      background: #ffffff;
+      border-bottom-left-radius: 10px;
+      border-bottom-right-radius: 10px;
+    }
+     .submit-panel button {
+        padding: 12px 22px;  
+        font-size: 1rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 15px;
+        transition: background-color 0.2s ease;
+    }
+    .submit-go-back-btn { background: #4b5563; color: white; }  
+    .submit-go-back-btn:hover { background: #374151; }
+    .submit-confirm-btn { background: #22c55e; color: white; }  
+    .submit-confirm-btn:hover { background: #16a34a; }
+
+
+    @media (min-width: 640px) {  
+        .submit-card {
+            flex-direction: row;  
+        }
+        .submit-panel-left {
+            border-top-right-radius: 0;
+            border-bottom-left-radius: 10px;
+        }
+        .submit-panel-right {
+            border-top-right-radius: 10px;  
+            border-bottom-left-radius: 0;  
+            border-bottom-right-radius: 10px;  
+        }
+    }
+    #confirmSubmitMessage {
+        color: red;
+        font-size: 0.9em;
+        margin-top: 10px;
+        min-height: 1.2em;  
+    }
+
+    @media (max-width: 767px) {
+        body {
+            padding-bottom: 60px;  
+        }
+        #sidebar {
+            display: none;  
+        }
+        #quizFormContainer {
+            margin-left: 15px;  
+            padding-right: 15px;
+        }
+        .choice-wrapper {  
+            padding: 10px;
+        }
+        .choice-button-main-area {  
+            font-size: 1rem;
+        }
+         .choice-button-main-area input[type="radio"] {
+            margin-right: 8px;
+        }
+        .toggle-visibility-btn {
+            padding: 0 2px;  
+        }
+        .quiz-controls {  
+            padding: 8px 10px;  
+        }
+        .quiz-controls .progress-info span {
+             font-size: 0.85rem;
+        }
+        
+         .header-bar {
+            padding: 10px 15px;
+        }
+        .header-bar div {
+            font-size: 0.85rem;  
+        }
+        #progressText {
+            font-size: 0.9rem;
+        }
+        .question-header { font-size: 1.1rem; }
+        .question-text { font-size: 0.95rem; }
+
+        #homeBtn {
+            bottom: 70px;
+            right: 15px;
+            width: 45px;
+            height: 45px;
+        }
+
+        .results-card { max-height: 85vh; }  
+        .score-circle { width: 90px; height: 90px; font-size: 28px; border-width: 5px; }
+        .score-circle::before { top: -5px; left: -5px; width: calc(100% + 10px); height: calc(100% + 10px); border-width: 5px;}
+        .upload-button { padding: 10px 20px; font-size: 1rem; }
+        .attention-message { font-size: 0.85rem; padding: 10px; }
+
+        .question-actions-bar button {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            flex-grow: 1;  
+            min-width: 80px;  
+        }
+         .question-actions-bar {
+            gap: 5px;  
+         }
+    }
+
+    @media (max-width: 480px) {  
+        .question-actions-bar button {
+            font-size: 0.85rem;
+        }
+        .intro-card-container h2 { font-size: 1.2rem; }
+        .intro-card-container p { font-size: 0.8rem; }
+        .question-count-label, .question-count-select { font-size: 0.9rem; }
+    }
+
+  </style>
+</head>
+<body>
+  <div id="introScreen" class="intro-screen-container">
+    <div class="intro-card-container">
+      <svg width="120" height="120" viewBox="0 0 200 200" style="margin-bottom: 15px; margin-left: auto; margin-right: auto;">
+        <defs>
+          <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#0284c7;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#38bdf8;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <path d="M 20 150 L 50 20 L 90 20 L 90 120 L 110 120 L 110 20 L 150 20 L 180 150 L 150 150 L 130 90 L 70 90 L 50 150 Z" fill="url(#grad1)"></path>
+        <rect x="55" y="25" width="30" height="90" fill="#1e293b" transform="skewX(-10)"></rect>
+        <rect x="115" y="25" width="30" height="90" fill="#0ea5e9" transform="skewX(-10)"></rect>
+        <text x="100" y="180" font-family="Arial, sans-serif" font-size="28" fill="#37474f" text-anchor="middle" font-weight="bold">BKRDI-FY</text>
+        <text x="100" y="200" font-family="Arial, sans-serif" font-size="14" fill="#6b7280" text-anchor="middle" font-weight="bold">TEST & STUDY</text>
+      </svg>
+      <h2>Do Not Start Until Instructed</h2>
+      <p>Activity conducted during this exam might actually matter.</p>
+      
+      <div class="question-count-select-container">
+        <label for="questionCount" class="question-count-label">Number of Questions:</label>
+        <select id="questionCount" class="question-count-select">
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <!-- "All Questions" option will be added here by JavaScript -->
+        </select>
+      </div>
+
+      <div class="intro-buttons-container">
+        <button onclick="startExam()" class="intro-start-button">Start Exam</button>
+        <button onclick="startStudy()" class="intro-start-button" style="background-color: #f59e0b;">Answer & Study</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="mainQuizContainer" style="display:none;">  
+    <div class="header-bar">  
+      <div><strong>Class 45</strong></div>
+      <div id="mainHeaderTitle">CJF</div> 
+      <div><strong id="timer">30:00</strong></div>
+    </div>
+
+    <div id="mainQuizLayout">
+      <nav id="sidebar">
+        <ul id="questionNav"></ul>
+      </nav>
+      <div id="quizFormContainer">
+        <div id="quizContentScrollable">
+          <div id="progress" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-top:10px;">
+            <button type="button" onclick="flagQuestion()" id="flagButton" style="font-size: 14px; padding: 5px 10px;">🚩 Flag</button>
+            <span id="progressText"></span>
+          </div>
+          <div class="review-actions-bar" id="reviewActionsTop" style="display:none;"> <button onclick="returnToHome()">Retake Test</button>
+          </div>
+          <form id="quizForm"></form>
+          <div class="question-actions-bar">
+            <button id="prevBtn" type="button" onclick="prevQuestion()">⟵ Previous</button>
+            <button id="skipBtn" type="button" onclick="skipQuestion()">⏭ Skip</button>
+            <button id="submitBtn" type="button" onclick="showSubmitScreen()" style="display: none;">✅ Submit</button>
+            <button id="nextBtn" type="button" onclick="nextQuestion()">Next ⟶</button>
+          </div>
+          <div id="studyEndActions" class="review-actions-bar" style="display:none;">
+            <button id="nextSetBtn" onclick="startNextStudySet()">Next Set of Questions</button>
+            <button id="retryIncorrectBtn" onclick="retryIncorrectQuestions()">Retry Incorrect Questions</button>
+            <button onclick="returnToHome()">Return to Home</button>
+          </div>
+          <div class="review-actions-bar" id="reviewActionsBottom" style="display:none;"> <button onclick="returnToHome()">Retake Test</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="quiz-controls">  
+      <div class="progress-info">
+        <span id="progressTextBottom">Question 1 of 60</span>
+        <span style='font-size: 0.8em;'>BKRDIFY Version 2.1.87</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="submitScreen">  
+    <div class="submit-card">
+      <div class="submit-panel submit-panel-left">
+        <h2>Return to Exam</h2>
+        <p>By clicking this button, you will be directed back to the exam.</p>
+        <button onclick="hideSubmitScreen()" class="submit-go-back-btn">Go Back</button>
+      </div>
+      <div class="submit-panel submit-panel-right">
+        <h2>Exit Exam</h2>
+        <p>Click 'Submit Exam' to upload and close this exam file.</p>
+        <label style="margin: 20px 0; display: flex; align-items: center; justify-content: center; font-size: 14px;">
+          <input type="checkbox" id="confirmSubmit" style="margin-right: 10px; transform: scale(1.5);">
+          I confirm that I have completed my exam.
+        </label>
+        <button onclick="confirmAndSubmit()" class="submit-confirm-btn">Submit Exam</button>
+        <div id="confirmSubmitMessage"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="resultsScreen" style="display: none;">
+    <div class="results-card">
+      <div class="results-left-panel">
+        <svg width="100" height="100" viewBox="0 0 200 200">
+            <path d="M 20 150 L 50 20 L 90 20 L 90 120 L 110 120 L 110 20 L 150 20 L 180 150 L 150 150 L 130 90 L 70 90 L 50 150 Z" fill="#0ea5e9"></path>
+            <rect x="55" y="25" width="30" height="90" fill="#1e293b" transform="skewX(-10)"></rect>
+            <rect x="115" y="25" width="30" height="90" fill="#38bdf8" transform="skewX(-10)"></rect>
+            <text x="100" y="180" font-family="Arial, sans-serif" font-size="28" fill="#fff" text-anchor="middle" font-weight="bold">BKRDI-FY</text>
+        </svg>
+      </div>
+      <div class="results-right-panel">
+        <h3 style="font-size: 1.3rem; margin-bottom: 10px;">Preliminary Results</h3> <p style="font-size: 1rem; margin-bottom: 15px;">Objective Question Score *</p> <div class="score-circle">
+          <span id="finalScore">75%</span>
+        </div>
+        <p style="font-size: 0.8rem; color: #555; margin-top: 10px;">This is the score for the objective questions only and I'm not sure what objective means</p> <p style="font-size: 0.8rem; color: #555; margin-top: 5px;">Test ID: <span id="testIdDisplay"></span></p> <button class="upload-button" onclick="showReviewPage()">Review</button>
+      </div>
+    </div>
+    <div class="attention-message">
+      <p><strong>ATTENTION:</strong></p>
+      <p>You will be informed of your final score, which is this score, so yeah</p>
+    </div>
+  </div>
+
+  <button id="homeBtn" onclick="returnToHome()" title="Return to Home Screen" style="display: none;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+  </button>
+
+  <script>
+// Function to shuffle an array (Fisher-Yates algorithm)
+function shuffleArray(array) {
+  let newArray = [...array]; // Work on a copy
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}
+
+const newQuestionsFromUser = [ 
+{"q":"What are the primary duties of a correctional officer as stated at the beginning of the lesson?","c":["The care, custody, and control of inmates.","Rehabilitation and counseling of inmates.","Investigation of crimes committed within the facility.","Facility maintenance and sanitation only."],"a":"0","e":"Your primary duties as a correctional officer are the care, custody, and control of inmates. Page 157"},
+{"q":"What is 'observation' defined as in a correctional facility?","c":["The act of listening to inmate phone calls.","The formal process of counting inmates.","Being aware of your surroundings and paying close attention to details.","Using surveillance cameras to watch inmates."],"a":"2","e":"Observation is being aware of your surroundings and paying close attention to details. Page 157"},
+{"q":"Monitoring inmates at all times, such as when they enter or exit a housing area, primarily protects what?","c":["The facility's budget.","The officer's personal schedule.","Your personal safety and security.","The privacy of the inmates."],"a":"2","e":"Protect your personal safety and security by monitoring inmates at all times, such as when they enter or exit a housing area. Page 157"},
+{"q":"What is the first stage of observation for monitoring inmate behavior?","c":["Using surveillance equipment.","Reviewing inmate disciplinary records.","Conducting a formal count.","Monitoring inmate behavior using the primary senses of seeing, hearing, touching, and smelling."],"a":"3","e":"The first stage of observation is monitoring inmate behavior using the primary senses of seeing, hearing, touching, and smelling. Page 157"},
+{"q":"When walking your rounds, which sense would you use to notice changes in regular facility odors, such as the smell of smoke?","c":["Hearing","Sight","Touch","Smelling"],"a":"3","e":"When you walk your rounds... notice any changes in the regular odors of the institution, such as smelling smoke. Page 157"},
+{"q":"Which of the following is an example of a change in inmate behavior an officer should watch for?","c":["Unauthorized dress.","Sexual comments, assaults, or escape attempts.","Hearing a change in the noise level or observing improper contact.","(All answers listed)"],"a":"3","e":"Changes in inmate behavior could include hearing a change in the noise level or observing improper contact between inmates or staff or a violation of inmate conduct, such as unauthorized dress, whistling, sexual comments, assaults, and escape attempts. Page 157"},
+{"q":"What should an officer do if they observe inmates gathering in a group that prevents the officer from seeing what is going on?","c":["Immediately deploy chemical agents.","Note it in the logbook and observe from a distance.","Disperse the group by making their presence known and giving verbal commands.","Wait for the group to disperse on its own."],"a":"2","e":"Inmates gathering in a group that keeps you from seeing what is going on could be dangerous. Disperse the group by making your presence known and giving the group verbal commands, such as telling them to break up and move on. Page 158"},
+{"q":"Which answer is an essential component of effective observation for a correctional officer?","c":["The ability to read lips.","Having a loud command voice.","Listening skills.","Command presence."],"a":"2","e":"Listening skills are an essential component of effective observation. Page 158"},
+{"q":"What should an officer listen for in inmate communications to detect potential issues?","c":["Only for compliments about the facility.","Only for conversations spoken in English.","Key words, slang, or changes in voice inflection.","Discussions about sports or television shows."],"a":"2","e":"Listen to inmate communications for key words, slang, or changes in voice inflection. Page 158"},
+{"q":"Which of the following unusual noises during sleeping hours requires investigation by an officer?","c":["Loud banging or scraping noises from a cell.","Screaming or crying.","Repeated flushing of toilets.","(All answers listed)"],"a":"3","e":"For example, you must investigate any loud banging or scraping noises coming from a cell, screaming, crying, or repeated flushing of toilets. Page 158"},
+{"q":"Loud banging or repeated flushing of toilets could be signs of what potential problems?","c":["A possible fight or sexual assault.","The sharpening of a shank.","An escape attempt.","(All answers listed)"],"a":"3","e":"These sounds could be signs of a possible fight, sexual assault, the sharpening of a shank, or an escape attempt. Page 158"},
+{"q":"How does an officer use their sense of touch to ensure the facility is secured?","c":["By feeling the temperature of the walls.","By checking if doors are closed properly by testing the knobs or handles.","By touching inmates to check for fever.","By feeling the texture of the flooring."],"a":"1","e":"While you are making your rounds, check to see if doors are closed properly by testing the knobs or handles. Page 158"},
+{"q":"What should an officer be able to recognize using their sense of smell?","c":["The specific brand of industrial cleaner used.","The scents that do not belong, such as certain drugs or metal shavings from an inmate fashioning a shank.","Which inmates have recently showered.","The daily menu from the kitchen."],"a":"1","e":"Be able to recognize the scents that do not belong in your everyday world, such as the smell of certain drugs, or of metal or wood shavings from an inmate fashioning a shank. Page 158"},
+{"q":"What could suspicious inmate activities like faking an injury or slamming a door be an attempt to do?","c":["Get the officer's attention for a non-urgent matter.","Express general frustration with their confinement.","Distract you to commit a violation.","Signal to an inmate in another part of the facility."],"a":"2","e":"Suspicious activities or behaviors, such as slamming a door or locker, yelling, fighting, or faking an injury could be an attempt to distract you to commit a violation. Page 158"},
+{"q":"If an officer assesses that a suspicious activity poses a threat, what are the immediate actions they should take?","c":["Attempt to handle the threat alone without notification.","Contact a supervisor, take required action, and document the situation after it is safely resolved.","Make a note in a personal log to discuss at the end of the shift.","Ask the inmate directly what their intentions are before taking any other action."],"a":"1","e":"If there is a threat, immediately contact a supervisor and take required action. Remember to document the situation after it has been resolved safely. Page 158"},
+{"q":"What personal issues could cause negative changes in an inmate's behavior within the housing area?","c":["Receiving good news from family.","Getting a desirable work assignment.","Divorce, notification of a death in the family, loss of a work assignment, or receipt of charges.","Winning a recreational sports game."],"a":"2","e":"These changes could be the result of personal stress, such as divorce, notification of a death in the family, loss of a work assignment, or receipt of charges. Page 159"},
+{"q":"Which of the following is NOT listed as an indicator of a possible escape attempt?","c":["An inaccurate count.","An inmate hoarding excessive sheets or towels.","An inmate requesting to be moved to a different cell.","Evidence of digging through walls or floors."],"a":"2","e":"Indicators of a possible escape include an inaccurate count... damaged toilets... evidence of digging through walls or floors... inmates hoarding excessive sheets or towels... An inmate requesting to be transferred is listed as an indicator of a potential disturbance, not specifically an escape. Page 159, 160"},
+{"q":"How can an inmate's uniform color be useful to an officer?","c":["It only indicates the inmate's favorite color.","It has no security value and is for appearance only.","It may reveal the inmate's classification, work assignment, or housing location.","It primarily indicates the inmate's length of sentence."],"a":"2","e":"The color of the uniform may reveal the inmate's classification, work assignment, or housing location. Page 159"},
+{"q":"Why is it important for officers to ensure inmates follow hygiene standards and clean their living areas?","c":["To teach inmates housekeeping skills.","To minimize health hazards and to prevent conflict that can arise from poor hygiene.","So the facility is always ready for an unannounced inspection.","It is primarily the responsibility of the janitorial staff, not officers."],"a":"1","e":"Make sure that inmates clean their living areas and practice personal hygiene to minimize health hazards. An inmate practicing poor personal hygiene can draw unwanted attention, causing conflict between inmates. Page 159"},
+{"q":"What might an inmate modifying their uniform, such as by rolling up a pant leg or tying shoes in a specific pattern, indicate?","c":["A personal fashion statement with no security implications.","A sign of a security threat group affiliation.","That the uniform is ill-fitting.","The inmate is trying to stay cool."],"a":"1","e":"Inmates may modify their uniforms by rolling up a pant leg, tying their shoes in a specific pattern, writing graffiti on clothes, and wearing clothes backward or inside out. Inmates dressed according to agency policy make it easier to see concealed contraband or identify signs of security threat groups. Page 159"},
+{"q":"What could an inmate wearing seasonally inappropriate clothing be an indicator of?","c":["They have a high tolerance for heat or cold.","They are concealing contraband.","They are protesting the facility's dress code.","Their seasonal clothing has not been issued yet."],"a":"1","e":"An inmate's appearance can also indicate a potential security risk; for example, an inmate wearing seasonally inappropriate clothing may be concealing contraband. Page 159"},
+{"q":"What are 'blind spots' in a correctional facility?","c":["Areas with no video surveillance.","Locations within a facility that have limited visibility, like corners, closets, and stairwells.","Any area where an officer cannot see an inmate's hands.","Designated quiet zones for inmates."],"a":"1","e":"Correctional facilities have blind spots, which are locations within a facility that have limited visibility, such as corners, closets, doorways, the rear of inmate dorms, and stairwells. Page 159"},
+{"q":"How does surveillance equipment such as video cameras and convex wall mirrors help officers?","c":["It reduces blind spots.","It helps limit the introduction of contraband.","It helps officers observe illegal activities and respond to incidents safely and quickly.","(All answers listed)"],"a":"3","e":"Surveillance equipment, such as video cameras, lighting, and convex wall mirrors, help you monitor daily operations within the facility. This equipment reduces blind spots and helps officers limit the introduction of contraband, observe illegal activities, and respond to incidents safely and quickly. Page 159"},
+{"q":"What is an 'unusual occurrence' in a correctional facility?","c":["Any scheduled activity, such as mealtime or sick call.","An incident that is out of the ordinary and disrupts the normal operation of the facility.","A positive interaction between an officer and an inmate.","An unusual shift change between officers."],"a":"1","e":"An unusual occurrence is an incident that is out of the ordinary and disrupts the normal operation of the facility and routine daily activities. Page 160"},
+{"q":"Which of the following would be considered an unusual occurrence that negatively affects facility security?","c":["A scheduled fire drill.","An inmate strike (refusal to eat or work).","Regularly scheduled visitation.","An inmate receiving mail."],"a":"1","e":"These incidents negatively affect the security of the facility, and include events such as: ... inmate strikes (refusal to eat or work)... Page 160"},
+{"q":"Which of these events are listed as unusual occurrences in the provided table?","c":["Suicide or attempted suicide.","Riots or hostage situations.","Lost or missing equipment, particularly keys.","(All answers listed)"],"a":"3","e":"The table lists suicide or attempted suicide, riots, hostage situations, and lost or missing equipment, particularly keys, as unusual occurrences. Page 160"},
+{"q":"Why is it important to handle minor incidents immediately?","c":["To avoid inmates taking matters into their own hands, which could lead to escalation.","To show other inmates that you are in charge.","Because minor incidents are easier to document.","To prevent inmates from filing grievances."],"a":"0","e":"Handle minor incidents immediately to avoid inmates taking matters into their own hands. When inmates seek revenge, sympathetic participants could join in the conflict, and a small, containable incident can quickly grow out of control. Page 160"},
+{"q":"Which of the following is NOT listed as an indicator of a potential disturbance?","c":["Inmates gathering in a particular area.","An increase in requests for protection or 'check-in'.","An inmate requesting to speak with the chaplain.","Inmates storing food or warning staff to stay home on particular days."],"a":"2","e":"Indicators include when inmates gather in a particular area, increase in requests for protection, store food, and warn staff to stay home. Requesting to see a chaplain is a referral need, not specifically an indicator of a disturbance. Page 160, 161"},
+{"q":"What could an increase or decrease in the normal activity or sounds of the facility indicate?","c":["A change in the weather outside.","A riot or escape is likely.","The inmates are tired.","A new television show is on."],"a":"1","e":"An increase or decrease in the normal activity or sounds of the facility may indicate a riot or escape is likely. Page 161"},
+{"q":"How can an officer proactively intervene to prevent disturbances?","c":["By ignoring minor changes in behavior to avoid confrontation.","By being aware of surroundings and changes in inmate behaviors, dress, and social groupings.","By staying in the control room and relying only on cameras.","By limiting conversation with all inmates."],"a":"1","e":"Proactive intervention begins with being aware of surroundings and changes in inmate behaviors, dress, and social groupings. Page 161"},
+{"q":"Why might an officer avoid long conversations with inmates?","c":["To maintain command presence.","Because it could be a diversion for inappropriate behavior happening in another area.","Due to a lack of time during a shift.","To prevent becoming a dirty C/O."],"a":"1","e":"Also avoid the distraction of long conversations, as this could be a diversion for inappropriate behavior in another area. Page 161"},
+{"q":"What tools are used by officers to document facility operations, daily activities, and unusual occurrences?","c":["Personal diaries and notebooks only.","Word of mouth reports to the next shift.","Logs, report forms, and video recordings.","Social media posts."],"a":"2","e":"Officers use logs, report forms, and video recordings to document facility operations, daily activities, and unusual occurrences. Page 162"},
+{"q":"Which of the following are examples of usual occurrences that need to be documented?","c":["Meals and sick call.","Security checks and workgroup assignments.","Court appearances and visitation.","(All answers listed)"],"a":"3","e":"The table lists meals, sick call, security checks, workgroup assignments, court appearances, and visitation as examples of occurrences that need to be documented. Page 162"},
+{"q":"Why is it particularly important to document inmate movement?","c":["To create a detailed timeline for every inmate's day.","This documentation helps verify counts and work assignments.","To track which inmates are friends with each other.","It is only necessary for high-risk inmates."],"a":"1","e":"It is particularly important to document inmate movement... This documentation helps verify counts and work assignments. Page 162"},
+{"q":"An officer observes an inmate hoarding commissary items. What could this behavior indicate?","c":["The inmate is preparing to share with others.","The inmate is simply hungry.","The inmate expects being placed in lockdown.","The inmate plans to sell the items at a profit."],"a":"2","e":"Hoarding items from the commissary may indicate an inmate expects being placed in lockdown. Page 161"},
+{"q":"When inmates enter or exit a housing area, their identification is compared with what document?","c":["Daily log.","The daily meal roster.","The housing roster.","FDIC roster."],"a":"2","e":"When inmates enter or exit the housing area, identify each inmate by photo ID, armband, or uniform color. Compare the identification method with the housing roster. Page 159"},
+{"q":"Which of these is NOT listed as one of the four primary senses for the first stage of observation?","c":["Seeing","Hearing","Tasting","Smelling"],"a":"2","e":"The first stage of observation is monitoring inmate behavior using the primary senses of seeing, hearing, touching, and smelling. Page 157"},
+{"q":"What is the primary function of written reports about facility operations?","c":["To provide reading material for inmates.","To keep the facility staff informed about developments and problem areas.","To practice report-writing skills.","To create a record for archival purposes only."],"a":"1","e":"Written reports keep the facility staff informed about developments and problem areas. Page 162"},
+{"q":"Which of the following is an example of an inmate modifying their uniform that could indicate a security threat group affiliation?","c":["Wearing a clean, pressed uniform.","Tying their shoes in a specific pattern or writing graffiti on clothes.","Requesting a different size uniform.","Wearing a standard-issue belt."],"a":"1","e":"Inmates may modify their uniforms by rolling up a pant leg, tying their shoes in a specific pattern, writing graffiti on clothes... Inmates dressed according to agency policy make it easier to see... signs of security threat groups. Page 159"},
+{"q":"An officer notices an increase in inmates requesting 'check-in' or protection. What could this indicate?","c":["The inmates are getting along better than usual.","There is a widespread fear of being attacked, possibly indicating a potential disturbance.","The officer is doing a good job of building rapport.","The inmates are attempting to get moved to better housing."],"a":"1","e":"An increase in requests for protection or \"check-in\" may indicate fear of being attacked. This is listed as an indicator of a potential disturbance. Page 161"},
+{"q":"Which of the following is a physical change in an inmate that could indicate the need for a referral?","c":["Weight loss, a rash, or a severe cough.","A new tattoo or hairstyle.","Increased muscle mass from working out.","A change in uniform."],"a":"0","e":"Obvious signs or changes to observe in an inmate may include difficulty in walking, low energy, screaming, crying, weight loss, a rash, or a severe cough. Page 164"},
+{"q":"What must an officer make sure that inmates follow established housing standards and schedules for what specific activities?","c":["Recreational time and television watching.","Phone calls and mail.","Showering and uniform guidelines.","Educational programs and work assignments."],"a":"2","e":"Make sure that inmates follow the established housing standards, showering schedules, and uniform guidelines. Page 159"},
+{"q":"If an inmate has altered their physical appearance with tattoos or body piercings, how should this be handled?","c":["It should be ignored as it is a personal choice.","The officer should compliment the new look.","These security violations must be addressed and documented.","The inmate should be immediately placed in isolation."],"a":"2","e":"Inmates may alter their physical appearance with tattoos, different hairstyles, and body piercings. These security violations must be addressed and documented. Page 159"},
+{"q":"What might the smell of metal or wood shavings in an inmate's area indicate?","c":["The inmate is participating in a facility-approved hobby class.","The inmate is fashioning a shank.","The cell is in need of cleaning.","There is an issue with the ventilation system."],"a":"1","e":"Be able to recognize the scents that do not belong in your everyday world, such as the smell of certain drugs, or of metal or wood shavings from an inmate fashioning a shank. Page 158"},
+{"q":"Why should an officer be alert even when noise levels increase for normal reasons, like inmates watching sporting events?","c":["To ensure the TV volume is not too loud.","Because they should remain alert for signs of a threat that could be masked by the noise.","To make sure all inmates are participating in the activity.","This is not necessary; increased noise for normal activities is not a concern."],"a":"1","e":"It is normal for noise levels to increase when inmates are watching sporting events or participating in activities, but you should remain alert for signs of a threat. Page 158"},
+{"q":"What is the primary reason an officer might check door knobs or handles while making rounds?","c":["To test their grip strength.","To ensure doors are closed properly as a security measure.","To check for cleanliness.","To see if they need maintenance or oiling."],"a":"1","e":"While you are making your rounds, check to see if doors are closed properly by testing the knobs or handles. Page 158"},
+{"q":"If an officer finds loose security bars, what could this be an indicator of?","c":["Poor facility construction.","A possible escape attempt.","Normal wear and tear that can be ignored.","The inmate is trying to improve ventilation."],"a":"1","e":"Indicators of a possible escape include... loose security bars. Page 159"},
+{"q":"What is the purpose of documenting both usual and unusual occurrences?","c":["To provide a record for safety, security, and accountability.","To keep facility staff informed about developments and problem areas.","To help verify counts and work assignments.","(All answers listed)"],"a":"3","e":"Completing accurate documentation is essential for safety, security, and accountability. Written reports keep the facility staff informed about developments and problem areas. This documentation helps verify counts and work assignments. Page 162"},
+{"q":"Which of the following would NOT be considered a usual or unusual occurrence that needs to be documented according to the provided table?","c":["Meals","Fights","Officer shift change briefings","Bomb threats"],"a":"2","e":"The table lists meals, fights, and bomb threats as occurrences to be documented. Officer shift change briefings, while a standard procedure, are not explicitly listed in this table of occurrences. Page 162"},
+{"q":"Which of the following are listed as referral services available to inmates?","c":["Medical, dental, and psychiatric.","Chaplain and substance abuse services.","Classification (housing/work assignment) and educational/legal services.","(All answers listed)"],"a":"3","e":"Inmates may be referred to the following providers: medical, dental, psychiatric, chaplain, substance abuse services, classification... additional services that may be provided, such as educational or legal services. Page 163"},
+{"q":"What does being familiar with the referral process allow for?","c":["The officer to diagnose the inmate's condition.","A prompt response, needed resources for the inmate, and safety and security of the facility.","The ability to override a supervisor's decision.","Inmates to have unlimited access to all services."],"a":"1","e":"Being familiar with the referral process will allow for a prompt response, needed resources for the inmate, and safety and security of the facility. Page 163"},
+{"q":"What may indicate the need for a referral for an inmate?","c":["Consistent and stable behavior.","Sudden or unusual changes in an inmate's behavior.","An inmate's request for extra food.","An inmate performing their work assignments correctly."],"a":"1","e":"Sudden or unusual changes in an inmate's behavior may indicate the need for a referral. Page 163"},
+{"q":"What kind of information can be used to justify a referral?","c":["Statements made by the inmate about their distress.","Behavior observed by the officer.","Information about a personal crisis the inmate is facing.","(All answers listed)"],"a":"3","e":"Information used for a referral may include statements made by the inmate, observed behavior, or another reason, such as a personal crisis. Page 164"},
+{"q":"Which of the following are examples of obvious physical signs or changes that may require a referral?","c":["An inmate having a positive demeanor and high energy.","Difficulty in walking, low energy, screaming, crying, weight loss, a rash, or a severe cough.","An inmate interacting normally with other inmates.","An inmate maintaining good personal hygiene."],"a":"1","e":"Obvious signs or changes to observe in an inmate may include difficulty in walking, low energy, screaming, crying, weight loss, a rash, or a severe cough. Page 164"},
+{"q":"Which of these behavioral changes may indicate an inmate is in distress?","c":["Saving their commissary items for later.","Actively participating in social activities.","Giving away belongings, wanting to be alone, or not eating.","Maintaining a clean and orderly cell."],"a":"2","e":"Behavioral changes include giving away belongings, wanting to be alone, not eating, acting strangely, having unusual interactions with others, being restless, or showing signs of poor personal hygiene. Page 164"},
+{"q":"What type of symptoms may require more interaction to determine the severity of the need for a referral?","c":["Physical symptoms like a rash or cough.","Psychological symptoms like abrupt changes in demeanor, mood swings, or depression.","Requests for a different work assignment.","Complaints about the food quality."],"a":"1","e":"Psychological symptoms may require more interaction to determine the severity of the need. These symptoms may include abrupt changes in demeanor, mood swings, depression, or suicidal thoughts. Page 164"},
+{"q":"How should an officer treat an inmate's direct request for a referral?","c":["With suspicion, as it is likely an attempt to manipulate the system.","Tell them to wait until a scheduled sick call.","In the same way as if the officer had observed the need for a referral themselves.","By telling them to submit a formal written grievance."],"a":"2","e":"Inmates may request a referral for services; treat this request in the same way as if you observed the need. Page 164"},
+{"q":"Besides direct observation or inmate requests, how else might an officer discover an inmate needs referral services?","c":["Reports of strange behavior from staff, family members, or other inmates.","Finding suicide notes or other evidence during a cell search.","The inmate suddenly becoming non-communicative.","Both 'Reports of strange behavior from staff, family members, or other inmates.' and 'Finding suicide notes or other evidence during a cell search.' are correct."],"a":"3","e":"Staff, friends, family members, or other inmates may report strange inmate behavior. Cell searches may also reveal suicide notes or other evidence that an inmate needs referral services. Page 164"},
+{"q":"An officer's decision for an inmate referral should be based on what?","c":["The inmate's criminal history.","The officer's personal feelings about the inmate.","Information obtained and knowledge of the facility's available services.","The time of day and staffing levels."],"a":"2","e":"Base your decision for an inmate referral on information you obtain and your knowledge of the facility's available services. Page 164"},
+{"q":"If an officer observes an inmate exhibiting bizarre behavior, what is the most appropriate referral?","c":["A medical referral.","A referral to the chaplain.","A psychological referral.","A classification referral for a housing change."],"a":"2","e":"For example, if you observe bizarre behavior, you should make a psychological referral. Illnesses and injuries require a medical referral. Page 164"},
+{"q":"When relaying information to a service provider, what kind of language should an officer use?","c":["Generalizations like 'acting weird'.","The officer's personal opinion of the inmate's motive.","Specific language describing actions, such as 'the inmate was talking to the wall'.","Only yes or no answers to the provider's questions."],"a":"2","e":"Statements such as 'acting weird' may not be helpful; instead, use more specific language such as 'the inmate was talking to the wall' or the inmate was 'unresponsive and staring off into space.' Page 164"},
+{"q":"Which of the following is NOT one of the basic steps listed for making a referral?","c":["Identify the need for a referral.","Interview the inmate, staff, or others.","Obtain written consent from the inmate for the referral.","Contact service providers."],"a":"2","e":"The basic steps listed are: Identify the need, Interview the inmate/staff, Contact service providers, Request an escort, Make the referral, and Document the incident. Obtaining written consent is not listed as one of these basic steps. Page 164-165"},
+{"q":"Once an officer determines the need for a referral, what is their primary responsibility until the inmate is in the care of the service provider?","c":["To go about their normal duties and wait for the provider to arrive.","To keep the inmate under close observation and take necessary action to prevent harm.","To get a detailed written statement from the inmate.","To search the inmate's cell for additional evidence."],"a":"1","e":"Once you determine the need for a referral, keep the inmate under close observation. Until the inmate is in the care of the service provider, you are responsible for taking necessary action so that no harm comes to the inmate or anyone else. Page 165"},
+{"q":"What potential threat should an officer be cautious of when responding to an inmate in distress?","c":["The inmate might request to see their family.","The inmate could pretend medical distress to cause a distraction for another purpose.","The inmate might file a grievance about the response time.","The officer might be required to work overtime."],"a":"1","e":"Be cautious; an inmate could pretend medical distress to cause a distraction. Page 165"},
+{"q":"What should an officer always do when an inmate reports or displays medical or psychological distress?","c":["Always respond.","Only respond if the report comes from medical staff.","Wait for a supervisor's approval before responding.","First check the inmate's disciplinary history."],"a":"0","e":"Always respond when an inmate reports or displays medical or psychological distress. Page 165"},
+{"q":"Who typically coordinates the movement of inmates who have received a referral inside a correctional facility?","c":["The service provider directly.","The inmate's family.","The control room or a supervisor.","The officer who made the referral."],"a":"2","e":"The control room or a supervisor will coordinate movement of inmates who have received a referral inside a correctional facility. Page 165"},
+{"q":"What security considerations are mentioned for escorting an inmate who has received a referral?","c":["The inmate's classification level.","The types of restraints to be used.","The number of officers needed for the escort.","(All answers listed)"],"a":"3","e":"When an escort is necessary, security considerations before movement include the inmate's classification level, types of restraints used, and number of officers needed. Page 165"},
+{"q":"After an escorted inmate arrives at their destination (e.g., medical), what must the officer do?","c":["Immediately return to their post.","Wait for the inmate's appointment to finish.","Notify the control room or supervisor that the movement is completed.","Fill out a new referral form."],"a":"2","e":"When the inmate arrives at the destination, notify the control room or supervisor that the movement of the inmate is completed. Page 165"},
+{"q":"How is information about an inmate's referral and follow-up requirements usually communicated to other shifts?","c":["It is not shared between shifts.","Through informal conversation only.","Verbally or through a daily log.","By sending a memo to the warden."],"a":"2","e":"Any time an inmate has been referred, communicate with other appropriate staff... communication is usually passed along verbally or through a daily log. Share details of the referral, follow-up requirements, and assessment with other shifts. Page 165"},
+{"q":"What information is typically included in the documentation for an inmate referral?","c":["The officer's opinion on the inmate's chances of rehabilitation.","The cost of the requested service.","A narrative report addressing the need for the referral, the inmate's identification, and the service provider.","A list of the inmate's previous rule violations."],"a":"2","e":"Typically, this documentation is a narrative report that addresses the need for the referral, the proper identification of the inmate referred, and the service provider. Page 165"},
+{"q":"How is 'discipline' defined in a correctional facility?","c":["A form of physical punishment to deter future violations.","The enforcement of a penalty for a violation of established rules, used to ensure compliance and obedience.","A process reserved only for inmates who commit new criminal acts.","The act of verbally counseling an inmate without any formal penalty."],"a":"1","e":"Discipline is the enforcement of a penalty for a violation of established rules and is used to ensure compliance and obedience to established rules. Page 166"},
+{"q":"What is the primary goal of discipline in a correctional setting?","c":["To maintain order and ensure the safety and security of the facility.","To increase the length of an inmate's sentence.","To provide a basis for civil lawsuits against inmates.","To ensure all inmates are treated identically, regardless of the violation."],"a":"0","e":"The goal of discipline is to maintain order and ensure the safety and security of the facility. Page 166"},
+{"q":"Which Florida Statute provides the authority and guidelines for enforcing rules in a correctional facility?","c":["Section 901.151, F.S.","Section 776.05, F.S.","Section 944.09, F.S.","Section 943.1735, F.S."],"a":"2","e":"Section 944.09, F.S., provides the authority and guidelines for enforcing rules. Page 166"},
+{"q":"According to the text, can an officer deny an inmate due process?","c":["Yes, due process can be denied for major rule violations.","Yes, but only with a supervisor's approval.","No, you can never deny due process, but you can restrict it to meet the safety needs of a facility.","No, and no inmate rights can ever be restricted, even for disciplinary reasons."],"a":"2","e":"You can never deny due process, but you can restrict it to meet the safety needs of a facility. Page 166"},
+{"q":"What is an example of a restricted right mentioned that can be withheld until disciplinary confinement is complete?","c":["Legal mail","Food and water","Medical care","Routine mail (with the exception of legal mail)"],"a":"3","e":"For example, mail is a right, but, with the exception of legal mail, it may be withheld from the inmate until disciplinary confinement is complete. Page 166"},
+{"q":"What is Rule 33-601.314, F.A.C., and where can inmates find a list of these rules?","c":["It defines visitation policies and is posted in the visitation area.","It defines the rules of prohibited inmate conduct and penalties, and it is included in every inmate's handbook.","It defines officer conduct and is found in the agency's policy manual.","It defines medical procedures and is kept in the infirmary."],"a":"1","e":"Rule 33-601.314, F.A.C., defines the rules of prohibited inmate conduct and the penalties for violations or infractions in state correctional facilities. A list of these rules is included in every inmate's handbook. Page 166"},
+{"q":"The disciplinary process in a correctional facility is what type of function?","c":["A criminal function following the same rules as court procedures.","A civil function adjudicated by an outside judge.","An administrative function that addresses minor and major rule violations.","An informal process with no written documentation."],"a":"2","e":"In a correctional facility, the disciplinary process is an administrative function that addresses minor and major rule violations; it does not follow the same rules as criminal procedures. Page 166"},
+{"q":"What is 'progressive discipline'?","c":["A process where the penalty is the same for every violation.","A system that only applies to minor rule violations.","A process that increases the penalty if the inmate does not correct their behavior.","A new, experimental discipline method not yet widely used."],"a":"2","e":"This disciplinary process is sometimes called progressive discipline. The process increases the penalty if the inmate does not correct their behavior. Page 166"},
+{"q":"When must Miranda warnings be given to an inmate during a disciplinary process?","c":["For any rule violation, no matter how minor.","Never, as the disciplinary process is administrative, not criminal.","If a pending outside criminal charge may apply to the incident.","Only when the inmate explicitly asks for an attorney."],"a":"2","e":"If an inmate is involved in a disciplinary process, and a pending outside criminal charge may apply, Miranda warnings must be given before questioning the inmate. Page 166"},
+{"q":"What is a 'rule violation' or 'infraction'?","c":["Any behavior an officer personally dislikes.","An activity or behavior that is not permitted in the correctional facility.","Only actions that would be considered a felony outside the facility.","Only violent or aggressive behavior."],"a":"1","e":"A rule violation or infraction is an activity or behavior that is not permitted in the correctional facility. Page 166"},
+{"q":"When questioning an inmate about a rule violation, what should an officer look for?","c":["Only a direct confession.","Inconsistencies in inmate responses, body language, or physical evidence.","Reasons to excuse the behavior.","Agreement from other inmates that the rule was broken."],"a":"1","e":"During questioning, look for inconsistencies in inmate responses, body language, or physical evidence. Page 167"},
+{"q":"What is a 'minor infraction'?","c":["Any violation that requires a formal disciplinary report.","A violation that is ignored by the officer.","A violation of rules for which a disciplinary report is not necessary.","A violation that results in the loss of gain time."],"a":"2","e":"Minor infractions are violations of rules for which a disciplinary report is not necessary. Page 167"},
+{"q":"Which of the following are examples of behaviors generally considered to be minor rule violations?","c":["Violence or use of a weapon.","Wearing a uniform improperly, rough horseplay, and gambling.","Use of drugs or extortion.","Disorderly conduct or battery."],"a":"1","e":"Some unacceptable behaviors generally considered to be minor rule violations include wearing a uniform improperly, rough horseplay, and gambling. Page 167"},
+{"q":"What defines a 'major rule violation'?","c":["Any violation that annoys an officer.","A rule violation that requires only a verbal warning.","Any disruption so significant that maximum disciplinary sanctions may be imposed.","An infraction that is a first-time offense."],"a":"2","e":"Major rule violations are any disruption so significant that maximum disciplinary sanctions may be imposed. Page 167"},
+{"q":"Which of the following are examples of major rule violations?","c":["Disorderly conduct and disrespectful behavior.","Violence and use of a weapon.","Use of drugs or intoxicants, battery, and extortion.","(All answers listed)"],"a":"3","e":"Incidents like disorderly conduct, disrespectful behavior, violence, use of a weapon, use of drugs or intoxicants, battery, and extortion are considered major rule violations. Page 167"},
+{"q":"What is the first step an officer must take as soon as they become aware of a major rule violation?","c":["Begin writing the disciplinary report immediately.","Isolate the inmate in a holding area.","Obtain approval from the shift supervisor to begin the disciplinary process.","Interview all potential witnesses."],"a":"2","e":"As soon as you become aware of a major rule violation, obtain approval from the shift supervisor to begin the disciplinary process. Page 167"},
+{"q":"Why might it be necessary to isolate an inmate who has committed a major rule violation?","c":["As an immediate form of punishment.","To maintain the order and security of the facility, and the safety of staff, visitors, and inmates.","To make it easier to complete the paperwork.","To send a message to the general inmate population."],"a":"1","e":"It may be necessary to isolate the inmate in a holding area to maintain the order and security of the facility, as well as the safety of staff, visitors, and inmates. Page 167"},
+{"q":"Which of the following is NOT one of the steps for placing an inmate into isolation after a major rule violation?","c":["Contact a supervisor or control room.","Secure the inmate and separate them from other inmates.","Withhold meals for the first 24 hours.","Have medical perform a pre-confinement physical."],"a":"2","e":"Steps include: Contact a supervisor, Request backup, Secure the inmate, Secure the scene, Move the inmate to a holding cell, Have medical perform a pre-confinement physical... Withholding meals is not a listed step and would violate inmate rights. Page 167"},
+{"q":"What is the role of the supervisor after being notified of a major rule violation?","c":["To evaluate the incident and ensure additional action is taken as needed.","To verify that proper documentation is completed.","To make sure the disciplinary process is carried out in a fair and unbiased manner.","(All answers listed)"],"a":"3","e":"The supervisor will evaluate the incident and make sure that any additional action is taken as needed. The supervisor must approve any action taken, verify that proper documentation is completed, and make sure that the disciplinary process is carried out in a fair and unbiased manner. Page 168"},
+{"q":"What is 'corrective action'?","c":["Only the act of writing a disciplinary report.","When steps are taken to eliminate the cause of inappropriate or unlawful behavior to prevent it from happening again.","The process of counseling an inmate's family.","A physical punishment administered by an officer."],"a":"1","e":"Corrective action is when steps are taken to eliminate the cause of inappropriate or unlawful behavior to prevent it from happening again. Page 168"},
+{"q":"What is often the first step in corrective action when an officer observes inappropriate inmate conduct?","c":["Issuing a formal disciplinary report.","Placing the inmate in confinement.","Giving a verbal warning or counseling to the inmate.","Taking away the inmate's privileges."],"a":"2","e":"When you observe inappropriate conduct, give a verbal warning or counseling to the inmate to stop the behavior immediately. A majority of disciplinary issues can be handled at this level. Page 168"},
+{"q":"The discipline process involves counseling and may also result in which of the following?","c":["A verbal warning.","A corrective consultation (incident report or mid-level written warning).","A formal disciplinary report.","(All answers listed)"],"a":"3","e":"The discipline process involves counseling and may also result in: verbal warning, corrective consultation (incident report or mid-level written warning), formal disciplinary report. Page 168"},
+{"q":"What is 'counseling' in the context of inmate discipline?","c":["A brief verbal warning to stop behavior.","A formal therapy session with a psychiatrist.","An in-depth explanation of a rule violation, including suggestions on how the inmate can correct their behavior.","A written report detailing the inmate's misdeeds."],"a":"2","e":"Counseling is an in-depth explanation of a rule violation, including suggestions on how the inmate can correct their behavior. Page 168"},
+{"q":"What should an officer explain during a counseling session with an inmate?","c":["The rules they have broken and the disciplinary process if the behavior continues.","The officer's personal opinion about the inmate's attitude.","Only the punishment without explaining the rule violation.","That nothing further will happen if the behavior is corrected."],"a":"0","e":"Make sure the inmate has a clear understanding of the rules they have broken. Explain the disciplinary process if the inmate's behavior continues. Page 168"},
+{"q":"A 'verbal warning' is a statement to an inmate that they have committed a rule violation and should do what?","c":["Expect a formal disciplinary report.","Prepare to be moved to confinement.","Correct the behavior immediately.","Apologize to the officer."],"a":"2","e":"A verbal warning is a verbal statement directed to an inmate that they have committed a rule violation and should correct the behavior immediately. Page 168"},
+{"q":"How can a verbal warning be documented?","c":["It cannot be documented; it is only verbal.","In a variety of ways, including incident reports, daily logs, computer logs, or an inmate's permanent disciplinary record.","Only on a specific 'Verbal Warning' form.","By telling a supervisor who makes a mental note."],"a":"1","e":"You can document a verbal warning in a variety of ways, including incident reports, daily logs, computer logs, an inmate's permanent disciplinary record, or specific agency forms. Page 168"},
+{"q":"What is a 'corrective consultation'?","c":["A formal disciplinary hearing.","An informal chat with an inmate about their behavior.","Usually an agency-specific form that documents an inmate rule violation after counseling.","A meeting between the inmate and the warden."],"a":"2","e":"A corrective consultation (incident report or written warning) is usually an agency-specific form that documents an inmate rule violation, You will counsel the inmate about the offense and then document it on the form. Page 169"},
+{"q":"If an inmate refuses to sign a corrective consultation form, what should the officer do?","c":["Discard the form and issue a verbal warning instead.","Force the inmate to sign the form.","Document the refusal on the form and provide the inmate with a copy within 24 hours.","Take away the inmate's privileges until they sign."],"a":"2","e":"If the inmate refuses to sign the form, document the refusal on the form, and provide the inmate with a copy within 24 hours of your completion of the form. Page 169"},
+{"q":"What is a 'disciplinary report (DR)'?","c":["A brief note in a daily log.","A verbal report to a supervisor.","A detailed report of the facts surrounding an inmate's rule violation that sets in motion events ensuring due process.","An informal warning given to an inmate."],"a":"2","e":"A disciplinary report (DR) is a detailed report of the facts surrounding an inmate's rule violation and sets in motion a series of events that ensures due process. Page 169"},
+{"q":"For what type of violations is a disciplinary report (DR) normally reserved?","c":["Only for minor infractions.","Major rule violations.","First-time offenses only.","Only for violations that involve property damage."],"a":"1","e":"A DR is normally reserved for major rule violations; however, when an inmate frequently commits minor rule violations, a DR could be issued. Page 169"},
+{"q":"What is the timeframe within which an officer must write a disciplinary report?","c":["Within one week of the incident.","By the end of the shift.","Within 24 hours from when the incident is discovered.","There is no specific timeframe."],"a":"2","e":"You must write a disciplinary report within 24 hours from when the incident is discovered. Page 169"},
+{"q":"Which of the following elements should be included in a DR?","c":["Officer name, inmate name/number, and place/date/time of the incident.","A formal statement of the specific violation (the charge).","A narrative explaining events, statements from witnesses, and a description of physical evidence.","(All answers listed)"],"a":"3","e":"A DR should include the following: officer name; inmate name and number... place, date, and time... formal statement of the specific violation... a narrative... statements from any known witnesses... a description of physical evidence... Page 169"},
+{"q":"What else must be included on a disciplinary report (DR) to be complete?","c":["The inmate's signature acknowledging guilt.","The officer's personal opinion of the inmate.","Action taken, signature of involved staff, and supervisor's approval.","A recommendation for the inmate's parole hearing."],"a":"2","e":"A DR should include the following: ... action taken, signature of involved staff, supervisor's approval. Page 169"},
+{"q":"If an inmate steals a radio from another inmate, how might this rule violation be handled?","c":["The inmate must be prosecuted in an outside court of law.","The inmate may be disciplined only within the facility.","The victim inmate is allowed to retaliate.","The incident is ignored if the radio is returned."],"a":"1","e":"For example, an inmate steals a radio that belongs to another inmate. While this is technically petit theft, the offending inmate may be disciplined only within the facility and not prosecuted in a court of law. Page 166-167"},
+{"q":"What is the officer's role after a corrective consultation form is signed (or refusal is documented)?","c":["The form is immediately shredded.","A copy is given to the inmate, and another is placed in the inmate's institutional file.","The officer keeps the only copy for personal records.","The form is posted publicly in the housing unit."],"a":"1","e":"If the inmate refuses to sign the form, document the refusal on the form, and provide the inmate with a copy within 24 hours of your completion of the form. An additional copy will be placed in the inmate's institutional file. Page 169"},
+{"q":"What discourages inmate rule violations, according to the section on Corrective Action?","c":["Frequent cell searches.","The threat of transfer to another facility.","Officer presence.","Limiting inmate privileges."],"a":"2","e":"Officer presence discourages rule violations. Page 168"},
+{"q":"When is it acceptable for a rule violation to be considered either major or minor?","c":["Never, the distinction is always rigid.","It depends on the mood of the officer.","It may depend on the circumstances, the severity or the degree of the violation, and other considerations.","Only if the inmate has no prior violations."],"a":"2","e":"Some rule violations may be considered major or minor depending on the circumstances, the severity or the degree of the violation, and other considerations. Page 167"},
+{"q":"What is the primary purpose of conducting inmate counts?","c":["To determine which inmates are eligible for work assignments.","To verify and account for every inmate within a facility or off-site area.","To provide inmates with a structured daily activity.","To test the facility's alarm system."],"a":"1","e":"Counts verify and account for every inmate within a facility or off-site area and are vital to security and safety. Page 170"},
+{"q":"What is an 'informal count'?","c":["A count that is not documented and is for the officer's personal awareness only.","A count that verifies the total number of inmates in the entire facility.","A count that verifies the number of inmates in a specific area and is done randomly.","The master count conducted once per day."],"a":"2","e":"An informal count verifies the number of inmates in an area. These counts are done randomly by the supervisor of inmates who are on-site or off-site... Page 170"},
+{"q":"A 'body count' is a type of informal count that is only reported under what circumstance?","c":["At the end of every shift.","If the number of inmates has increased.","If an inmate is missing.","When requested by the warden."],"a":"2","e":"A body count is a type of informal count that is a custody count of all of the inmates under your supervision and is only reported if an inmate is missing. Page 170"},
+{"q":"What does a 'formal count' verify?","c":["The number of inmates in a temporary work detail only.","The total number of inmates at a facility, accounting for all gains and losses during the day.","Only the inmates present in the dining hall during meals.","The number of visitors present in the facility."],"a":"1","e":"A formal count verifies the total number of inmates at a facility, accounting for all gains and losses during the day. Page 170"},
+{"q":"How often is a formal count performed?","c":["Once per week.","Only when an emergency occurs.","At least once per shift.","Randomly, with no set schedule."],"a":"2","e":"A formal count is performed at least once per shift, and may be conducted at the beginning and end of your shift. Page 170"},
+{"q":"What is the purpose of an 'out count'?","c":["To count inmates who have been released from the facility.","To provide accountability for the location of inmates outside their assigned housing area.","To count the number of officers working outside the facility.","To count inmates who are refusing to leave their cells."],"a":"1","e":"This count provides accountability for the location of inmates outside their assigned housing area. Page 170"},
+{"q":"What is a 'master count'?","c":["A quick, informal count of a specific housing unit.","A count where positive identification of each inmate is verified through items like armbands or photo ID cards.","A count conducted only in the event of an escape.","The final count performed at the end of the day."],"a":"1","e":"In a master count, positive identification of each inmate is verified through various items, such as armband identification or photo identification cards... Page 170"},
+{"q":"How often is a master count conducted?","c":["Once per shift.","Twice per day.","A minimum of once a day at a specified time.","Only when there is a discrepancy in other counts."],"a":"2","e":"This count is conducted a minimum of once a day at a specified time and accounts for all inmates admitted, released, returned, or detained in the facility during the previous 24-hour period. Page 171"},
+{"q":"When are 'emergency counts' conducted?","c":["When there is a possible escape or a disturbance.","When an evacuation is necessary.","When the total count of inmates is not confirmed or verified with the facility total.","(All answers listed)"],"a":"3","e":"Emergency counts are conducted when unusual situations arise, such as a possible escape, a disturbance, an evacuation, or when the total count of inmates, regardless of the type of count, is not confirmed or verified with the facility total. Page 171"},
+{"q":"What is another name for an emergency count used by some agencies?","c":["Final count","Special count","Recount","Master count"],"a":"2","e":"Some agencies refer to an emergency count as a recount. Page 171"},
+{"q":"Which types of counts must be documented, according to the text?","c":["Only formal and master counts.","Only emergency counts.","All types of counts except informal counts.","All types of counts including informal counts."],"a":"2","e":"You must document all types of counts except informal counts. Page 171"},
+{"q":"What is the first step in the common count process inside a facility?","c":["Inmates report to their assigned housing area.","A physical count of each inmate is conducted.","The control room, a supervisor, or the daily schedule will begin a count.","Officers document and report the totals."],"a":"2","e":"1. The control room, a supervisor, or the daily facility schedule will begin a count. Page 171"},
+{"q":"What is announced to staff and inmates once every inmate is present and the count is verified?","c":["The total number of inmates.","The start of the next shift.","A clear count.","The time for the next meal."],"a":"2","e":"If every inmate was present for the count, then a clear count is announced to the staff and the inmates. Page 171"},
+{"q":"What should an officer do if they are one of two officers conducting a count and their totals do not match?","c":["Average the two numbers and report that total.","Report the discrepancy to a supervisor immediately.","Immediately recount the inmates in their count area before reporting the count.","Ask the inmates how many of them there are."],"a":"2","e":"If two officers conduct a count together, they should make sure that their count numbers match. If there is a difference, they should immediately recount the inmates in their count area before reporting the count. Page 172"},
+{"q":"What procedure is initiated if a facility-wide recount does not resolve a count difference?","c":["The facility is placed on lockdown for 24 hours.","An emergency master count procedure.","All inmates are strip-searched.","A new computer-generated roster is printed."],"a":"1","e":"If the recount does not resolve the difference, an emergency master count procedure will be announced and initiated. Page 172"},
+{"q":"What is a 'count slip'?","c":["A disciplinary report for an inmate who misbehaves during a count.","A form used to document inmate counts.","A pass an inmate receives to be out of their cell during a count.","A list of inmates with special medical needs."],"a":"1","e":"A count slip is a form used to document inmate counts. Page 172"},
+{"q":"Which type of count slip may include information such as facility name, date, time, location, officer signature, total inmates counted, and time cleared?","c":["The informal count slip","The formal count slip","The dormitory count slip","The master count slip"],"a":"1","e":"The formal count slip may include the following information: facility name, date, time, location, officer signature, total number of inmates counted, and time cleared. Page 172"},
+{"q":"What is strictly prohibited on a count slip to ensure its accuracy?","c":["The use of blue ink.","The officer's printed name.","Erasures, strikeouts, or alterations.","The supervisor's signature."],"a":"2","e":"The count slip cannot contain erasures, strikeouts, or alterations. Page 172"},
+{"q":"Why should the dining area be inspected prior to mealtime?","c":["To ensure health and safety through cleanliness and order.","To set up decorations for the meal.","To make sure there are enough seats for every inmate.","To check the temperature of the food being served."],"a":"0","e":"The dining area should be inspected for cleanliness and order to ensure health and safety. Page 173"},
+{"q":"Under what circumstances is a pre-mealtime security check of the dining area NOT necessary?","c":["If the meal is being served on a holiday.","If there are fewer than 50 inmates eating.","If inmates are served in cells or other common areas.","A pre-mealtime security check is always necessary."],"a":"2","e":"If inmates are served in cells or other common areas, a pre-mealtime security check is not necessary; regular searches will go on as usual. Page 173"},
+{"q":"What makes food items like sugar, yeast, and fruit considered sensitive contraband in a dining area?","c":["They can be used to produce alcohol.","They are high in calories and can lead to health issues.","They can attract pests to the facility.","They are expensive and difficult to replace."],"a":"0","e":"Some examples of contraband include food, utensils, drugs, and sensitive items (food such as sugar, yeast, and fruit can be used to produce alcohol). Page 173"},
+{"q":"During food distribution, what should an officer observe regarding the inmate food handlers?","c":["That they are wearing proper attire like gloves, hairnets, and aprons.","That they are not taking extra food for themselves.","That they are following all sanitation standards.","(All answers listed)"],"a":"3","e":"In most facilities, inmates serve the meals. Enforce all sanitation standards, making sure food handlers are properly attired in gloves, hairnets, and aprons. Page 174"},
+{"q":"What is the officer's responsibility concerning inmates with special dietary requirements?","c":["To encourage them to eat the standard meal.","To ensure that the correct inmate receives the proper prescribed meal.","To allow them to have food sent from home.","To have them eat at a different time than other inmates."],"a":"1","e":"Be aware of those differences and ensure that the correct inmate receives the proper prescribed meal. Page 174"},
+{"q":"What is essential for effective observation of all inmate activity in the dining area?","c":["Remaining in a fixed position at the front of the room.","Officer positioning and patrolling.","Watching the surveillance monitors from the control room.","Engaging in conversation with inmates at their tables."],"a":"1","e":"Disturbances and riots may occur in the inmate dining area. Officer positioning and patrolling are essential for effective observation of all inmate activity in the dining area. Page 174"},
+{"q":"How does walking around the dining area help an officer maintain security?","c":["It allows the officer to get exercise during their shift.","It makes the inmates nervous and less likely to eat.","It allows the officer to observe inmates' behavior and prevent rule violations.","It is not recommended as it can be disruptive to the inmates."],"a":"2","e":"By walking around the dining area and making your presence known, you will be able to observe the inmates' behavior and prevent rule violations. Page 174"},
+{"q":"Which specific areas should an officer monitor and supervise within the dining area during meals?","c":["Entrances and serving lines.","Seating areas and tray return windows.","Exits.","(All answers listed)"],"a":"3","e":"It will also allow you to monitor and supervise specific areas, such as the entrances, serving lines, seating areas, tray return windows, and exits. Page 174"},
+{"q":"What must an officer account for to ensure all items are returned after a meal?","c":["All issued utensils, glasses, and trays.","Only the metal utensils.","The number of inmates who ate.","The amount of leftover food."],"a":"0","e":"Make sure you account for all issued utensils, glasses, and trays. Page 173"},
+{"q":"What should an officer do if they find equipment in the dining area that poses a safety hazard?","c":["Try to fix the equipment themselves.","Document and report it, and close the area until it is repaired or replaced.","Allow inmates to use the area but warn them about the hazard.","Ignore it, as maintenance is not an officer's responsibility."],"a":"1","e":"Document and report any equipment that poses a safety hazard, and close the area until the equipment is repaired or replaced. Page 173"},
+{"q":"What are the three types of mail an inmate may receive?","c":["Personal, business, and official.","First-class, media, and parcel.","Weekly, monthly, and yearly.","Routine, legal, and privileged."],"a":"3","e":"Inmates are allowed to receive three types of mail: routine, legal, and privileged. Page 175"},
+{"q":"What does 'routine mail' include?","c":["Only letters from family members.","All mail received by inmates, such as letters, magazines, and newspapers that have not been tampered with and came from the publisher or supplier.","Only mail from attorneys and courts.","Packages containing personal property."],"a":"1","e":"Routine mail-includes all mail received by inmates, such as letters, magazines, newspapers, periodicals, and book subscriptions that have not been tampered with and were received directly from the publisher or supplier. Page 175"},
+{"q":"Mail from state attorneys, private attorneys, public defenders, and courts falls into which category?","c":["Routine mail","Privileged mail","Legal mail","Official mail"],"a":"2","e":"Legal mail-contains confidential information concerning legal matters and includes mail to and from municipal, county, state, and federal courts as well as state attorneys, private attorneys, public defenders, legal aid organizations, and agency clerks. Page 175"},
+{"q":"What does 'privileged mail' consist of?","c":["Mail from an inmate's immediate family.","Any package an inmate is allowed to receive.","Correspondence to and from public officials, government agencies, and the news media.","All mail that has already been opened and inspected."],"a":"2","e":"Privileged mail-consists of correspondence to and from public officials, government agencies, and the news media. Page 175"},
+{"q":"While there is no limit to the amount of mail an inmate may receive, what limit is there regarding mail?","c":["A limit on the number of pages per letter.","There is a limit to the amount of mail that an inmate may possess.","A limit on the number of senders an inmate can correspond with.","There are no limits of any kind on inmate mail."],"a":"1","e":"There is no limit to the amount of mail that an inmate may receive, but there is a limit to the amount of mail that an inmate may possess. Page 175"},
+{"q":"Why should officers use PPE when inspecting mail?","c":["To prevent paper cuts.","To keep their fingerprints off the mail.","To prevent exposure to contaminants such as fecal matter, blood, body fluids, or other hazardous materials.","It is not required, only recommended for new officers."],"a":"2","e":"People inspecting mail should use PPE to prevent exposure to contaminants, such as fecal matter, blood, and body fluids or other hazardous materials that may be found inside or outside of mail. Page 175"},
+{"q":"When inspecting mail, what should an officer check the content for?","c":["Pornography or information about criminal activity.","Codes, escape plans, threats to the facility, or extortion.","To ensure victims or witnesses are not contacting the inmate.","(All answers listed)"],"a":"3","e":"The content of the mail is scanned for pornography, information about criminal activity, codes, plans... threats to the facility, threats or evidence of extortion against staff or other inmates, and escape plans... to ensure victims or witnesses are not contacting the inmate. Page 176"},
+{"q":"What might an odd texture in mail, such as being brittle or stained, indicate?","c":["The mail got wet during delivery.","The use of recycled paper.","The presence of drugs, body fluids, or hidden messages.","The sender used an old pen."],"a":"2","e":"When inspecting mail for contraband, check the texture of the mail to determine if it is brittle or stained. An odd texture could indicate the presence of drugs, body fluids, or hidden messages. Page 176"},
+{"q":"How is legal and privileged mail handled differently from routine mail?","c":["It is delivered to the inmate unopened.","It is read by a supervisor before delivery.","It can only be opened in the presence of the inmate to whom it is addressed.","It is photocopied, and the copy is given to the inmate."],"a":"2","e":"Legal and privileged mail is handled differently than routine mail. While you may inspect the outside of the envelope, you can open it only in the presence of the inmate to whom it is addressed. Page 176"},
+{"q":"When inspecting opened legal or privileged mail, what is the officer allowed to do?","c":["Read the content to check for security threats.","Inspect it for contraband, but must not read the content.","Make a copy of the content for the inmate's file.","Allow the inmate to inspect it for contraband themselves."],"a":"1","e":"When the inmate opens the envelope or package, you can inspect it for contraband, but you must not read the content of legal or privileged mail. Page 176"},
+{"q":"What is the delivery timeframe for legal mail?","c":["It must be delivered within 72 hours of receipt.","It must be delivered within 24 hours of receipt.","It can be held indefinitely if the inmate is in disciplinary confinement.","There is no specific delivery timeframe."],"a":"1","e":"Legal mail cannot be withheld from an inmate for disciplinary action and must be delivered within 24 hours of receipt. Page 176"},
+{"q":"How can an officer verify that legal mail is authentic?","c":["By calling the law firm or court to confirm they sent it.","Confirm the letterhead has the proper return address and a raised seal or watermark, and verify the correspondent is a legitimate legal source.","By asking the inmate if they are expecting legal mail.","(None of the answers listed)"],"a":"1","e":"To ensure that the legal mail is authentic, confirm the letterhead has the proper return address and a raised seal or watermark, and verify that the correspondent is a legitimate legal source. Page 176"},
+{"q":"What is 'kickback' or 'three-way mail'?","c":["A letter that is returned to the facility because of a wrong address.","A common method used by inmates to send unauthorized communications to other inmates.","Mail that has been damaged by postal service equipment.","A system where inmates can reply to mail for free."],"a":"1","e":"Kickback or three-way mail is a common method used by inmates to send unauthorized communications to other inmates within the same facility or other institutions. Page 177"},
+{"q":"According to Rule 33-601.714, F.A.C., is visitation for inmates considered a right or a privilege?","c":["An absolute right that cannot be taken away.","A privilege that can be lost due to inappropriate conduct, rule violations, or introducing contraband.","A right for social visitors but a privilege for professional visitors.","A privilege for minimum-security inmates but a right for all others."],"a":"1","e":"Visitation is a privilege and not a right for inmates and visitors (Rule 33-601.714, F.A.C.). Visitors and inmates can lose this privilege because of inappropriate conduct, rule violations, or by introducing contraband. Page 178"},
+{"q":"What defines a 'contact visit'?","c":["A visit where the inmate and visitor communicate through a glass barrier using phones.","A visit in which both the visitor and the inmate are in the same room, without a physical barrier, and can have limited physical contact.","Any visit from a family member.","A visit that is monitored via closed-circuit television."],"a":"1","e":"Contact visits are visits in which both the visitor and the inmate are in the same room, without a physical barrier and can have limited physical contact. Page 178"},
+{"q":"What are 'non-contact visits'?","c":["Visits where the inmate and visitor can have limited physical contact, such as a hug.","Visits in which the inmate and visitor are physically separated by some type of barrier or communicate using electronic equipment.","Visits that are not monitored by correctional officers.","Visits that take place outside the facility."],"a":"1","e":"Non-contact visits are visits in which the inmate and visitor are physically separated by some type of barrier or communicate using electronic equipment, such as an audio and video communication system. Page 178"},
+{"q":"What two types of visitors may an inmate receive?","c":["Pre-approved and walk-in.","Local and out-of-state.","Official and unofficial.","Social and professional."],"a":"3","e":"An inmate may receive two types of visitors, social and professional. Page 178"},
+{"q":"Who is included in the category of 'professional visitor'?","c":["Only immediate family members.","Attorneys, investigators, bail bondsmen, parole and probation officers, and clergy.","Friends and former colleagues.","Anyone who is not on the inmate's approved social visitor list."],"a":"1","e":"A professional visitor may include attorneys and staff employed by attorneys, investigators, bail bondsmen, parole and probation officers, social service agency staff, and clergy. Page 178"},
+{"q":"Which of the following are listed as valid forms of photo identification for visitors?","c":["Driver's license or state identification card.","Military identification or passport.","Agency-issued identification.","(All answers listed)"],"a":"3","e":"Valid forms of identification include government-issued photo identification, driver's license or identification card, military identification, agency-issued identification, or passport. Page 179"},
+{"q":"According to s. 944.39, F.S., what is the legal consequence of a visitor presenting a false ID?","c":["They are given a verbal warning.","They are banned from the facility for 30 days.","It is a crime.","They must pay a fine."],"a":"2","e":"It is a crime to present a false ID (s. 944.39, F.S.). Page 179"},
+{"q":"What security equipment might an agency provide to a visitor for use in an emergency?","c":["A two-way radio.","A personal body alarm.","A whistle.","A map of the facility."],"a":"1","e":"Some agencies may use closed-circuit television systems to monitor visitor movement, while others may issue personal body alarms that the visitor can activate in an emergency, alerting security personnel to potential threats... Page 179"},
+{"q":"For what purposes are visitor registration logs maintained as a permanent record?","c":["For accountability, such as proving an inmate's rights have not been violated.","For emergency evacuation purposes.","For compiling statistics on visitation frequency.","Both 'For accountability...' and 'For emergency evacuation purposes.' are correct."],"a":"3","e":"Correctional agencies maintain visitor registration logs as a permanent record. These logs are for accountability purposes to prove that an inmate's rights have not been violated (such as for attorney visits), and for emergency evacuation purposes. Page 179"},
+{"q":"What should an officer do before allowing inmates or visitors access to the visitation area?","c":["Conduct a systematic search of the visiting area.","Set up refreshments for the visitors.","Brief the visitors on the inmate's case.","Count the number of chairs available."],"a":"0","e":"Conduct a systematic search of the visiting area before allowing inmates or visitors access. The area should be free of contraband and any potentially hazardous material. Page 179"},
+{"q":"What is the primary purpose of searching visitors before admitting them to the visitation area?","c":["To ensure they are dressed appropriately.","To confirm their identity again.","To control the introduction of contraband into the facility.","To deter people from visiting."],"a":"2","e":"Visitors are searched to control the introduction of contraband into the facility. Page 179"},
+{"q":"If a visitor is found with non-criminal contraband, like personal car keys, what is the likely procedure?","c":["The visitor is arrested immediately.","The keys are confiscated and processed as evidence.","The visitor will likely be told to return the keys to their car or place them in a secure location.","The visit is canceled, and the visitor is permanently banned."],"a":"2","e":"For example, most facilities consider personal keys as contraband... The visitor will likely be told to return the keys to their car or place them in a secure location until they leave. Page 180"},
+{"q":"What happens if a visitor is found with criminal contraband, such as unauthorized cell phones, weapons, or drugs?","c":["They are given a warning and allowed to continue their visit.","The items are confiscated, and the visitor is subject to criminal prosecution and termination of visitation privileges.","The items are returned to the visitor upon their departure.","The inmate they are visiting is immediately disciplined."],"a":"1","e":"Confiscate all contraband of a criminal nature, such as unauthorized cell phones, weapons, drugs, and intoxicants. The visitor is then subject to criminal prosecution, and visitation privileges may be terminated. Page 180"},
+{"q":"What happens if an inmate declines a visit?","c":["The visit is rescheduled for another day.","The visitor is allowed to wait until the inmate changes their mind.","The inmate is disciplined for refusing.","The declination is documented, the visitor registration area is advised, and the visitor is asked to leave."],"a":"3","e":"The inmate may either accept or decline the visit. Document if the inmate declines the visit. If the inmate declines the visit, the visitor registration area is advised, and the visitor is informed and asked to leave. Page 180"},
+{"q":"What must be done with an inmate before they enter the visitation area for a contact visit?","c":["They must be searched for contraband.","They must sign a waiver.","They must be provided with a list of conversation topics to avoid.","Their vital signs must be taken."],"a":"0","e":"For inmates accepting visitors, search the inmate for contraband before the visit. Page 180"},
+{"q":"What should an officer continually observe for during a visit?","c":["Excessive noise or vulgarity.","Sexual misconduct or introduction of contraband.","Altercations.","(All answers listed)"],"a":"3","e":"Continually observe the conduct of the inmate and visitor for general rule violations such as excessive noise, vulgarity, sexual misconduct, introduction of contraband, and altercations. Page 180"},
+{"q":"What is 'ballooning' in the context of smuggling contraband?","c":["Decorating the visitation area with balloons.","When contraband is placed in a sealed balloon and concealed in a body cavity or swallowed for later expulsion.","A type of contraband that inflates when exposed to air.","A code word used by inmates to signal a contraband drop."],"a":"1","e":"For example, visitors may smuggle contraband through security checkpoints by \"ballooning,\" which is when contraband is placed in a sealed balloon and concealed in a body cavity or swallowed for later expulsion. Page 181"},
+{"q":"If an issue arises during a visit that an officer cannot control, what is the appropriate course of action?","c":["End the visit without any documentation.","Attempt to handle it alone to show command presence.","Call for backup, potentially end the visit, restrict the visitor, discipline the inmate, and document the actions.","Allow the inmate and visitor to resolve the issue themselves."],"a":"2","e":"If an issue arises that you cannot control or that is beyond your authority, call for backup. You may end the visit, permanently restrict the visitor from the facility, and discipline the inmate. Document any actions taken. Page 181"},
+{"q":"What is the first step at the end of visitation?","c":["Search all visitors again.","Ensure the inmates and visitors are separated.","Collect feedback forms from the visitors.","Announce the end of visitation over the intercom."],"a":"1","e":"At the end of visitation, ensure the inmates and visitors are separated. Page 181"},
+{"q":"Why is it important to search the visitation area and restrooms after a visit concludes?","c":["To prepare it for the next group of visitors.","To check for any damage to facility property.","Because contraband could have been concealed in the area to be recovered by an inmate later.","To ensure visitors did not leave any personal belongings behind."],"a":"2","e":"Be aware that contraband could be concealed in the visitation area to be recovered by an inmate at a later time. Systematically search the visitation area and restrooms upon conclusion of the visit. Page 181"},
+{"q":"What happens to inmates after a contact visit concludes?","c":["They are immediately returned to their housing units.","They are allowed free time in the recreation yard.","They should be segregated, monitored, and then thoroughly searched.","They are required to clean the visitation area."],"a":"2","e":"At the conclusion of the visit, the inmates should be segregated and monitored pending a thorough search. Inmates exiting a contact visit are searched to make sure no contraband enters the facility. Page 181"},
+{"q":"What is an 'escort' in a correctional setting?","c":["A formal visit from an inmate's attorney.","The movement of an inmate from one point to another accompanied by an officer or staff member.","A disciplinary action for minor rule violations.","An informal count of inmates in a housing unit."],"a":"1","e":"An escort is the movement of an inmate from one point to another accompanied by an officer or staff member. Page 182"},
+{"q":"What is the difference between an internal escort and an external escort?","c":["Internal escorts are for male inmates, while external escorts are for female inmates.","Internal escorts occur within the facility's secure perimeter, while external escorts occur outside of it.","Internal escorts do not require restraints, while external escorts always do.","Internal escorts are done by one officer, while external escorts require at least two."],"a":"1","e":"Internal escorts are conducted within the facility's secure perimeter. External escorts occur outside the secure perimeter of the facility. Page 182"},
+{"q":"Before an escort begins, what must an officer do after receiving instructions?","c":["Allow the inmate to gather their personal property.","Positively identify the inmates, take an accurate count, and notify appropriate staff of the number and destination.","Provide the inmate with a meal and a beverage.","Ask the inmate if they agree to be escorted."],"a":"1","e":"Inmates must be positively identified before departing. Take an accurate count of the inmates and notify appropriate staff of the number of inmates to be escorted and their destination. Page 182"},
+{"q":"What is the first physical security step an officer should take before escorting an inmate?","c":["Apply restraints immediately.","Conduct a frisk for weapons or contraband.","Have the inmate change into a transport uniform.","Check the inmate's medical records."],"a":"1","e":"Before escorting an inmate, conduct a frisk for weapons or contraband. Page 182"},
+{"q":"When might some facilities require strip searches of inmates in relation to an escort?","c":["Before any internal escort to a work detail.","When inmates are escorted outside of or returning to the facility.","If the inmate has a history of rule violations.","Strip searches are never required for escorts."],"a":"1","e":"Some facilities require strip searches when inmates are escorted outside of or returning to the facility. Page 182"},
+{"q":"What must be done with any medical equipment or prosthetic devices an inmate has?","c":["They should be left in the inmate's cell during the escort.","They require a search for contraband.","They are not a security concern.","Only a medical staff member can search them."],"a":"1","e":"All medical equipment or prosthetic devices require a search for contraband. Page 182"},
+{"q":"Where should an officer position themselves while escorting an inmate to control movement?","c":["Directly in front of the inmate to lead the way.","Directly behind the inmate, holding their shoulders.","To the rear and slightly to one side of the inmate.","At least 10 feet away from the inmate at all times."],"a":"2","e":"Position yourself to the rear and slightly to one side of the inmate to control movement. Page 182"},
+{"q":"What are some potential risks that can occur during inmate movement?","c":["Introduction of contraband.","The inmate may commit battery.","The inmate may attempt to escape.","(All answers listed)"],"a":"3","e":"During movement, contraband may be introduced, the inmate may commit battery, or the inmate may attempt to escape. Page 182-183"},
+{"q":"Upon completing an escort and arriving at the destination, what must the officer confirm?","c":["That the inmate is comfortable in the new location.","That the number and identity of the inmates arriving match the original record of those departing.","The time of the next scheduled meal for the inmate.","That the inmate has all their personal belongings."],"a":"1","e":"After completing the escort, confirm that the number and identity of the inmates arriving at the destination match the original record of the inmates departing. Page 183"},
+{"q":"How is 'transport' defined in this lesson?","c":["Moving an inmate from their cell to the dining hall.","Moving an inmate from the confines of a secure facility to another location outside the facility.","Any movement of an inmate accompanied by an officer.","The process of transferring an inmate's records to another facility."],"a":"1","e":"Transport is defined as moving an inmate from the confines of a secure facility to another location outside the facility. Page 184"},
+{"q":"Which of the following factors help determine the type of transport vehicle required?","c":["The number of inmates to be transferred.","The custody levels, gender, and special needs of the inmates.","The purpose of the transport.","(All answers listed)"],"a":"3","e":"Determine what type of transport vehicle is required by considering how many inmates are to be transferred; the custody levels, gender, and special needs of the inmates; and the purpose of the transport. Page 184"},
+{"q":"Which groups of inmates must be transported in separate compartments?","c":["Male and female inmates.","Juveniles and adults.","High-profile inmates and violent inmates.","(All answers listed)"],"a":"3","e":"The following groups of inmates must be transported in separate compartments: male and female inmates, juveniles and adults, high-profile inmates, and violent inmates (who must be separated from others). Page 184"},
+{"q":"What is a 'trailing or chase vehicle'?","c":["A vehicle that follows the transport to monitor for traffic violations.","An armed escort vehicle used to follow or trail a transport vehicle to provide additional security.","A backup transport vehicle in case the primary one breaks down.","A vehicle used to transport an officer's personal belongings."],"a":"1","e":"A trailing or chase vehicle is an armed escort vehicle used to follow or trail a transport vehicle to provide additional security. Page 185"},
+{"q":"What is the officer's responsibility regarding the transport vehicle before use?","c":["To systematically inspect it for mechanical deficiencies and possible security breaches.","To wash and wax the exterior of the vehicle.","To choose their preferred vehicle regardless of the transport needs.","To assume the vehicle is in good working order if it was used recently."],"a":"0","e":"It is your responsibility to systematically inspect the transport vehicle for mechanical deficiencies and possible security breaches, and to make sure the vehicle is properly equipped and in good working order. Page 185"},
+{"q":"Which equipment on a transport vehicle must be checked to ensure it functions properly?","c":["Radio, issued cell phone, and brakes.","Spare tire and jack, horn, and lights.","Seat belts, wipers, mirrors, and security equipment.","(All answers listed)"],"a":"3","e":"Check that all equipment functions properly, including the radio, issued cell phone, brakes, spare tire and jack, horn, lights, seat belts, wipers, mirrors, security equipment, and locks. Page 185"},
+{"q":"When are searches of the transport vehicle conducted?","c":["Only before the transport begins.","Only after the transport is completed.","Before and after inmate transport.","Only if contraband is suspected to be present."],"a":"2","e":"These searches are done to make sure there is no contraband present before and after inmate transport. Page 185"},
+{"q":"What common vehicle components should be checked carefully as they can be made into weapons?","c":["The radio antenna.","The upholstery of the seats.","Bolts, screws, and parts of seat belts.","The vehicle's floor mats."],"a":"2","e":"Common components of the vehicle, such as bolts, screws, and parts of seat belts, can be removed quickly and without notice. Such items can be made into weapons or other contraband. Page 185"},
+{"q":"What is the general rule regarding restraints during transport?","c":["Restraints are not necessary if the vehicle has cages.","Keep all inmates restrained, but do not restrain them to the vehicle itself except by standard seat belts.","Only high-risk inmates need to be restrained.","Inmates should be restrained to the vehicle's cage for maximum security."],"a":"1","e":"Generally, keep all inmates restrained during transport. However, you must not restrain inmates to the vehicle except by the use of standard seat belts and shoulder harnesses. Page 186"},
+{"q":"What is a 'face sheet'?","c":["A list of charges against the inmate.","A document with a current picture of the inmate, name, ID number, physical description, and other key data.","A form the inmate signs before transport.","A cover sheet for the transport vehicle's maintenance log."],"a":"1","e":"A face sheet is a document with a current picture of the inmate, name, inmate identification number, physical description, incarceration date, date of birth, end of sentence date, and custody level. Page 187"},
+{"q":"Before placing inmates in the transport vehicle, what must be done?","c":["Verify proper attire.","Search each individual inmate.","Properly apply security restraint devices.","(All answers listed)"],"a":"3","e":"Verify that they wear proper attire, search each individual inmate before transport, and secure the inmates. Once you have properly applied security restraint devices, place the inmates in the transport vehicle. Page 187"},
+{"q":"What is the Florida Safety Belt Law's requirement for inmate transport?","c":["It does not apply to inmates in a caged vehicle.","Officers and inmates must adhere to it, and the number of inmates cannot exceed the vehicle's passenger capacity.","Only the officer driving must wear a seat belt.","Seat belts are optional if the transport is less than 15 minutes."],"a":"1","e":"Officers and inmates must adhere to the Florida Safety Belt Law, and the number of inmates transported cannot exceed the vehicle passenger capacity. Page 187"},
+{"q":"What is a recommended security practice for transport routes?","c":["Always use the fastest and most direct route.","Routine routes should be varied to reduce the risk of outside assaults.","Only use major highways.","Announce the route publicly before departure."],"a":"1","e":"A transport plan should include a primary and an alternative route. Routine routes should be varied to reduce the risk of outside assaults. Page 187"},
+{"q":"If an inmate becomes non-compliant, combative, or complains of a medical condition during transport, what should the officer do?","c":["Pull over on the side of the road immediately to address the issue.","Increase the vehicle's speed to reach the destination faster.","Do not stop the transport; immediately contact your agency for instructions.","Stop at the nearest gas station to call for local law enforcement."],"a":"2","e":"During transport, if an inmate becomes non-compliant, combative, or disorderly or complains of a medical condition, do not stop the transport. Immediately contact your agency with all appropriate information and follow instructions. Page 187"},
+{"q":"If a transport vehicle encounters an unforeseen situation like a crash or mechanical failure, what is the officer's first priority?","c":["To inspect the vehicle for damage.","To make sure that the inmates are secure.","To direct traffic around the vehicle.","To finish the transport using a different vehicle immediately."],"a":"1","e":"If the transport vehicle encounters any unforeseen situations, such as a vehicle crash, mechanical failure, or a problem with the primary route, immediately make sure that the inmates are secure. Page 187"},
+{"q":"What is a 'transfer' as defined in the context of inmate movement?","c":["Any escort within the facility.","Movement of an inmate from one housing location to another.","A change in an inmate's work assignment.","The movement of an officer from one post to another."],"a":"1","e":"A transfer is movement of an inmate from one housing location to another. Page 188"},
+{"q":"Which entity within the correctional system is responsible for assigning inmates to a work detail?","c":["The shift supervisor.","The medical department.","Classification.","The inmates themselves."],"a":"2","e":"Classification is responsible for assigning inmates to a work detail. Page 189"},
+{"q":"What is the difference between an inside work squad and an outside work squad?","c":["Inside squads work during the day; outside squads work at night.","Inside squads do not go beyond the security perimeter of a facility; outside squads work beyond the perimeter.","Inside squads are supervised; outside squads are not.","Inside squads perform maintenance; outside squads perform groundskeeping only."],"a":"1","e":"Work crews or squads that do not go beyond the security perimeter of a facility are considered inside. Any squad or detail that works beyond the perimeter is considered an outside work squad. Page 189"},
+{"q":"How must an officer verify an inmate's identity for a work squad?","c":["By asking the inmate to state their name.","By comparing the inmate's issued ID card with the work squad roster and the inmate.","By recognizing the inmate from previous shifts.","By having the inmate sign a logbook."],"a":"1","e":"Verify an inmate's identity on an inside or outside work squad by comparing the inmate's issued ID card with the work squad roster and the inmate. Page 189"},
+{"q":"When are inmates assigned to a work detail searched for contraband?","c":["Only before the work assignment.","Only after the work assignment.","Before and after the work assignment.","Only if they are on an outside work squad."],"a":"2","e":"Search inmates for contraband before and after the work assignment. Page 189"},
+{"q":"What is the supervising officer's responsibility regarding inmate counts for a work squad?","c":["To count the inmates only at the beginning and end of the day.","To delegate the count to one of the inmates.","To maintain an ongoing count of the inmates under their supervision.","Counts are not necessary for work squads."],"a":"2","e":"The officer supervising the work squad must maintain an ongoing count of the inmates under their supervision. Page 190"},
+{"q":"Why is it important to vary the method and timing of searches for regularly scheduled work locations?","c":["To keep the inmates from getting bored.","So as not to set a pattern or routine that inmates could exploit.","To comply with federal regulations.","To make the search process more efficient."],"a":"1","e":"Vary the method and timing of searches conducted for regularly scheduled work locations so as not to set a pattern or routine. Page 190"},
+{"q":"What must an officer do before each new job assignment regarding safety?","c":["Assume the inmates are already trained.","Conduct and document safety training for the inmates.","Have the inmates sign a liability waiver.","Give the inmates a written test on safety procedures."],"a":"1","e":"Before each new job assignment, conduct and document safety training for the inmates. Page 190"},
+{"q":"When should equipment used by a work squad be inspected?","c":["Only before it is issued to the inmate.","Only after it has been returned by the inmate.","Both before issuing the equipment to the inmate and after it has been returned.","Only at the end of each week."],"a":"2","e":"This inspection should take place both before issuing the equipment to the inmate and after it has been returned. Page 190"},
+{"q":"What is the correct procedure if an inmate escapes from an outside work squad?","c":["Immediately abandon the remaining inmates to pursue the escaping inmate.","Wait until returning to the facility to report the escape.","Immediately assemble the remaining inmates and notify the facility that an escape has occurred.","Finish the work assignment with the remaining inmates before taking any action."],"a":"2","e":"In the event of an escape, immediately assemble the remaining inmates and notify the facility that an escape has occurred. Do not abandon the remaining inmates in an attempt to capture the escaping inmate. Page 191"},
+{"q":"What is the stated lesson goal for Lesson 11: Hospital Assignments?","c":["To understand how to provide medical treatment to inmates.","To learn the administrative procedures for hospital billing.","To maintain custody of an inmate during a hospital assignment.","To be able to authorize visitor access at a hospital."],"a":"2","e":"You will maintain custody of an inmate during a hospital assignment. Page 192"},
+{"q":"When an officer arrives at a hospital with an inmate, what should they do with any accompanying medical records?","c":["Keep them secured in the transport vehicle.","Give them to the hospital staff.","Mail them to the hospital at a later time.","Only provide them if explicitly asked."],"a":"1","e":"When you arrive at the hospital, give any accompanying medical records to hospital staff. Page 192"},
+{"q":"Which of the following are security concerns an officer might need to communicate to hospital staff?","c":["Unauthorized visitation and phone access.","Safety and suicide precautions.","Access to items considered contraband in a correctional facility.","(All answers listed)"],"a":"3","e":"These concerns may include: unauthorized visitation, safety and suicide precautions, unauthorized phone access, access to items that are considered contraband in a correctional facility. Page 192"},
+{"q":"Even if hospital staff assist with moving an inmate, who retains the responsibility for maintaining security?","c":["The hospital security staff.","The attending physician.","The correctional officer on duty.","The responsibility is shared equally."],"a":"2","e":"However, it is your responsibility to maintain security. Page 192"},
+{"q":"What is a key step in securing an inmate's hospital room?","c":["Survey the area for threats.","Remove unnecessary medical equipment, furnishings, and personnel if possible.","Conduct a visual search of the room and any adjacent rooms.","(All answers listed)"],"a":"3","e":"Survey the area in which the inmate is being held for potential security threats. Remove unnecessary medical equipment, furnishings, and hospital personnel from the immediate area if possible. Conduct a visual search of the inmate, the room, and any adjacent rooms... Page 192"},
+{"q":"What is the common practice for securing an inmate to a hospital bed using leg restraints?","c":["Attaching one leg restraint to the inmate and the other to the bed rail for easy adjustment.","Attaching one leg restraint to the inmate and the other to the bed frame to prevent unauthorized movement.","Using two sets of leg restraints, one for each leg, attached to opposite sides of the bed.","Restraints are not attached to the bed; they only restrain the inmate's legs together."],"a":"1","e":"It is common practice for officers to apply one leg restraint to the inmate and the other to the bed frame and not the bed rail, to prevent unauthorized movement. Page 193"},
+{"q":"When is it NOT recommended to remove an inmate's handcuffs and leg restraints at the same time?","c":["At any time, one set should always remain on.","Unless it is medically necessary, and if so, additional security measures should be taken.","When the inmate is asleep.","If the inmate is compliant and cooperative."],"a":"1","e":"Removing handcuffs and leg restraints at the same time is not recommended unless medically necessary; however, in such cases, take additional security measures. Page 193"},
+{"q":"What are 'clinical restraints'?","c":["Standard security restraints applied by an officer in a clinical setting.","Measures ordered by the attending physician to keep inmate-patients from injuring themselves.","Restraints used only on inmates with mental health issues.","A type of flexible cuff used only in hospitals."],"a":"1","e":"Clinical restraints are measures that keep inmate-patients from injuring themselves and are ordered by the attending physician in a medical facility. Page 193"},
+{"q":"What is 'clinical seclusion'?","c":["Placing an inmate in a standard hospital room with the door locked.","The isolation of an inmate from the general population at a medical facility for medical and safety reasons, which may include a padded room or straightjacket.","An inmate choosing to be alone in their room.","A disciplinary measure used by correctional officers in a hospital."],"a":"1","e":"Clinical seclusion is the isolation of an inmate from the general population at a medical facility for medical and safety reasons and may include placing the inmate in a padded room or a straightjacket for their safety. Page 193"},
+{"q":"Who has the sole discretion on the application or removal of clinical restraints and placement in clinical seclusion?","c":["The correctional officer on duty.","The officer's supervisor.","The attending physician.","A hospital administrator."],"a":"2","e":"The attending physician has sole discretion on the application or removal of clinical restraints and placement in or out of clinical seclusion based on specific medical needs. Page 193"},
+{"q":"What should an officer do if a visitor is found with criminal contraband, such as unauthorized cell phones, weapons, or drugs?","c":["They are given a warning and allowed to continue their visit.","The items are confiscated, and the visitor is subject to criminal prosecution and termination of visitation privileges.","The items are returned to the visitor upon their departure.","The inmate they are visiting is immediately disciplined."],"a":"1","e":"Confiscate all contraband of a criminal nature, such as unauthorized cell phones, weapons, drugs, and intoxicants. The visitor is then subject to criminal prosecution, and visitation privileges may be terminated. Page 180"},
+{"q":"What are the responsibilities of the supervising officer during a work detail?","c":["Supervise work performance and maintain safety and security.","Notify a supervisor of any problems that arise.","Document all training.","(All answers listed)"],"a":"3","e":"It is your responsibility to supervise work performance, maintain safety and security of the squad, notify your supervisor of any problems that arise, and document all training. Page 190"},
+{"q":"What must be done with any confiscated property of a criminal nature?","c":["Dispose of it immediately.","Store it in their personal locker.","Follow the chain of custody.","Return it to local law enforcement without documentation."],"a":"2","e":"All confiscated property will follow the chain of custody. Page 180"},
+{"q":"In the event of a life-threatening emergency on a work detail, what is the correct procedure?","c":["Transport the inmate back to the facility's medical unit yourself.","Immediately request local emergency medical services, notify your agency, and request additional support as needed.","Secure the other inmates and wait for a supervisor to arrive.","Only notify your agency and wait for their instructions."],"a":"1","e":"In the event of a life-threatening emergency, immediately request local emergency medical services, notify your agency, and request additional support as needed. Page 191"},
+{"q":"What is the name for the administrative function that addresses minor and major rule violations and does not follow the same rules as criminal procedures?","c":["The disciplinary process","The jury process","The awards process","The extended privileges program"],"a":"0","e":"The disciplinary process (in a correctional facility) is an administrative function that addresses minor and major rule violations. It does not follow the same rules as criminal procedures. Page 166"},
+{"q":"Which type of mail includes correspondence to and from courts, state attorneys, private attorneys, and public defenders?","c":["Privileged mail","Routine mail","Routed mail","Legal mail"],"a":"3","e":"Legal mail-contains confidential information concerning legal matters and includes mail to and from municipal, county, state, and federal courts as well as state attorneys, private attorneys, public defenders, legal aid organizations, and agency clerks. Page 175"},
+{"q":"How should a post-mealtime security check be conducted?","c":["It should only be a quick visual scan of the area.","In the same manner as a pre-mealtime security check, including accounting for serving utensils.","It should focus only on the trash cans.","It is only necessary if contraband was found before the meal."],"a":"1","e":"Conduct a post-mealtime security check in the same manner as a pre-mealtime security check. This check includes serving utensils. Page 174"},
+{"q":"Which type of count slip includes only the total number of inmates in a housing area and the officer's signature?","c":["The formal count slip","The informal count slip","The dormitory count slip","The master count slip"],"a":"2","e":"The dormitory count slip includes the total number of inmates in a housing area, and your signature. Page 172"},
+{"q":"Which of the following incidents is considered a major rule violation, as opposed to a minor one?","c":["Violence","Rough horseplay","Gambling","Wearing a uniform improperly"],"a":"0","e":"Incidents like disorderly conduct, disrespectful behavior, violence, use of a weapon... are considered major rule violations. Some unacceptable behaviors generally considered to be minor rule violations include... rough horseplay, and gambling. Page 167"},
+{"q":"When visitors arrive and are approved, the inmate is properly ______ and informed of the visit, and may either accept or decline it.","c":["searched","given a visitation handbook","identified","read his or her rights"],"a":"2","e":"When visitors arrive at the facility and have been approved for visitation, the inmate is properly identified and informed of the visit. The inmate may either accept or decline the visit. Page 180"},
+{"q":"What is the most common type of mail in a correctional facility?","c":["Legal mail","Privileged mail","Routine mail","Routed mail"],"a":"2","e":"Routine mail is the most common type of mail in a correctional facility and comes directly through the postal service. Page 175"},
+{"q":"Which type of mail can only be opened in the presence of the inmate to whom it is addressed?","c":["Routine mail","Routed mail","Legal and privileged mail","All mail"],"a":"2","e":"Legal and privileged mail is handled differently than routine mail. While you may inspect the outside of the envelope, you can open it only in the presence of the inmate to whom it is addressed. Page 176"},
+{"q":"What are visits called when the inmate and visitor are physically separated by a barrier or use electronic equipment?","c":["Contact visits","Commercial visits","Corrective visits","Non-contact visits"],"a":"3","e":"Non-contact visits are visits in which the inmate and visitor are physically separated by some type of barrier or communicate using electronic equipment, such as an audio and video communication system. Page 178"},
+{"q":"What type of visitors may include friends and family?","c":["Professional visitors","Social visitors","Commercial visitors","Corrective visitors"],"a":"1","e":"Social visitors may include friends and family. Page 178"},
+{"q":"After an officer identifies the need for a referral but before contacting the service provider, what should they do?","c":["Gather relevant facts to explain the decision, for example by observing and interviewing the inmate.","Wait 24 hours to see if the inmate's condition improves on its own.","Immediately place the inmate in isolation.","Consult with other inmates about the situation."],"a":"0","e":"Once you identify the need for a referral, gather relevant facts to explain your decision. Personally observe the inmate, and interview the inmate, staff, or others. Page 164"},
+{"q":"What are some reasons for inmate transport?","c":["Medical treatments at local facilities or offices.","Transfers, confinement, and required court appearances.","Work assignments outside the facility.","Both 'Medical treatments...' and 'Transfers, confinement, and required court appearances.' are correct."],"a":"3","e":"Reasons for inmate transport include medical treatments at local facilities or offices, transfers, work assignments, confinement, and required court appearances within and between jurisdictions. Page 184"},
+{"q":"What should be done with contraband of a criminal nature found on a visitor, such as weapons or drugs?","c":["It should be confiscated.","It should be returned to the visitor.","It may or may not need to be confiscated.","It should not be confiscated to avoid legal issues."],"a":"0","e":"Confiscate all contraband of a criminal nature, such as unauthorized cell phones, weapons, drugs, and intoxicants. The visitor is then subject to criminal prosecution... Page 180"},
+{"q":"If an officer is unsure whether a detail in a report should be stated as approximate or absolute, the officer should:","c":["Omit the detail entirely.","Choose the absolute format to appear more confident.","Clarify which type of detail it is.","Use the approximate format in all cases."],"a":"2","e":"The correct answer is Clarify which type of detail it is. The text explicitly states, \"It is important to clarify the details you write in a report, representing details as either approximate... or absolute.\" Page: 287"},
+{"q":"If you are taken hostage, your first and most effective survival tool is your mind, which allows you to:","c":["Look for an opportunity to overpower your captor.","Plan a detailed escape route.","Remain calm and controlled.","Mentally document the captor's appearance for a future report."],"a":"2","e":"The correct answer is Remain calm and controlled. While other mental tasks are important, the text emphasizes that the key to survival is to \"remain calm, rest when possible,\" and avoid confrontation. Page: 268"},
+{"q":"An officer observes an increase in weapons manufacturing and inmates beginning to separate into unusual ethnic or geographical groupings. This is a primary indicator of:","c":["A potential riot or disturbance.","A pending facility assault.","A mass escape attempt.","An organized medical emergency fraud."],"a":"0","e":"The correct answer is A potential riot or disturbance. The text lists \"weapons manufacturing\" and \"unusual groupings of inmates\" as key indicators that precede a riot. Page: 265"},
+{"q":"A human-instigated disaster is defined as a disastrous event caused directly or principally by:","c":["One or more identifiable human actions, whether intentional or unintentional.","The failure of facility infrastructure only.","Only the intentional or willful actions of people.","An unforeseen act of nature that is made worse by human error."],"a":"0","e":"The correct answer is One or more identifiable human actions, whether intentional or unintentional. This is the specific definition provided in the text, distinguishing it from a natural disaster. Page: 281"},
+{"q":"An ABC fire extinguisher is considered highly versatile because it is rated for which combination of fire classes?","c":["Class A, Class B, and Class K","Class A, Class B, and Class C","Class B, Class C, and Class D","Class A, Class C, and Class D"],"a":"1","e":"The correct answer is Class A, Class B, and Class C. The text specifies that an ABC extinguisher is used for \"ordinary combustibles, flammable liquids, and electrical\" fires, which correspond to Classes A, B, and C. Page: 272"},
+{"q":"Which of the following actions is NOT a recommended procedure for a first-responding officer during a hazardous material emergency?","c":["Approaching the scene from upwind and observing from a safe distance.","Attempting to clean up the spill themselves.","Referring to the posted Safety Data Sheet (SDS).","Relaying the wind direction to the control room."],"a":"1","e":"The correct answer is Attempting to clean up the spill themselves. The text states that \"the resolution of a hazmat incident is usually the responsibility of supervisory staff and specialized response teams\" and that officers should only respond within the scope of their training, not attempt cleanup. Page: 276"},
+{"q":"A key safeguard for chain of custody is that access to evidence storage areas is restricted and controlled by:","c":["The lead investigator only.","Any officer on duty.","Designated personnel.","The shift supervisor."],"a":"2","e":"The correct answer is Designated personnel. The text explains that safeguards include protocols where \"Designated personnel will be in charge of evidence storage areas.\" Page: 290"},
+{"q":"A crime scene log provides a continuous record of:","c":["All evidence collected at the scene.","The activities happening at the scene, including personnel entry and exit.","All radio transmissions related to the incident.","The chain of custody for a single piece of evidence."],"a":"1","e":"The correct answer is The activities happening at the scene, including personnel entry and exit. This log documents the timeline and access to the scene to maintain its integrity. Page: 284"},
+{"q":"The documentation of how evidence is handled and preserved is known as:","c":["An incident report.","A crime scene log.","The chain of custody.","An evidence receipt."],"a":"2","e":"The correct answer is The chain of custody. This is the specific term for the documentation that tracks evidence from collection to court to ensure its integrity. Page: 289"},
+{"q":"What is the stated lesson goal for Lesson 11: Hospital Assignments?","c":["To understand how to provide medical treatment to inmates.","To learn the administrative procedures for hospital billing.","To maintain custody of an inmate during a hospital assignment.","To be able to authorize visitor access at a hospital."],"a":"2","e":"You will maintain custody of an inmate during a hospital assignment. Page 192"},
+{"q":"As soon as an officer becomes aware of a _____ rule violation, they must obtain approval from the shift supervisor to begin the disciplinary process.","c":["minor","major","misdemeanor","maximum"],"a":"1","e":"As soon as you become aware of a major rule violation, obtain approval from the shift supervisor to begin the disciplinary process. Page 167"},
+{"q":"An inmate's behavior is unacceptable if it clearly violates the...","c":["officer's personal preferences.","unwritten rules of the cell block.","facility rules.","norms of outside society."],"a":"2","e":"An inmate's behavior is unacceptable if it clearly violates the facility rules. Page 168"},
+{"q":"In the event of a life-threatening emergency on a work detail, what is the correct procedure?","c":["Transport the inmate back to the facility's medical unit yourself.","Immediately request local emergency medical services, notify your agency, and request additional support as needed.","Secure the other inmates and wait for a supervisor to arrive.","Only notify your agency and wait for their instructions."],"a":"1","e":"In the event of a life-threatening emergency, immediately request local emergency medical services, notify your agency, and request additional support as needed. Page 191"},
+{"q":"What should an officer do if an inmate becomes non-compliant or complains of a medical condition during transport?","c":["Stop the transport immediately.","Increase the speed to get to the destination faster.","Do not stop the transport and contact your agency for instructions.","Pull over and let the inmate out of the vehicle."],"a":"2","e":"During transport, if an inmate becomes non-compliant, combative, or disorderly or complains of a medical condition, do not stop the transport. Page 187"},
+{"q":"Work squads that do not go beyond the security perimeter are considered ______ work squads, while any squad that works beyond the perimeter is considered an ______ work squad.","c":["outside / inside","inside / inside","inside / outside","outside / outside"],"a":"2","e":"Work crews or squads that do not go beyond the security perimeter of a facility are considered inside. and any squad or detail that works beyond the perimeter is considered an outside work squad. Page 189"},
+{"q":"Who is responsible for taking necessary action to prevent harm to an inmate until they are in the care of a service provider?","c":["Your supervisor","The inmate's advocate","The medical responder","You (the officer)"],"a":"3","e":"Until the inmate is in the care of the service provider, you are responsible for taking necessary action so that no harm comes to the inmate or anyone else. Page 165"},
+{"q":"When telling a service provider about an inmate's behavior for a referral, an officer should avoid what?","c":["Specific details","Using direct quotes","Generalizations","Documenting the conversation"],"a":"2","e":"For a referral, tell the service provider about the inmate's specific actions and behaviors, avoiding generalizations. Page 164"},
+{"q":"What is the name for an armed escort vehicle used to follow a transport vehicle for additional security, especially for high-level threats?","c":["An armored vehicle","A partitioned vehicle","A tailing vehicle","A trailing or chase vehicle"],"a":"3","e":"A trailing or chase vehicle is an armed escort vehicle used to follow or trail a transport vehicle to provide additional security. These vehicles are often used when the transport is a high-level threat... Page 185"},
+{"q":"How should an officer position themselves while escorting an inmate to control movement?","c":["To the rear and slightly to one side of the inmate.","In front of the inmate.","Directly beside the inmate, shoulder to shoulder.","At least six feet in front of the inmate."],"a":"0","e":"While escorting an inmate, position yourself to the rear and slightly to one side of the inmate to control movement. Page 182"},
+{"q":"What is the term for when contraband is placed in a sealed balloon and concealed in a body cavity or swallowed for later expulsion?","c":["Inflating","Concealing","Sealing","Ballooning"],"a":"3","e":"For example, visitors may smuggle contraband through security checkpoints by \"ballooning,\" which is when contraband is placed in a sealed balloon and concealed in a body cavity or swallowed for later expulsion. Page 181"},
+
+];
+
+function processAndCleanQuestions(questionArray) {
+    // Filter out any null or undefined entries from the initial array
+    const initialCleanedArray = questionArray.filter(q => q && typeof q === 'object');
+
+    return initialCleanedArray.map((q_orig, index) => {
+        // Deep copy the question object to avoid modifying the original
+        let q = JSON.parse(JSON.stringify(q_orig)); 
+        q.originalIndex = index; // Store original index
+
+        // Convert answer to a number if it's a string
+        if (typeof q.a === 'string') {
+          q.a = parseInt(q.a, 10);
+        }
+
+        // Convert letter-based answer (a_letter) to numeric index (a)
+        if (q.a_letter) { 
+            const letterMap = { A: 0, B: 1, C: 2, D: 3 };
+            q.a = letterMap[q.a_letter.toUpperCase()]; // Ensure uppercase for consistency
+            delete q.a_letter; 
+        }
+
+        // Validate the answer index; default to 0 if invalid
+        if (q.a === undefined || q.a < 0 || q.a >= q.c.length) {
+            console.warn("Initial invalid answer index for question:", q.q, "Original index:", q_orig.a, "Defaulting to 0.");
+            q.a = 0; 
+        }
+        
+        // Store the correct answer text before shuffling choices
+        let correctAnswerText = q.c[q.a]; 
+
+        // Standardize "All of the above." to "All answers Listed"
+        q.c = q.c.map(choice => choice === "All of the above." ? "(All answers listed)" : choice);
+        if (correctAnswerText === "All of the above.") {
+            correctAnswerText = "(All answers listed)";
+        }
+        
+        // Shuffle the choices
+        let shuffledChoices = shuffleArray([...q.c]); 
+        // Find the new index of the correct answer after shuffling
+        let newCorrectIndex = shuffledChoices.indexOf(correctAnswerText);
+
+        // Handle cases where the correct answer text might not be found after shuffling (should be rare)
+        if (newCorrectIndex === -1) {
+            console.error("CRITICAL ERROR: Correct answer text '"+ correctAnswerText +"' not found after shuffling for question:", q.q, "Shuffled choices:", shuffledChoices, "Original choices were:", q.c);
+            // Fallback: try to find it in the original, unshuffled choices
+            newCorrectIndex = q.c.indexOf(correctAnswerText); 
+            if (newCorrectIndex !== -1) {
+                q.a = newCorrectIndex; 
+            } else {
+                q.a = 0; 
+                console.error("ABSOLUTE FALLBACK: Could not find '"+ correctAnswerText +"' even in original choices for q: " + q.q + ". Using original choices and index 0.");
+            }
+        } else {
+            q.c = shuffledChoices; 
+            q.a = newCorrectIndex; 
+        }
+        return q;
+    });
+}
+
+// Process the questions and store them in the questionPool
+const questionPool = processAndCleanQuestions(newQuestionsFromUser);
+
+
+let selectedQuestions = []; 
+let currentIndex = 0;
+const skipped = []; 
+const flagged = []; 
+let answers = []; 
+let choiceVisibility = {}; 
+let testId = ''; 
+let timerSeconds = 1800; 
+let isReviewMode = false;
+let isStudyMode = false;
+let incorrectlyAnswered = [];
+let usedQuestionIndicesInPool = [];
+let currentStudySetSize = 10;
+var timerInterval;
+
+function selectRandomQuestionsFromPool(pool, count) {
+  const shuffledFullPool = shuffleArray([...pool]); 
+  return shuffledFullPool.slice(0, count);
+}
+
+function renderQuiz() {
+  const form = document.getElementById("quizForm");
+  form.innerHTML = ''; 
+
+  if (selectedQuestions.length === 0 ) {
+    if(isStudyMode) showStudyEndActions();
+    return;
+  }
+  if (!selectedQuestions[currentIndex]){
+      // This can happen if we run out of incorrect questions to retry
+      showStudyEndActions();
+      return;
+  }
+
+  const q = selectedQuestions[currentIndex]; 
+  const questionDiv = document.createElement("div"); 
+  questionDiv.classList.add("question");
+  questionDiv.innerHTML = `<div class='question-header'>Question ${currentIndex + 1}</div><div class='question-text'>${q.q}</div>`;
+  
+  const hasBeenAnsweredInStudy = isStudyMode && answers[currentIndex] !== null;
+
+  q.c.forEach((choice, i) => {
+    const choiceKey = `q${currentIndex}_c${i}`;
+    const isVisuallyObscured = choiceVisibility[choiceKey] === true; 
+    const isSelected = answers[currentIndex] === i;
+    
+    const eyeIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+    const eyeOffIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+
+    const choiceWrapper = document.createElement('div');
+    choiceWrapper.className = 'choice-wrapper';
+    if (isSelected && !isStudyMode) {
+        choiceWrapper.classList.add('selected-wrapper');
+    }
+    
+    const radioId = `${choiceKey}_radio`;
+    choiceWrapper.innerHTML = `
+        <label class="choice-button-main-area" for="${radioId}">
+            <input type="radio" id="${radioId}" name="q${currentIndex}" value="${i}" ${isSelected ? 'checked' : ''} onclick="recordAnswer(${i})">
+            <span class="choice-text-container">
+              ${String.fromCharCode(65 + i)}. <span class="actual-choice-text ${isVisuallyObscured ? 'actual-choice-text-visually-obscured' : ''}">${choice}</span>
+            </span>
+        </label>
+        <button type="button" class="toggle-visibility-btn" onclick="toggleChoiceVisibility(${currentIndex}, ${i}, event)">
+          ${isVisuallyObscured ? eyeOffIconSVG : eyeIconSVG}
+        </button>
+    `;
+    questionDiv.appendChild(choiceWrapper);
+    
+    if (hasBeenAnsweredInStudy) {
+        const selectedAnswer = answers[currentIndex];
+        const isCorrect = selectedAnswer === q.a;
+        if (i === selectedAnswer) {
+            choiceWrapper.classList.add(isCorrect ? 'study-correct' : 'study-incorrect');
+        }
+        if (i === q.a) {
+            choiceWrapper.classList.add('study-correct');
+        }
+    }
+  });
+  
+  const explanationDiv = document.createElement('div');
+  explanationDiv.className = 'explanation';
+  explanationDiv.id = `explanation-${currentIndex}`;
+  explanationDiv.innerHTML = q.e;
+  if(hasBeenAnsweredInStudy) {
+      explanationDiv.style.display = 'block';
+  }
+  questionDiv.appendChild(explanationDiv);
+  
+  form.appendChild(questionDiv);
+  
+  document.getElementById("progressText").textContent = `Question ${currentIndex + 1} of ${selectedQuestions.length}`; 
+  document.getElementById("progressTextBottom").textContent = `Question ${currentIndex + 1} of ${selectedQuestions.length}`; 
+  
+  document.getElementById("submitBtn").style.display = answers.every(a => a !== null) && !isStudyMode ? 'inline-block' : 'none';
+
+  const flagButton = document.getElementById("flagButton");
+  if (flagButton) { 
+      flagButton.style.display = isStudyMode ? 'none' : 'inline-block';
+    if (flagged.includes(currentIndex)) {
+      flagButton.innerHTML = '✅ Unflag';
+    } else {
+      flagButton.innerHTML = '🚩 Flag';
+    }
+  }
+  highlightNavItem(currentIndex); 
+}
+
+function toggleChoiceVisibility(qIndex, cIndex, event) {
+    event.stopPropagation(); 
+    const choiceKey = `q${qIndex}_c${cIndex}`;
+    choiceVisibility[choiceKey] = !choiceVisibility[choiceKey]; 
+    
+    const buttonClicked = event.currentTarget; 
+    const choiceWrapper = buttonClicked.closest('.choice-wrapper');
+    if (!choiceWrapper) return;
+
+    const textSpan = choiceWrapper.querySelector('.actual-choice-text');
+    if (!textSpan) return;
+    
+    const eyeIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+    const eyeOffIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+
+    if (choiceVisibility[choiceKey]) { 
+        textSpan.classList.add('actual-choice-text-visually-obscured');
+        buttonClicked.innerHTML = eyeOffIconSVG;
+    } else {
+        textSpan.classList.remove('actual-choice-text-visually-obscured');
+        buttonClicked.innerHTML = eyeIconSVG;
+    }
+}
+
+
+function recordAnswer(selectedIndex) {
+    const alreadySelectedAndAnswered = answers[currentIndex] !== null;
+
+    if (alreadySelectedAndAnswered) {
+        if (isStudyMode) {
+            nextQuestion();
+        } else if (selectedIndex !== answers[currentIndex]) {
+            answers[currentIndex] = selectedIndex;
+            renderQuiz(); 
+            generateSidebar();
+        } else {
+             nextQuestion();
+        }
+        return;
+    }
+    
+    answers[currentIndex] = selectedIndex;
+
+    const idxInSkipped = skipped.indexOf(currentIndex);
+    if (idxInSkipped > -1) {
+        skipped.splice(idxInSkipped, 1);
+    }
+    
+    const questionDiv = document.getElementById("quizForm").querySelector(".question");
+    
+    if (isStudyMode) {
+        const q = selectedQuestions[currentIndex];
+        const isCorrect = selectedIndex === q.a;
+        const choiceWrappers = questionDiv.querySelectorAll('.choice-wrapper');
+
+        choiceWrappers.forEach((wrapper, i) => {
+            if (i === selectedIndex) {
+                wrapper.classList.add(isCorrect ? 'study-correct' : 'study-incorrect');
+            }
+            if (i === q.a) {
+                wrapper.classList.add('study-correct');
+            }
+        });
+        document.getElementById(`explanation-${currentIndex}`).style.display = 'block';
+
+        if (!isCorrect) {
+            if (!incorrectlyAnswered.some(item => item.originalIndex === q.originalIndex)) {
+                incorrectlyAnswered.push(q);
+            }
+        }
+        
+        if (currentIndex === selectedQuestions.length - 1) {
+            showStudyEndActions();
+        }
+    } else { 
+        if (questionDiv) {
+            const currentQuestionChoiceWrappers = questionDiv.querySelectorAll('.choice-wrapper');
+            currentQuestionChoiceWrappers.forEach((wrapper, idx) => {
+                wrapper.classList.remove('selected-wrapper');
+                if (idx === selectedIndex) {
+                    wrapper.classList.add('selected-wrapper');
+                }
+            });
+        }
+        document.getElementById("submitBtn").style.display = answers.every(a => a !== null) ? 'inline-block' : 'none';
+    }
+    
+    generateSidebar(); 
+}
+
+function showStudyEndActions() {
+    document.querySelector('.question-actions-bar').style.display = 'none';
+    const studyEndActions = document.getElementById('studyEndActions');
+    studyEndActions.style.display = 'block';
+
+    const retryBtn = document.getElementById('retryIncorrectBtn');
+    retryBtn.style.display = incorrectlyAnswered.length > 0 ? 'inline-block' : 'none';
+
+    const nextSetBtn = document.getElementById('nextSetBtn');
+    const remainingQuestions = questionPool.length - usedQuestionIndicesInPool.length;
+    nextSetBtn.style.display = remainingQuestions >= currentStudySetSize ? 'inline-block' : 'none';
+}
+
+function startNextStudySet() {
+    setupSession(true); // Call setupSession again, indicating it's the next set
+}
+
+function retryIncorrectQuestions() {
+    selectedQuestions = shuffleArray([...incorrectlyAnswered]);
+    currentIndex = 0;
+    answers = new Array(selectedQuestions.length).fill(null);
+    incorrectlyAnswered = [];
+    flagged.length = 0;
+    skipped.length = 0;
+
+    document.getElementById('studyEndActions').style.display = 'none';
+    document.querySelector('.question-actions-bar').style.display = 'flex';
+    document.getElementById('nextBtn').style.display = 'inline-block';
+    document.getElementById('prevBtn').style.display = 'inline-block';
+
+    renderQuiz();
+    generateSidebar();
+}
+
+function skipQuestion() {
+  const questionToSkip = currentIndex;
+  if (!skipped.includes(questionToSkip)) {
+    skipped.push(questionToSkip);
+  }
+  nextQuestion(); 
+}
+
+function flagQuestion() {
+  const indexInFlagged = flagged.indexOf(currentIndex);
+  if (indexInFlagged > -1) {
+    flagged.splice(indexInFlagged, 1); 
+  } else {
+    flagged.push(currentIndex); 
+  }
+  renderQuiz(); 
+  generateSidebar(); 
+}
+
+function nextQuestion() {
+  let potentialNextIndex = currentIndex + 1;
+
+  if (potentialNextIndex >= selectedQuestions.length) { 
+    if (isStudyMode) {
+      showStudyEndActions();
+      return;
+    }
+    potentialNextIndex = -1; 
+
+    for (const skippedIdx of skipped) {
+      if (answers[skippedIdx] === null) {
+        potentialNextIndex = skippedIdx;
+        break;
+      }
+    }
+
+    if (potentialNextIndex === -1) {
+      for (let i = 0; i < selectedQuestions.length; i++) {
+        if (answers[i] === null) {
+          potentialNextIndex = i;
+          break;
+        }
+      }
+    }
+    
+    if (potentialNextIndex === -1) {
+      potentialNextIndex = currentIndex; 
+    }
+  }
+  currentIndex = potentialNextIndex;
+  renderQuiz();
+  generateSidebar(); 
+}
+
+function prevQuestion() {
+  if (currentIndex > 0) {
+    currentIndex--;
+  }
+  renderQuiz();
+  generateSidebar(); 
+}
+
+function displayReview() {
+  isReviewMode = true; // Set review mode
+  choiceVisibility = {}; 
+  const form = document.getElementById("quizForm");
+  form.innerHTML = ''; 
+  let correctCount = 0;
+
+  const reviewActionsTop = document.getElementById("reviewActionsTop");
+  if(reviewActionsTop) reviewActionsTop.style.display = 'block';
+
+
+  selectedQuestions.forEach((q, i) => { 
+    const div = document.createElement("div");
+    div.id = `review-q-${i}`; // Add ID for scrolling
+    const isCorrect = answers[i] === q.a;
+    const statusClass = isCorrect ? 'correct' : 'incorrect';
+    const chosenAnswerText = (answers[i] !== null && q.c[answers[i]] !== undefined) ? q.c[answers[i]] : '<em>No answer provided</em>';
+    const correctAnswerText = (q.a !== undefined && q.c[q.a] !== undefined) ? q.c[q.a] : '<em>Error: Correct answer not found</em>';
+    
+    div.className = statusClass; 
+    div.innerHTML = `<div class='question-header'>Question ${i + 1}</div>` +
+                      `<div class='question-text'>${q.q}</div>` +
+                      `<p>Your Answer: ${chosenAnswerText}</p>` +
+                      `<p>Correct Answer: ${correctAnswerText}</p>` +
+                      `<div class='explanation' style="display:block;">${q.e}</div><hr>`;
+    if (isCorrect) correctCount++;
+    form.appendChild(div);
+  });
+  
+  const scoreHeader = document.createElement("h2");
+  scoreHeader.id = "reviewSummaryHeader"; 
+  scoreHeader.style.textAlign = "center";
+  scoreHeader.innerHTML = `Review Summary<br>You answered ${correctCount} out of ${selectedQuestions.length} correctly.`; 
+  
+  const quizContentScrollable = document.getElementById("quizContentScrollable");
+  const referenceNodeForHeader = document.getElementById("quizForm"); 
+
+  if (reviewActionsTop && reviewActionsTop.parentNode === quizContentScrollable) {
+      quizContentScrollable.insertBefore(scoreHeader, reviewActionsTop.nextSibling);
+  } else if (referenceNodeForHeader && referenceNodeForHeader.parentNode === quizContentScrollable) {
+      quizContentScrollable.insertBefore(scoreHeader, referenceNodeForHeader);
+  } else {
+      const progressDiv = document.getElementById('progress');
+      if (progressDiv && progressDiv.parentNode === quizContentScrollable) {
+          quizContentScrollable.insertBefore(scoreHeader, progressDiv.nextSibling);
+      } else {
+          quizContentScrollable.prepend(scoreHeader); 
+      }
+  }
+  
+  document.getElementById("progressText").textContent = "Review Mode";
+  document.getElementById("progressTextBottom").textContent = "Review Mode";
+  
+  const questionActionsBar = document.querySelector(".question-actions-bar");
+  if(questionActionsBar) questionActionsBar.style.display = 'none';
+  document.getElementById("flagButton").style.display = 'none';
+  
+  const reviewActionsBottom = document.getElementById("reviewActionsBottom");
+  if(reviewActionsBottom) reviewActionsBottom.style.display = 'block';
+  generateSidebar(); // Refresh sidebar with review colors
+}
+
+function returnToHome() {
+    isReviewMode = false; // Exit review mode
+    isStudyMode = false;
+    const reviewActionsTop = document.getElementById("reviewActionsTop");
+    if(reviewActionsTop) reviewActionsTop.style.display = 'none';
+    const reviewActionsBottom = document.getElementById("reviewActionsBottom");
+    if(reviewActionsBottom) reviewActionsBottom.style.display = 'none';
+    const studyEndActions = document.getElementById("studyEndActions");
+    if(studyEndActions) studyEndActions.style.display = 'none';
+    
+    const scoreHeader = document.getElementById("reviewSummaryHeader");
+    if (scoreHeader) {
+        scoreHeader.remove();
+    }
+    
+    document.getElementById('mainQuizContainer').style.display = 'none';
+    document.getElementById('resultsScreen').style.display = 'none'; 
+    document.getElementById('introScreen').style.display = 'flex';
+    document.getElementById('homeBtn').style.display = 'none'; 
+
+    const timerDisplay = document.getElementById('timer');
+    if(timerDisplay) timerDisplay.textContent = "30:00"; 
+    
+    currentIndex = 0;
+    answers = [];
+    skipped.length = 0; 
+    flagged.length = 0;
+    choiceVisibility = {};
+    selectedQuestions = []; 
+    incorrectlyAnswered = [];
+    usedQuestionIndicesInPool = [];
+}
+
+
+function submitAll() {
+  let correct = 0;
+  selectedQuestions.forEach((q, i) => { 
+    if (answers[i] === q.a) correct++;
+  });
+  const scorePercentage = selectedQuestions.length > 0 ? (correct / selectedQuestions.length) * 100 : 0;
+
+  document.getElementById("mainQuizContainer").style.display = "none";
+  document.getElementById("resultsScreen").style.display = "flex";
+  document.getElementById("finalScore").textContent = `${scorePercentage.toFixed(0)}%`;
+  document.getElementById("testIdDisplay").textContent = testId; 
+
+  clearInterval(timerInterval); 
+  const timerDisplay = document.getElementById('timer');
+  if(timerDisplay) timerDisplay.textContent = "00:00"; 
+}
+
+function showReviewPage() {
+  isReviewMode = true; // Set review mode
+  document.getElementById("resultsScreen").style.display = "none";
+  document.getElementById("submitScreen").style.display = "none"; 
+  document.getElementById("mainQuizContainer").style.display = "block"; 
+  
+  const questionActionsBar = document.querySelector(".question-actions-bar");
+  if(questionActionsBar) questionActionsBar.style.display = 'none'; 
+  document.getElementById("flagButton").style.display = 'none'; 
+
+  displayReview(); 
+}
+
+function startExam() {
+    isStudyMode = false;
+    isReviewMode = false;
+    usedQuestionIndicesInPool = []; // Reset used questions for a new exam
+    setupSession();
+}
+
+function startStudy() {
+    isStudyMode = true;
+    isReviewMode = false;
+    usedQuestionIndicesInPool = []; // Reset used questions for a new study session
+    setupSession();
+}
+
+function setupSession(isNextSet = false) {
+    if(!isNextSet) {
+        usedQuestionIndicesInPool = [];
+    }
+  document.getElementById('introScreen').style.display = 'none';
+  document.getElementById('mainQuizContainer').style.display = 'block'; 
+  document.getElementById('homeBtn').style.display = 'flex';
+  
+  const mainHeader = document.getElementById('mainHeaderTitle');
+  const timerDisplay = document.getElementById('timer');
+  const questionActionsBar = document.querySelector(".question-actions-bar");
+  const flagButton = document.getElementById("flagButton");
+  const studyEndActions = document.getElementById("studyEndActions");
+
+  studyEndActions.style.display = 'none';
+  questionActionsBar.style.display = 'flex'; 
+
+  if (isStudyMode) {
+      mainHeader.textContent = "Answer & Study";
+      timerDisplay.style.display = 'none';
+      document.getElementById('submitBtn').style.display = 'none';
+      document.getElementById('skipBtn').style.display = 'none';
+  } else {
+      mainHeader.textContent = 'Exam';
+      timerDisplay.style.display = 'block';
+      document.getElementById('submitBtn').style.display = 'none';
+      document.getElementById('skipBtn').style.display = 'inline-block';
+  }
+
+
+  const reviewActionsTop = document.getElementById("reviewActionsTop");
+  if(reviewActionsTop) reviewActionsTop.style.display = 'none';
+  const reviewActionsBottom = document.getElementById("reviewActionsBottom");
+  if(reviewActionsBottom) reviewActionsBottom.style.display = 'none';
+  
+  const oldScoreHeader = document.getElementById("reviewSummaryHeader");
+  if (oldScoreHeader) oldScoreHeader.remove();
+
+  if(flagButton) flagButton.style.display = isStudyMode ? 'none' : 'inline-block';
+
+  const questionCountSelect = document.getElementById('questionCount');
+  let numberOfQuestions;
+
+  if (questionCountSelect && questionCountSelect.value === 'all') {
+    numberOfQuestions = questionPool.length;
+  } else if (questionCountSelect) {
+    numberOfQuestions = parseInt(questionCountSelect.value, 10);
+  } else {
+    numberOfQuestions = 10; // Fallback
+  }
+  currentStudySetSize = numberOfQuestions;
+
+  // Select questions for the session
+    let availableQuestions = questionPool.filter(q => !usedQuestionIndicesInPool.includes(q.originalIndex));
+    let shuffled = shuffleArray(availableQuestions);
+    selectedQuestions = shuffled.slice(0, currentStudySetSize);
+    selectedQuestions.forEach(q => usedQuestionIndicesInPool.push(q.originalIndex));
+
+  
+  answers = new Array(selectedQuestions.length).fill(null); 
+  choiceVisibility = {}; 
+  testId = `TEST-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  currentIndex = 0;
+  skipped.length = 0; 
+  flagged.length = 0;
+  incorrectlyAnswered = [];
+
+  adjustFooterPadding(); 
+
+  generateSidebar(); 
+  renderQuiz(); 
+
+  if (!isStudyMode) {
+    timerSeconds = numberOfQuestions * 60; 
+    const initialMin = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+    const initialSec = String(timerSeconds % 60).padStart(2, '0');
+    if(timerDisplay) timerDisplay.textContent = `${initialMin}:${initialSec}`;
+
+    clearInterval(timerInterval); 
+    timerInterval = setInterval(() => {
+      if (timerSeconds > 0) {
+        timerSeconds--;
+        const min = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+        const sec = String(timerSeconds % 60).padStart(2, '0');
+        if(timerDisplay) timerDisplay.textContent = `${min}:${sec}`;
+      } else {
+        submitAll(); 
+        clearInterval(timerInterval);
+      }
+    }, 1000);
+  }
+}
+
+function showSubmitScreen() {
+  document.getElementById("submitScreen").style.display = "flex"; 
+}
+function hideSubmitScreen() {
+  document.getElementById("submitScreen").style.display = "none";
+}
+function confirmAndSubmit() {
+  const confirmMessageDiv = document.getElementById("confirmSubmitMessage");
+  const confirmSubmitCheckbox = document.getElementById("confirmSubmit");
+
+  if (confirmSubmitCheckbox && confirmSubmitCheckbox.checked) {
+    if(confirmMessageDiv) confirmMessageDiv.textContent = ""; 
+    submitAll();
+  } else {
+    if(confirmMessageDiv) confirmMessageDiv.textContent = "Please confirm you have completed the exam.";
+    setTimeout(() => { 
+        if(confirmMessageDiv) confirmMessageDiv.textContent = ""; 
+    }, 3000);
+  }
+}
+
+function generateSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  if (sidebar && getComputedStyle(sidebar).display === 'none' && window.innerWidth <= 767) {
+      return; 
+  }
+
+  const ul = document.getElementById("questionNav");
+  if (!ul) return; 
+  ul.innerHTML = ''; 
+  for (let i = 0; i < selectedQuestions.length; i++) {
+    const li = document.createElement("li");
+    li.innerHTML = `<button ondblclick="jumpToQuestion(${i})" onclick="jumpToQuestion(${i})" id="nav-${i}" style="width: 40px; height: 40px; margin: 5px auto; border-radius: 50%; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;">${i + 1}</button>`;
+    ul.appendChild(li);
+    highlightNavItem(i); 
+  }
+}
+
+function jumpToQuestion(index) {
+  currentIndex = index; // Always update the current index
+
+  if (isReviewMode) {
+    const element = document.getElementById(`review-q-${index}`);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  } else {
+    renderQuiz();
+  }
+  generateSidebar(); // Update sidebar for both modes
+}
+
+function highlightNavItem(index) {
+    const btn = document.getElementById(`nav-${index}`);
+    if (!btn) return;
+
+    const isCurrent = index === currentIndex;
+    let bg, color, border, iconText;
+    iconText = `${index + 1}`;
+    border = '2px solid transparent';
+
+    const mode = isReviewMode || (isStudyMode && answers[index] !== null) ? 'review' : 'quiz';
+
+    switch (mode) {
+        case 'review':
+            const isCorrect = answers[index] === selectedQuestions[index].a;
+            if (answers[index] === null) {
+                bg = '#6b7280'; // Gray for unanswered/skipped in review
+                color = '#fff';
+            } else if (isCorrect) {
+                bg = '#22c55e'; // Green for correct
+                color = '#fff';
+            } else {
+                bg = '#ef4444'; // Red for incorrect
+                color = '#fff';
+            }
+            break;
+        case 'quiz':
+        default:
+            const isAnswered = answers[index] !== null;
+            const isSkipped = skipped.includes(index);
+            const isFlagged = flagged.includes(index);
+
+            bg = '#d0d0d0';
+            color = '#000';
+
+            if (isAnswered) {
+                bg = '#3b82f6';
+                color = '#fff';
+            } else if (isSkipped) {
+                bg = '#6b7280';
+                color = '#fff';
+                iconText += ' ⏸';
+            }
+
+            if (isFlagged) {
+                iconText += ' 🚩';
+            }
+            break;
+    }
+
+    if (isCurrent) {
+        border = '2px solid #1d4ed8'; // Highlight current item in both modes
+        if (!isReviewMode && !isStudyMode && answers[index] === null && !skipped.includes(index)) {
+            bg = '#e5e7eb';
+            color = '#000';
+        }
+    }
+
+    btn.style.background = bg;
+    btn.style.color = color;
+    btn.style.border = border;
+    btn.innerHTML = iconText.trim();
+
+    if (isCurrent && !isReviewMode && !isStudyMode && btn.scrollIntoView) {
+        btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+
+function adjustFooterPadding() {
+    const footer = document.querySelector('.quiz-controls');
+    const sidebar = document.getElementById('sidebar');
+    if (footer && getComputedStyle(footer).position === 'fixed') {
+        let footerHeight = footer.offsetHeight;
+        document.body.style.paddingBottom = footerHeight + 'px';
+        if (sidebar && getComputedStyle(sidebar).display !== 'none') { 
+            sidebar.style.bottom = footerHeight + 'px';
+        }
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    adjustFooterPadding(); 
+    window.addEventListener('resize', adjustFooterPadding); 
+
+    if (document.getElementById('introScreen').style.display !== 'none') {
+        const mainQuizContainer = document.getElementById('mainQuizContainer');
+        if (mainQuizContainer) mainQuizContainer.style.display = 'none';
+    }
+
+    const questionCountSelect = document.getElementById('questionCount');
+    if (questionCountSelect) {
+        questionCountSelect.innerHTML = ''; // Clear existing options
+
+        const options = [10, 25, 50]; // Define standard options
+        options.forEach(num => {
+            if (questionPool.length >= num) { // Only add option if there are enough questions
+                const option = document.createElement('option');
+                option.value = num;
+                option.textContent = num;
+                questionCountSelect.appendChild(option);
+            }
+        });
+
+        // Set a default selected value
+        if (questionCountSelect.options.length > 0) {
+            const defaultOption = questionCountSelect.querySelector('option[value="50"]') || questionCountSelect.options[questionCountSelect.options.length - 1];
+            if(defaultOption) defaultOption.selected = true;
+        }
+
+        // Add the "All Questions" option
+        const allQuestionsOption = document.createElement('option');
+        allQuestionsOption.value = 'all';
+        allQuestionsOption.textContent = `All (${questionPool.length} Questions)`;
+        questionCountSelect.appendChild(allQuestionsOption);
+    }
+});
+
+</script>
+</body>
+</html>

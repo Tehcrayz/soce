@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title> Officer Safety</title>
+  <style>
+    body {  
+      font-family: Arial, sans-serif;  
+      margin: 0;  
+      line-height: 1.6;  
+      background: #f4f8fb;  
+      padding-bottom: 70px;  
+    }
+    .question-header { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+    .question-text { font-size: 16px; margin-bottom: 10px; }
+    
+    /* New structure for choice rendering */
+    .choice-wrapper {
+      display: flex;
+      align-items: center;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      margin: 10px 0;
+      background: #ffffff;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .choice-wrapper:hover {
+      background: #e6f0ff;
+    }
+    .choice-wrapper.selected-wrapper { /* Applied to the wrapper when selected */
+      background: #d0ebff;
+      border-color: #3b82f6;
+    }
+    /* Styles for study mode feedback */
+    .choice-wrapper.study-correct {
+        background-color: #dcfce7;
+        border-color: #22c55e;
+    }
+    .choice-wrapper.study-incorrect {
+        background-color: #fee2e2;
+        border-color: #ef4444;
+    }
+
+
+    .choice-button-main-area { /* This is the label now */
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      padding-right: 10px; /* Space before the eye icon button */
+    }
+    .choice-button-main-area input[type="radio"] {
+      margin-right: 10px;  
+      -webkit-appearance: radio;  
+      -moz-appearance: radio;
+      appearance: radio;
+    }
+    .choice-text-container {
+        /* flex-grow: 1; */ /* No longer needed here, label is flex-grow */
+    }
+    .actual-choice-text-visually-obscured {  
+        opacity: 0.3;
+        text-decoration: line-through;
+    }
+    .toggle-visibility-btn {
+        background: none;
+        border: none;
+        font-size: 1em;  
+        cursor: pointer;
+        padding: 0 5px;
+        /* margin-left: auto; /* No longer needed due to flex on wrapper */
+        color: #555;
+        display: flex;  
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0; /* Prevent button from shrinking */
+    }
+    .toggle-visibility-btn svg {  
+        width: 20px;
+        height: 20px;
+    }
+    .toggle-visibility-btn:hover {
+        color: #000;
+    }
+
+    .correct { border: 2px solid green; background: #e0ffe0; padding: 10px; margin-bottom:10px; border-radius: 5px; }
+    .incorrect { border: 2px solid red; background: #ffe0e0; padding: 10px; margin-bottom:10px; border-radius: 5px; }
+    .explanation { font-style: italic; color: #555; margin-top: 10px; display: none;} /* Hidden by default */
+
+    .question-actions-bar {
+      display: flex;
+      justify-content: center;  
+      align-items: center;
+      flex-wrap: wrap;  
+      gap: 10px;  
+      padding: 15px 10px;  
+      margin-top: 20px;  
+      margin-bottom: 10px;  
+    }
+    .question-actions-bar button {
+      padding: 10px 15px;  
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      background-color: #fff;  
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .question-actions-bar button:hover {
+      background-color: #f8f9fa;
+      border-color: #bbb;
+    }
+    .question-actions-bar button#submitBtn {
+        background-color: #22c55e;  
+        color: white;
+        border-color: #22c55e;
+    }
+    .question-actions-bar button#submitBtn:hover {
+        background-color: #16a34a;
+    }
+    .review-actions-bar {  
+        text-align: center;
+        padding: 10px 0 20px 0;  
+    }
+    .review-actions-bar button {
+        padding: 10px 20px;  
+        font-size: 1rem;
+        cursor: pointer;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        margin: 5px;  
+    }
+    .review-actions-bar button:hover {
+        background-color: #0056b3;
+    }
+
+
+    .quiz-controls { /* Footer */
+      justify-content: center;  
+      align-items: center;
+      padding: 10px 20px;  
+      background: #dbeafe;
+      position: fixed;
+      bottom: 0;
+      left: 0;  
+      right: 0;  
+      display: flex;
+      z-index: 100;  
+      box-sizing: border-box;  
+    }
+    .quiz-controls .progress-info {  
+        display: flex;
+        align-items: center;
+        justify-content: space-between;  
+        width: 100%;
+    }
+    
+    #progressText { font-size: 16px; margin: 0 10px 0 0; }
+    /* .choice-button.selected is replaced by .choice-wrapper.selected-wrapper */
+    
+
+    #resultsScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #4a90e2;  
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;  
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .results-card {
+      display: flex;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      overflow: auto;  
+      width: 95%;  
+      max-width: 900px;  
+      max-height: 90vh;  
+      flex-direction: column;  
+    }
+
+    .results-left-panel {
+      flex-shrink: 0;  
+      background: #37474f;  
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      border-top-left-radius: 10px;  
+      border-top-right-radius: 10px;
+      border-bottom-left-radius: 0;
+    }
+
+    .results-right-panel {
+      flex-grow: 1;  
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      border-bottom-left-radius: 10px;  
+      border-bottom-right-radius: 10px;
+      border-top-right-radius: 0;
+    }
+     @media (min-width: 768px) {  
+      .results-card {
+        flex-direction: row;  
+        min-height: 400px;  
+        overflow: hidden;  
+      }
+      .results-left-panel {
+        border-top-right-radius: 0;
+        border-bottom-left-radius: 10px;
+        flex-basis: 300px;  
+      }
+      .results-right-panel {
+        border-top-right-radius: 10px;
+        border-bottom-left-radius: 0;
+      }
+    }
+
+
+    .score-circle {
+      width: 100px;  
+      height: 100px;
+      border-radius: 50%;
+      border: 6px solid #e0e0e0;  
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;  
+      font-weight: bold;
+      color: #4CAF50;  
+      margin-bottom: 15px;  
+      position: relative;
+    }
+
+    .score-circle::before {
+      content: '';
+      position: absolute;
+      top: -6px;  
+      left: -6px;
+      width: calc(100% + 12px);  
+      height: calc(100% + 12px);
+      border-radius: 50%;
+      border: 6px solid transparent;  
+      border-top-color: #4CAF50;  
+      border-right-color: #4CAF50;
+      transform: rotate(-45deg);  
+      box-sizing: border-box;
+    }
+
+    .upload-button {  
+      padding: 12px 25px;  
+      font-size: 16px;  
+      background-color: #4CAF50;  
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;  
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: background-color 0.3s ease;
+    }
+
+    .upload-button:hover {
+      background-color: #45a049;
+    }
+
+    .attention-message {
+      background: white;
+      padding: 15px;  
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-top: 15px;  
+      width: 90%;
+      max-width: 800px;
+      text-align: center;
+      font-size: 14px;  
+      color: #333;
+    }
+
+    #quizContentScrollable {
+      max-height: calc(100vh - 100px);  
+      overflow-y: auto;
+      padding: 10px 15px 0 0;  
+    }
+    
+    #mainQuizLayout {  
+        display: flex;
+        padding-top: 40px;  
+    }
+
+    #sidebar {
+      width: 60px;
+      background: #e3edf8;
+      position: fixed;
+      top: 40px;  
+      bottom: 50px;  
+      overflow-y: auto;  
+      z-index: 50;  
+      padding-top: 10px;  
+      padding-bottom: 10px;
+      transition: width 0.3s ease, opacity 0.3s ease, bottom 0.3s ease;
+    }
+
+    #sidebar::-webkit-scrollbar {
+      width: 0px;  
+      background: transparent;  
+    }
+    #sidebar::-webkit-scrollbar-thumb {
+      background: transparent;  
+    }
+
+    #questionNav {
+      list-style: none;
+      padding: 0;  
+      margin: 0;  
+      text-align: center;
+    }
+    
+    #quizFormContainer {  
+        margin-left: 75px;  
+        flex-grow: 1;
+        padding-right: 15px;  
+        transition: margin-left 0.3s ease;
+    }
+
+
+    .header-bar {  
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #1f2937;
+      color: white;
+      padding: 10px 20px;
+      font-size: 14px;
+      position: fixed;  
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;  
+      box-sizing: border-box;
+    }
+
+    .intro-screen-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #fbbf24;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      flex-direction: column;
+      padding: 15px;  
+      box-sizing: border-box;
+    }
+
+    .intro-card-container {
+      background: white;
+      padding: 20px;  
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      width: 90%;
+      max-width: 450px;  
+    }
+    .intro-card-container h2 {
+        font-size: 1.4rem;  
+        margin-bottom: 0.5em;
+    }
+    .intro-card-container p {
+        font-size: 0.85rem;  
+        margin-bottom: 1em;
+    }
+    .intro-buttons-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+
+    .intro-start-button {
+      /* margin-top: 15px;   */
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #10b981;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+
+    .question-count-select-container {
+      margin-top: 15px;  
+      margin-bottom: 15px; /* Added margin for spacing */
+    }
+
+    .question-count-label {
+      font-size: 1rem;  
+      margin-right: 8px;
+    }
+
+    .question-count-select {
+      padding: 8px 10px;  
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 1rem;  
+    }
+    
+    #homeBtn {
+      position: fixed;
+      bottom: 80px; 
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      background-color: #0d6efd;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      display: none; /* Hidden by default */
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      cursor: pointer;
+      z-index: 1001;
+      transition: background-color 0.3s ease;
+    }
+    #homeBtn:hover {
+      background-color: #0b5ed7;
+    }
+
+    #submitScreen {
+      display: none;  
+      position: fixed;  
+      top: 0;  
+      left: 0;  
+      width: 100%;  
+      height: 100%;  
+      background: rgba(0,0,0,0.6);  
+      z-index: 9998;  
+      align-items: center;
+      justify-content: center;
+      padding: 15px;
+      box-sizing: border-box;
+    }
+    .submit-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.25);  
+      width: 100%;
+      max-width: 550px;  
+      display: flex;
+      flex-direction: column;  
+    }
+    .submit-panel {
+      padding: 20px;
+      text-align: center;
+      flex: 1;
+    }
+    .submit-panel-left {
+      background: #f0f4f8;  
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;  
+    }
+    .submit-panel-right {
+      background: #ffffff;
+      border-bottom-left-radius: 10px;
+      border-bottom-right-radius: 10px;
+    }
+     .submit-panel button {
+        padding: 12px 22px;  
+        font-size: 1rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 15px;
+        transition: background-color 0.2s ease;
+    }
+    .submit-go-back-btn { background: #4b5563; color: white; }  
+    .submit-go-back-btn:hover { background: #374151; }
+    .submit-confirm-btn { background: #22c55e; color: white; }  
+    .submit-confirm-btn:hover { background: #16a34a; }
+
+
+    @media (min-width: 640px) {  
+        .submit-card {
+            flex-direction: row;  
+        }
+        .submit-panel-left {
+            border-top-right-radius: 0;
+            border-bottom-left-radius: 10px;
+        }
+        .submit-panel-right {
+            border-top-right-radius: 10px;  
+            border-bottom-left-radius: 0;  
+            border-bottom-right-radius: 10px;  
+        }
+    }
+    #confirmSubmitMessage {
+        color: red;
+        font-size: 0.9em;
+        margin-top: 10px;
+        min-height: 1.2em;  
+    }
+
+    @media (max-width: 767px) {
+        body {
+            padding-bottom: 60px;  
+        }
+        #sidebar {
+            display: none;  
+        }
+        #quizFormContainer {
+            margin-left: 15px;  
+            padding-right: 15px;
+        }
+        .choice-wrapper {  
+            padding: 10px;
+        }
+        .choice-button-main-area {  
+            font-size: 1rem;
+        }
+         .choice-button-main-area input[type="radio"] {
+            margin-right: 8px;
+        }
+        .toggle-visibility-btn {
+            padding: 0 2px;  
+        }
+        .quiz-controls {  
+            padding: 8px 10px;  
+        }
+        .quiz-controls .progress-info span {
+             font-size: 0.85rem;
+        }
+        
+         .header-bar {
+            padding: 10px 15px;
+        }
+        .header-bar div {
+            font-size: 0.85rem;  
+        }
+        #progressText {
+            font-size: 0.9rem;
+        }
+        .question-header { font-size: 1.1rem; }
+        .question-text { font-size: 0.95rem; }
+
+        #homeBtn {
+            bottom: 70px;
+            right: 15px;
+            width: 45px;
+            height: 45px;
+        }
+
+        .results-card { max-height: 85vh; }  
+        .score-circle { width: 90px; height: 90px; font-size: 28px; border-width: 5px; }
+        .score-circle::before { top: -5px; left: -5px; width: calc(100% + 10px); height: calc(100% + 10px); border-width: 5px;}
+        .upload-button { padding: 10px 20px; font-size: 1rem; }
+        .attention-message { font-size: 0.85rem; padding: 10px; }
+
+        .question-actions-bar button {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            flex-grow: 1;  
+            min-width: 80px;  
+        }
+         .question-actions-bar {
+            gap: 5px;  
+         }
+    }
+
+    @media (max-width: 480px) {  
+        .question-actions-bar button {
+            font-size: 0.85rem;
+        }
+        .intro-card-container h2 { font-size: 1.2rem; }
+        .intro-card-container p { font-size: 0.8rem; }
+        .question-count-label, .question-count-select { font-size: 0.9rem; }
+    }
+
+  </style>
+</head>
+<body>
+  <div id="introScreen" class="intro-screen-container">
+    <div class="intro-card-container">
+      <svg width="120" height="120" viewBox="0 0 200 200" style="margin-bottom: 15px; margin-left: auto; margin-right: auto;">
+        <defs>
+          <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#0284c7;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#38bdf8;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <path d="M 20 150 L 50 20 L 90 20 L 90 120 L 110 120 L 110 20 L 150 20 L 180 150 L 150 150 L 130 90 L 70 90 L 50 150 Z" fill="url(#grad1)"></path>
+        <rect x="55" y="25" width="30" height="90" fill="#1e293b" transform="skewX(-10)"></rect>
+        <rect x="115" y="25" width="30" height="90" fill="#0ea5e9" transform="skewX(-10)"></rect>
+        <text x="100" y="180" font-family="Arial, sans-serif" font-size="28" fill="#37474f" text-anchor="middle" font-weight="bold">BKRDI-FY</text>
+        <text x="100" y="200" font-family="Arial, sans-serif" font-size="14" fill="#6b7280" text-anchor="middle" font-weight="bold">TEST & STUDY</text>
+      </svg>
+      <h2>Do Not Start Until Instructed</h2>
+      <p>Activity conducted during this exam might actually matter.</p>
+      
+      <div class="question-count-select-container">
+        <label for="questionCount" class="question-count-label">Number of Questions:</label>
+        <select id="questionCount" class="question-count-select">
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <!-- "All Questions" option will be added here by JavaScript -->
+        </select>
+      </div>
+
+      <div class="intro-buttons-container">
+        <button onclick="startExam()" class="intro-start-button">Start Exam</button>
+        <button onclick="startStudy()" class="intro-start-button" style="background-color: #f59e0b;">Answer & Study</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="mainQuizContainer" style="display:none;">  
+    <div class="header-bar">  
+      <div><strong>Class 45</strong></div>
+      <div id="mainHeaderTitle">CJF</div> 
+      <div><strong id="timer">30:00</strong></div>
+    </div>
+
+    <div id="mainQuizLayout">
+      <nav id="sidebar">
+        <ul id="questionNav"></ul>
+      </nav>
+      <div id="quizFormContainer">
+        <div id="quizContentScrollable">
+          <div id="progress" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-top:10px;">
+            <button type="button" onclick="flagQuestion()" id="flagButton" style="font-size: 14px; padding: 5px 10px;">🚩 Flag</button>
+            <span id="progressText"></span>
+          </div>
+          <div class="review-actions-bar" id="reviewActionsTop" style="display:none;"> <button onclick="returnToHome()">Retake Test</button>
+          </div>
+          <form id="quizForm"></form>
+          <div class="question-actions-bar">
+            <button id="prevBtn" type="button" onclick="prevQuestion()">⟵ Previous</button>
+            <button id="skipBtn" type="button" onclick="skipQuestion()">⏭ Skip</button>
+            <button id="submitBtn" type="button" onclick="showSubmitScreen()" style="display: none;">✅ Submit</button>
+            <button id="nextBtn" type="button" onclick="nextQuestion()">Next ⟶</button>
+          </div>
+          <div id="studyEndActions" class="review-actions-bar" style="display:none;">
+            <button id="nextSetBtn" onclick="startNextStudySet()">Next Set of Questions</button>
+            <button id="retryIncorrectBtn" onclick="retryIncorrectQuestions()">Retry Incorrect Questions</button>
+            <button onclick="returnToHome()">Return to Home</button>
+          </div>
+          <div class="review-actions-bar" id="reviewActionsBottom" style="display:none;"> <button onclick="returnToHome()">Retake Test</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="quiz-controls">  
+      <div class="progress-info">
+        <span id="progressTextBottom">Question 1 of 60</span>
+        <span style='font-size: 0.8em;'>BKRDIFY Version 2.1.87</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="submitScreen">  
+    <div class="submit-card">
+      <div class="submit-panel submit-panel-left">
+        <h2>Return to Exam</h2>
+        <p>By clicking this button, you will be directed back to the exam.</p>
+        <button onclick="hideSubmitScreen()" class="submit-go-back-btn">Go Back</button>
+      </div>
+      <div class="submit-panel submit-panel-right">
+        <h2>Exit Exam</h2>
+        <p>Click 'Submit Exam' to upload and close this exam file.</p>
+        <label style="margin: 20px 0; display: flex; align-items: center; justify-content: center; font-size: 14px;">
+          <input type="checkbox" id="confirmSubmit" style="margin-right: 10px; transform: scale(1.5);">
+          I confirm that I have completed my exam.
+        </label>
+        <button onclick="confirmAndSubmit()" class="submit-confirm-btn">Submit Exam</button>
+        <div id="confirmSubmitMessage"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="resultsScreen" style="display: none;">
+    <div class="results-card">
+      <div class="results-left-panel">
+        <svg width="100" height="100" viewBox="0 0 200 200">
+            <path d="M 20 150 L 50 20 L 90 20 L 90 120 L 110 120 L 110 20 L 150 20 L 180 150 L 150 150 L 130 90 L 70 90 L 50 150 Z" fill="#0ea5e9"></path>
+            <rect x="55" y="25" width="30" height="90" fill="#1e293b" transform="skewX(-10)"></rect>
+            <rect x="115" y="25" width="30" height="90" fill="#38bdf8" transform="skewX(-10)"></rect>
+            <text x="100" y="180" font-family="Arial, sans-serif" font-size="28" fill="#fff" text-anchor="middle" font-weight="bold">BKRDI-FY</text>
+        </svg>
+      </div>
+      <div class="results-right-panel">
+        <h3 style="font-size: 1.3rem; margin-bottom: 10px;">Preliminary Results</h3> <p style="font-size: 1rem; margin-bottom: 15px;">Objective Question Score *</p> <div class="score-circle">
+          <span id="finalScore">75%</span>
+        </div>
+        <p style="font-size: 0.8rem; color: #555; margin-top: 10px;">This is the score for the objective questions only and I'm not sure what objective means</p> <p style="font-size: 0.8rem; color: #555; margin-top: 5px;">Test ID: <span id="testIdDisplay"></span></p> <button class="upload-button" onclick="showReviewPage()">Review</button>
+      </div>
+    </div>
+    <div class="attention-message">
+      <p><strong>ATTENTION:</strong></p>
+      <p>You will be informed of your final score, which is this score, so yeah</p>
+    </div>
+  </div>
+
+  <button id="homeBtn" onclick="returnToHome()" title="Return to Home Screen" style="display: none;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+  </button>
+
+  <script>
+// Function to shuffle an array (Fisher-Yates algorithm)
+function shuffleArray(array) {
+  let newArray = [...array]; // Work on a copy
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}
+
+const newQuestionsFromUser = [ 
+    {"q":"According to the text, what is a correctional officer's primary responsibility as the 'front line' for their facility?","c":["Supervision of inmate activities, enforcement of rules, and maintaining order.","Conducting administrative tasks and paperwork.","Providing medical care to inmates.","Managing the facility's budget."],"a":"0","e":"As a correctional officer, you represent one of the most important resources available to any correctional agency. You will be the front line for your facility and will be responsible for supervision of inmate activities, enforcement of rules and regulations, and maintaining order in the facility. Page: 83"},
+    {"q":"What is the term for a comfortable or relaxed state of mind that can lull an officer into a false sense of safety and security?","c":["Situational Awareness","Complacency","Stress","Professionalism"],"a":"1","e":"Complacency is a comfortable or relaxed state of mind that lulls you into a false sense of safety and security. Page: 84"},
+    {"q":"Which category of stress includes factors like weather, noise levels, and lighting conditions?","c":["Personal","Work-related","Self-induced","Environmental"],"a":"3","e":"Four categories of stress an officer may experience are: environmental-weather, noise levels, lighting conditions, crowded areas. Page: 84"},
+    {"q":"What is the ability to pay attention to what is going on around you, described as a state of mental responsiveness?","c":["Complacency","Situational awareness","Posture","Positioning"],"a":"1","e":"Situational awareness refers to the ability to pay attention to what is going on around you; it is a state of mental responsiveness. Page: 84"},
+    {"q":"What is the first stage of situational awareness in a correctional setting?","c":["Identifying a potential threat","Responding to a threat","Being alert","Avoiding tunnel vision"],"a":"2","e":"Situational awareness in a correctional setting occurs in three stages: 1. Being alert-be aware of what is going on around you at all times. Page: 84"},
+    {"q":"What is 'tunnel vision' in the context of responding to a threat?","c":["The ability to see clearly in dark environments.","When your attention and field of view narrow because of stress.","A state of heightened awareness of all surroundings.","A deliberate focus on a non-threatening object."],"a":"1","e":"In response to an actual threat, you should be mentally ahead of the threat and take appropriate action, avoiding tunnel vision, which is when your attention and field of view narrow because of stress. Page: 85"},
+    {"q":"Placing yourself in a tactically advantageous location to observe an area is known as:","c":["Posture","Observing","Positioning","Listening"],"a":"2","e":"Positioning is placing yourself in a tactically advantageous location to observe an area. Page: 85"},
+    {"q":"Why should an officer avoid establishing a set pattern when positioning themselves in an area?","c":["It is physically tiring.","It can confuse other officers.","Inmates may predict your position and gain a tactical advantage.","It violates facility policy."],"a":"2","e":"Avoid establishing a set pattern-if inmates can predict what position you will take, they may be able to gain a tactical advantage. Page: 85"},
+    {"q":"Holding your body in a manner that shows strength, confidence, interest, and control is defined as:","c":["Positioning","Posture","Observing","Listening"],"a":"1","e":"Posture is holding your body in a manner that shows strength, confidence, interest, and control. Page: 86"},
+    {"q":"What is the term for being aware of any occurrence or activity that may signify safety and security problems, such as irregular mood changes or threatening behavior?","c":["Positioning","Posture","Observing","Listening"],"a":"2","e":"Observing is another skill of situational awareness. Observing is being aware of any occurrence or activity... that may signify safety and security problems. Page: 86"},
+    {"q":"What is the primary purpose of identity verification in a correctional facility?","c":["To track inmate movement for statistical purposes.","To provide an accurate account of everyone within the facility for safety and security.","To issue visitor passes more efficiently.","To test the facility's electronic systems."],"a":"1","e":"Efficient identification checks provide an accurate account of everyone within the facility. They also help keep you, others, and the facility safe and secure from unauthorized and dangerous individuals. Page: 87"},
+    {"q":"Which of the following is NOT an acceptable official method of identification?","c":["Automated facial recognition software.","An inmate face sheet from the agency database.","Personal knowledge or recognition of a person.","A government-issued identification card."],"a":"2","e":"Personal knowledge or recognition of a person is not acceptable as an official method of identification. Page: 87"},
+    {"q":"What does an Automated Visitor Registration (AVR) hand scanner recognize to link visitors to a database?","c":["Distinct facial features","Distinct fingerprint features","The barcode on a visitor pass","The magnetic stripe on an ID card"],"a":"1","e":"automated visitor registration (AVR) hand scanner-recognizes distinct fingerprint features and links to a database... Page: 87"},
+    {"q":"Which of the following is a manual method of identification used in correctional facilities?","c":["Facial recognition software","Automated barcode scanner","Rapid Identification System","Inmate gate pass"],"a":"3","e":"MANUAL inmate face sheet... inmate gate pass... inmate files... agency identification card... armband or wristband... government-issued identification cards. Page: 88"},
+    {"q":"Which of the following is a valid form of personal identification for entry into a correctional facility?","c":["A social media profile page","A credit card with a photo","A U.S. military identification card","A personal letter with a return address"],"a":"2","e":"Valid forms of identification can include: state driver's license, state identification card, criminal justice agency or correctional facility identification card or records, U.S. military identification card, U.S. passport... Page: 88"},
+    {"q":"What is a hologram on an identification card?","c":["A recognizable image or pattern in the paper.","A dark stripe on the back of the card.","A hidden image that is visible when viewed at certain angles.","A raised or embossed seal."],"a":"2","e":"hologram-a hidden image that is visible when viewed at certain angles or with appropriate lighting, such as on a driver's license. Page: 89"},
+    {"q":"A recognizable image or pattern in paper that appears lighter or darker when held up to the light is called a:","c":["Hologram","Watermark","Raised seal","Magnetic stripe"],"a":"1","e":"watermark-a recognizable image or pattern in paper that appears lighter or darker when held up to the light. Page: 89"},
+    {"q":"What is a key difference between a valid identification and a counterfeit one?","c":["Valid IDs are always made of plastic.","Counterfeit IDs may be missing essential security features.","Valid IDs never have an expiration date.","Counterfeit IDs always have a magnetic stripe."],"a":"1","e":"Counterfeit identification appears to be valid but may be missing some or all of the essential security features and information. Page: 90"},
+    {"q":"When comparing a person's physical appearance to their photo ID, which feature should be checked?","c":["Skin color and eye color","Hair and facial structure","Scars, birthmarks, or tattoos","All of the above"],"a":"3","e":"To ensure a positive identification, compare the person's physical appearance to their identification. Features to compare include skin color, eye color, hair, facial structure, and any other distinctive features like scars, birthmarks, or tattoos. Page: 90"},
+    {"q":"What is it called when an inmate attempts to get something they want by influencing an officer to do something they would not ordinarily do?","c":["Deception","Manipulation","Complacency","Situational awareness"],"a":"1","e":"Inmate manipulation occurs when an inmate attempts to get something they want by influencing the officer or staff member to do something the officer or staff member would not ordinarily do. Page: 91"},
+    {"q":"Lying to, misleading, tricking, or fooling another person is known as:","c":["Manipulation","Deception","Intimidation","Negotiation"],"a":"1","e":"Deception is lying to, misleading, tricking, or fooling another person. Page: 91"},
+    {"q":"What is the ultimate goal of both manipulation and deception by an inmate?","c":["To build a friendship with the officer.","To help maintain order in the facility.","Personal gain or avoidance of disciplinary action.","To test the officer's knowledge of the rules."],"a":"2","e":"The ultimate goal of both is personal gain or avoidance of disciplinary action. Page: 91"},
+    {"q":"Which of the following is a method inmates use to manipulate and deceive staff?","c":["Attempting to create bonds with staff members.","Circumventing or disobeying rules.","Attempting to engage staff in casual non-job related conversation.","All of the above."],"a":"3","e":"Methods inmates use to manipulate and deceive correctional staff can range from subtle to extreme, such as: attempting to create bonds... circumventing or disobeying rules... attempting to engage staff in casual non-job related conversation... Page: 92"},
+    {"q":"In an inmate manipulation team, which member observes officers to identify potential targets?","c":["Contacts","Runners","Observers","Turners"],"a":"2","e":"observers-observe correctional officers who use inmate jargon, ignore minor rule infractions, play favorites, enforce rules for some and not others, or are easily distracted. Page: 92"},
+    {"q":"Which member of an inmate manipulation team supplies information about an officer's work habits, likes, and dislikes?","c":["Observers","Contacts","Runners","Point men"],"a":"1","e":"contacts-supply information about the correctional officer's work habits, likes, and dislikes. Page: 92"},
+    {"q":"Who are usually the only paid members of an inmate manipulation team because they must expose themselves to the officer by asking for small items?","c":["Observers","Contacts","Runners","Turners"],"a":"2","e":"runners-are usually the only paid members of the team because they must expose themselves to the correctional officer by asking for small items like candy, cigarettes, or pencils. Page: 92"},
+    {"q":"Which member of an inmate manipulation team befriends the officer to ultimately coerce them into rule infractions?","c":["Contacts","Runners","Turners","Point men"],"a":"2","e":"turners-befriend the correctional officer and use the friendship to ultimately coerce the officer into engaging in rule infractions. They are the least suspected ones by the correctional officer. Page: 92"},
+    {"q":"Who stands guard when an officer is in the process of granting illegal favors or being compromised?","c":["Observers","Runners","Turners","Point men"],"a":"3","e":"point men-stand guard when the officer is in the process of granting illegal favors, violating institutional rules, or being compromised or harmed. Page: 92"},
+    {"q":"To avoid inmate manipulation, what behavior should an officer display?","c":["Be overly friendly to gain trust.","Give out personal information to build rapport.","Be part of the correctional team and follow rules.","Do personal favors for inmates to show kindness."],"a":"2","e":"Behaviors you should display to avoid inmate manipulation include: be part of the correctional team, follow rules and procedures... Page: 93"},
+    {"q":"How should an officer address an inmate to maintain professionalism and avoid manipulation?","c":["By their first name or nickname.","By 'inmate' or their last name.","By their cell number.","By a term of endearment."],"a":"1","e":"address inmates by 'inmate' or their last name. Page: 93"},
+    {"q":"What is defined as any unauthorized article or any authorized article in excessive quantities or altered from its original state?","c":["Evidence","Property","Contraband","Nuisance"],"a":"2","e":"contraband is any unauthorized article or any authorized article in excessive quantities or altered from its original state. Page: 94"},
+    {"q":"Which category of contraband is any authorized item found in excessive amounts that usually does not pose an immediate threat?","c":["Hard contraband","Hazardous contraband","Nuisance contraband","Weaponized contraband"],"a":"2","e":"Nuisance contraband is any authorized item found in excessive amounts or altered from its original state that usually does not pose an immediate threat to the safety or security of the staff, inmates, and facility. Page: 94"},
+    {"q":"Which of the following is an example of nuisance contraband?","c":["A firearm","A homemade knife (shank)","Excessive clothing or linen","Illegal drugs"],"a":"2","e":"Nuisance contraband includes excessive clothing, linen, laundry items, canteen and hygiene items, photos, reading materials... Page: 94"},
+    {"q":"What is any item that poses a serious threat to the safety and security of the staff, inmates, and facility?","c":["Nuisance contraband","Personal property","Hard/hazardous contraband","Authorized items"],"a":"2","e":"Hard/hazardous contraband is any item that poses a serious threat to the safety and security of the staff, inmates, and facility. Page: 94"},
+    {"q":"Which of the following is an example of hard/hazardous contraband?","c":["Excessive hygiene items","Reading materials","Cell phones and electronic devices","Extra laundry items"],"a":"2","e":"Firearms, homemade knives (shanks), other weapons, drugs, alcoholic beverages, toxic materials, prescription medication, inhalants, cell phones, and electronic devices that store or receive data are examples of hard/hazardous contraband. Page: 95"},
+    {"q":"What is the most common inmate weapon?","c":["Firearms","Shanks (homemade knives)","Heavy objects in a sock","Writing utensils"],"a":"1","e":"Shanks are the most common inmate weapon and can be made from almost anything. Page: 95"},
+    {"q":"How can contraband be introduced into a correctional facility?","c":["Concealed by inmates, visitors, or staff.","Through mail or deliveries.","In body cavities.","All of the above."],"a":"3","e":"Contraband may enter correctional facilities by various means. Inmates, visitors, vendors, and even staff can conceal contraband in their clothing, on their person, or in other items. Other methods of introduction are through body cavities, mail, canteen or commissary items, and deliveries. Page: 95"},
+    {"q":"What is the search method that involves physically frisking a subject in a predetermined pattern to locate weapons or contraband?","c":["Visual search","Pat down","Clothed search","Strip search"],"a":"1","e":"pat down-physically frisking a subject in a predetermined pattern to locate weapons or other types of contraband. Page: 95"},
+    {"q":"Which search method involves physically patting and squeezing the clothing of a person in a systematic pattern in a secure environment?","c":["Pat down","Clothed search","Custodial search","Cell search"],"a":"1","e":"clothed search-physically patting and squeezing the clothing of a person in a systematic pattern, following the quadrant search approach; used in a secure environment. Page: 95"},
+    {"q":"A search conducted when a subject is taken into custody in an unsecured environment is called a:","c":["Pat down","Clothed search","Custodial search","Strip search"],"a":"2","e":"custodial search-physically patting and squeezing the clothing of a person in a systematic pattern; used when a subject is taken into custody in an unsecured environment. Page: 95"},
+    {"q":"Which type of search is conducted by medical staff only?","c":["Strip search","Cell search","Vehicle search","Body cavity search"],"a":"3","e":"body cavity search-visually and physically inspecting body openings; such searches are to be conducted by medical staff only. Page: 96"},
+    {"q":"What is the witnessed written record of all individuals who have handled evidence since its collection?","c":["Incident report","Inventory form","Chain of custody","Contraband log"],"a":"2","e":"It is also important to document the chain of custody, which you will recall from Chapter 1 is the witnessed written record of all individuals who have handled the evidence since its collection. Page: 96"},
+    {"q":"What should an officer do with hard or hazardous contraband before confiscation, storage, or disposal?","c":["Taste or smell it to identify it.","Photograph it.","Give it back to the inmate with a warning.","Immediately destroy it."],"a":"1","e":"When hard or hazardous contraband is found, it may be necessary to photograph it before confiscation, storage, or disposal. Page: 96"},
+    {"q":"What information should be included when documenting the confiscation of contraband?","c":["Where it was found.","A description of what was found.","The quantity and method of disposal.","All of the above."],"a":"3","e":"Include as many details as possible, such as where the contraband was found, descriptions of what was found, quantity, and method of disposal. Page: 97"},
+    {"q":"What is the final disposition of contraband?","c":["It is always destroyed immediately.","It is returned to the inmate upon release.","Immediate disposal or storage for future action.","It is given to the officer who found it."],"a":"2","e":"The final disposition of contraband includes either immediate disposal or storage for future inmate disciplinary action, case reference, or training purposes. Page: 97"},
+    {"q":"How should money confiscated from an inmate be handled?","c":["It should be thrown away.","It should be counted in the presence of the inmate and a receipt given.","The officer can keep it as a reward.","It should be mailed to the inmate's family immediately."],"a":"1","e":"money-although some facilities allow inmates to have money up to a specified amount, many do not allow it at all. You should count confiscated money in the presence of the inmate. Staff should sign and give a receipt to the inmate. Page: 97"},
+    {"q":"Who determines the appropriate method of disposal for confiscated medication?","c":["The officer who found it.","The shift supervisor.","The facility's medical staff or the issuing authority.","The inmate who owned it."],"a":"2","e":"medication-you must confiscate any unauthorized medication or authorized medication in excessive amounts. The facility's medical staff or the issuing authority should determine the appropriate method of disposal. Page: 97"},
+    {"q":"How should biohazardous materials, such as a tattoo gun needle, be disposed of?","c":["Placed in a regular trash can.","Flushed down the toilet.","Placed in the appropriate biohazard container or bag.","Sterilized and reused."],"a":"2","e":"biohazardous materials-materials such as a tattoo gun needle or soiled bedsheet may contain blood or body fluids. Place these items in the appropriate biohazard container or bags and follow your agency's policies and procedures to dispose of them. Page: 98"},
+    {"q":"What is a primary purpose of conducting searches in a correctional facility?","c":["To harass inmates.","To prevent the spread of contraband, weapons, and other dangerous items.","To create more paperwork for officers.","To test the alarm systems."],"a":"1","e":"Searches prevent the spread of contraband, weapons, and other dangerous items in a facility. Page: 99"},
+    {"q":"What type of equipment can provide varying levels of protection for an officer during a search?","c":["Standard uniform","Ballistic vest","Gloves (latex, non-latex, puncture or cut-resistant)","Sunglasses"],"a":"2","e":"To avoid exposure to biohazardous materials, always use universal precautions and personal protective equipment when conducting a search. Gloves can range from latex or non-latex to puncture or cut-resistant gloves, which provide varying levels of protection... Page: 99"},
+    {"q":"Which of the following areas should be searched in a correctional facility?","c":["Day rooms and cells","Recreation yards and kitchens","Parking lots and courtrooms","All of the above"],"a":"3","e":"Searches should be conducted in all facility areas, including day rooms, cells, dormitories, recreation yards, kitchens, and parking lots. You must search outside transport destinations, including work-release sites, courtrooms, or medical offices. Page: 100"},
+    {"q":"What should an officer do before searching an area?","c":["Turn off all the lights.","Remove all people from the location.","Announce the search over the intercom.","Allow inmates to help with the search."],"a":"1","e":"Prior to the area search, subjects should also be searched and closely monitored. Remove all people from a location being searched. Page: 100"},
+    {"q":"What is the recommended method for an officer to use their hands during a search to avoid injury?","c":["Rub or slide hands over objects.","A pat or pat-and-squeeze method.","Use bare hands for better sensitivity.","Quickly jab hands into hidden areas."],"a":"1","e":"Never put your hands in places where you cannot also see what you are inspecting. Avoid rubbing or sliding your hands over objects or clothing; a pat or pat-and-squeeze method is recommended instead. Page: 100"},
+    {"q":"Which search pattern is usually used by one person and begins at a central point, moving in increasingly larger circles?","c":["Strip/line search pattern","Grid search pattern","Zone/quadrant search pattern","Spiral search pattern"],"a":"3","e":"spiral search pattern-usually used by one person, this pattern begins at a central point and moves in increasingly larger circles to the outermost boundary of the search area. Page: 100"},
+    {"q":"Which search pattern divides the area into lanes that are searched by one or more people in both directions?","c":["Spiral search pattern","Strip/line search pattern","Grid search pattern","Zone/quadrant search pattern"],"a":"1","e":"strip/line search pattern-usually used in a predetermined area by several people, this pattern divides the search area into lanes that are searched by one or more people in both directions until the entire area has been examined. Page: 100"},
+    {"q":"A variation of the strip/line search that overlaps a series of lanes in a cross pattern is the:","c":["Spiral search pattern","Zone/quadrant search pattern","Grid search pattern","Random search pattern"],"a":"2","e":"grid search pattern-a variation of the strip/line search, this pattern overlaps a series of lanes in a cross pattern, making the search more methodical and thorough. Page: 101"},
+    {"q":"Which search pattern is used for large areas by dividing the area into four sections?","c":["Spiral search pattern","Strip/line search pattern","Grid search pattern","Zone/quadrant search pattern"],"a":"3","e":"zone/quadrant search pattern-used for searching large areas, this pattern divides the area into four sections and searches using one of the patterns above. Page: 101"},
+    {"q":"What piece of equipment is used for viewing areas not easily seen, such as under bunks or vehicles?","c":["Flashlight","Screwdriver","Mirror","Probing device"],"a":"2","e":"mirrors-used for viewing areas not easily seen, such as under or behind bunks, sinks, toilets, and other areas; mirrors can also be used to search above and beneath vehicles. Page: 102"},
+    {"q":"What is a probing device used for in a search?","c":["To illuminate dark areas.","To remove panels or covers.","To search holes, cracks, or hollow areas.","To collect contraband."],"a":"2","e":"probing devices-any item used to search holes, cracks, or hollow areas; one such method is using a wire to check grills, door tracks, faucets, and drains. Page: 102"},
+    {"q":"What can be used to scan a mattress for metal objects without the officer physically handling it?","c":["A flashlight","A mirror","A metal detector","A probing device"],"a":"2","e":"metal detectors... When searching a bunk, the officer can scan the mattress instead of physically handling it. Using this method will protect the officer from possible injury and prevent the destruction of property. Page: 102"},
+    {"q":"What are canines specially trained to detect during a search?","c":["Only illegal drugs.","Drugs, other chemicals, and cell phones.","Only weapons.","Hidden compartments in vehicles."],"a":"1","e":"canines and their handlers-specially trained to detect certain types of contraband such as drugs, other chemicals, and cell phones. Page: 102"},
+    {"q":"When must inmate transport vehicles be thoroughly searched?","c":["Only before transport.","Only after transport.","Before and after transport.","Only if contraband is suspected."],"a":"2","e":"Inmate transport vehicles are of particular concern. You must thoroughly search all vehicles before and after transport. Page: 103"},
+    {"q":"What is a key aspect of an officer's preparation for a shift to ensure safety?","c":["Arriving just on time.","Being well-rested and physically ready.","Bringing personal items into the facility.","Avoiding communication with supervisors."],"a":"1","e":"You should come to work well-rested and physically ready to perform your duties. Coming to work prepared creates a safe and professional work environment. Page: 83"},
+    {"q":"Why is it important for a correctional officer to maintain good physical health?","c":["To win athletic competitions against inmates.","Lack of stamina, agility, and mobility can hinder the ability to protect oneself and others.","To get a discount on health insurance.","It is not important for this job."],"a":"1","e":"Lack of stamina, agility, and mobility can hinder your ability to protect yourself, as well as staff and visitors. For example, you may have to sprint long distances or climb flights of stairs and still be able to control a combative inmate successfully... Page: 83"},
+    {"q":"How should an officer handle a request from an inmate or visitor to maintain professionalism?","c":["Ignore the request completely.","Grant the request to be seen as friendly.","Handle the situation fairly, firmly, and consistently.","Delegate the request to another officer."],"a":"2","e":"Handle each situation fairly, firmly, and consistently, while remaining professional. Page: 83"},
+    {"q":"What can happen if an officer fails to address minor infractions professionally?","c":["The inmate will respect the officer more.","The inmate's behavior may escalate into more serious problems.","The officer will save time and paperwork.","Nothing, minor infractions are not important."],"a":"1","e":"Failure to do so may result in inmates' behavior escalating into more serious problems, both for you and the other inmates. Page: 84"},
+    {"q":"Which category of stress is related to an officer's personal attitudes toward work and perception of others?","c":["Environmental","Personal","Work-related","Self-induced"],"a":"3","e":"self-induced-personal attitudes toward work, perception of others, work or academic goals. Page: 84"},
+    {"q":"What is the second stage of situational awareness?","c":["Being alert","Identifying a potential threat","Responding to a threat","Maintaining posture"],"a":"1","e":"Situational awareness in a correctional setting occurs in three stages: ... 2. Identifying a potential threat-concentrate on possible threats while remaining aware of your surroundings. Page: 84"},
+    {"q":"What is the third and final stage of situational awareness?","c":["Being alert","Identifying a potential threat","Responding to a threat","Positioning"],"a":"2","e":"Situational awareness in a correctional setting occurs in three stages: ... 3. Responding to a threat-focus your attention on potential threats while maintaining intense concentration... Page: 85"},
+    {"q":"When evaluating a situation, an officer should consider the inmate's body stance, facial expression, and what else?","c":["Their criminal history.","The tone, volume, and pitch of their voice.","Their educational level.","Their family background."],"a":"1","e":"Questions you may ask yourself to evaluate a situation include: What does the inmate's body stance, posture, or positioning show? What does the inmate's facial expression show? ... What do the tone, volume, and pitch of the inmate's voice show? Page: 85"},
+    {"q":"What does 'active listening' involve?","c":["Hearing only what you want to hear.","Paying attention to volume, pitch, tone, and inflection.","Interrupting the speaker to ask questions.","Ignoring inflammatory words."],"a":"1","e":"Active listening is a learned skill that you should use to quickly determine the context, threat, and relevance of events unfolding around you. Be sure to pay attention to volume, pitch, tone, and inflection. Page: 86"},
+    {"q":"What is an example of something an officer might observe that could indicate a safety or security problem?","c":["An inmate sleeping during designated quiet hours.","An inmate uniform worn incorrectly, like one pant leg rolled up.","An inmate reading a book in the day room.","An inmate eating their meal in the dining hall."],"a":"1","e":"Examples of things you may observe include: an inmate uniform worn incorrectly-misplaced identification, untied shoe, belt hanging to the right or left, one pant leg rolled up. Page: 86"},
+    {"q":"What is the purpose of an inmate gate pass?","c":["To allow unsupervised inmates to leave the facility.","To authorize supervised inmates to exit the secure perimeter.","To serve as a permanent form of inmate ID.","To grant access to the visitor area."],"a":"1","e":"inmate gate pass-authorizes supervised inmates to exit the secure perimeter. Page: 88"},
+    {"q":"Which security feature on an ID card is a dark stripe on the back that contains information?","c":["Hologram","Watermark","Raised seal","Magnetic stripe or bar code"],"a":"3","e":"magnetic stripe or bar code-a dark stripe on the back of the identification card that contains all information on the card. Page: 89"},
+    {"q":"If an ID card looks suspicious, what should an officer do?","c":["Confiscate it immediately without question.","Question the person about information on the card they should know.","Ignore it to avoid a confrontation.","Ask the person to get a new ID."],"a":"1","e":"If, something looks suspicious during the identification process, question the person. Ask for information on the card that the person should know, such as their date of birth or address. Page: 90"},
+    {"q":"What is a potential consequence for an officer who falls for inmate manipulation and deception?","c":["A promotion.","A commendation.","Loss of certification, demotion, dismissal, or prosecution.","A transfer to a different facility."],"a":"2","e":"There will be severe consequences, such as loss of certification, demotion, dismissal, or prosecution if you fall for inmate manipulation and deception. Page: 91"},
+    {"q":"An inmate using a disability or illness to gain preferential treatment is an example of what manipulation method?","c":["Attempting to create bonds with staff.","Circumventing rules.","Using special circumstances or situations.","Distracting staff."],"a":"2","e":"using special circumstances or situations-using a disability or illness to gain preferential or special treatment. Page: 92"},
+    {"q":"What is a behavior an officer should display to avoid manipulation?","c":["Engage in personal conversations.","Give one inmate authority over another.","Learn to say 'no' and mean it.","Accept small gifts from inmates."],"a":"2","e":"Behaviors you should display to avoid inmate manipulation include: ... learn to say 'no' and mean it. Page: 93"},
+    {"q":"How might a visitor attempt to manipulate a correctional officer?","c":["By offering gifts or favors.","By using intimidation or threats.","By reporting the officer to a supervisor for no reason.","All of the above."],"a":"3","e":"Visitors may bring gifts or offer favors to staff or use intimidation in an attempt to get staff to violate facility rules. For example, a visitor may threaten to harm staff members or their family, or to report the staff member to a supervisor. Page: 93"},
+    {"q":"What is a primary duty of correctional officers regarding contraband?","c":["To ignore it unless it is a weapon.","To prevent, control, and dispose of it.","To allow inmates to have a small amount of nuisance contraband.","To sell confiscated items to other inmates."],"a":"1","e":"Correctional officers are tasked with preventing, controlling, and disposing of contraband through regular and irregular searches. Page: 94"},
+    {"q":"Why is it important to control even seemingly minor contraband?","c":["It shows inmates who is in charge.","There is a high likelihood that more serious contraband may be introduced in the same way.","It is required by law.","It keeps the facility looking clean."],"a":"1","e":"Even if seemingly minor contraband makes its way into the facility, there is a high likelihood that more serious contraband may be introduced in the same way. Page: 94"},
+    {"q":"What should an officer never do when handling suspected contraband?","c":["Use universal precautions and PPE.","Photograph it.","Taste or smell it.","Document it."],"a":"2","e":"Never taste or smell any material found in a facility or handle suspected contraband more than is absolutely necessary. Page: 96"},
+    {"q":"When is contraband kept as evidence?","c":["Only if it is a weapon.","If it is part of an investigation, used in a crime, or required for disciplinary proceedings.","Only if the inmate requests it.","If it is a valuable item."],"a":"1","e":"Contraband may be kept as evidence if it is part of an investigation, is used in the commission of a crime, or is required for disciplinary proceedings. Page: 96"},
+    {"q":"What is the purpose of a chain of custody form?","c":["To track an officer's movements during a shift.","To document all individuals who have handled evidence.","To request new equipment for the facility.","To log visitor information."],"a":"1","e":"Chain of custody and inventory forms help ensure a complete and comprehensive contraband collection process. Page: 96"},
+    {"q":"What must an officer get before disposing of contraband?","c":["The inmate's permission.","A court order.","Authorization.","A second opinion from another officer."],"a":"2","e":"You must get authorization before disposing of contraband. Page: 97"},
+    {"q":"What might happen if an officer fails to properly document contraband?","c":["It could negatively impact the legal process and hinder disciplinary actions.","Nothing, documentation is not important.","The officer will receive a commendation for efficiency.","The contraband will be returned to the inmate."],"a":"0","e":"Failure to photograph and properly document contraband could negatively impact the legal process and hinder disciplinary actions. Page: 96"},
+    {"q":"What is the purpose of searching people and property entering a correctional facility?","c":["To slow down the entry process.","To discover contraband and maintain safety and security.","To generate revenue from confiscated items.","To practice search techniques."],"a":"1","e":"Conducting searches is critical in discovering contraband and maintaining safety and security. Page: 99"},
+    {"q":"What should an officer do with property and furnishings after completing an area search?","c":["Leave them as they are.","Confiscate them as evidence.","Return them to their original condition and position.","Move them to a different location."],"a":"2","e":"Return property or furnishings to their original condition and position. Page: 100"},
+    {"q":"Which of the following is NOT a piece of equipment used for an area search?","c":["Flashlights","Mirrors","Probing devices","Handcuffs"],"a":"3","e":"Equipment for an area search includes flashlights, screwdrivers, mirrors, probing devices, collection bags or containers, and forms to record any contraband found. Handcuffs are restraint devices. Page: 102"},
+    {"q":"What details should be documented after an area search?","c":["Subjects' names and locations.","Items confiscated.","Officers who conducted the search.","All of the above."],"a":"3","e":"Details may include the subjects' names, locations, items confiscated, and the officers who conducted the search. Page: 103"},
+    {"q":"Which of the following is a key component of 'positioning' for situational awareness?","c":["Keeping a safe distance.","Being familiar with your environment.","Watching groups and individuals.","All of the above."],"a":"3","e":"Positioning includes: Keeping a safe distance... Being familiar with your environment... Watching groups and individuals... Page: 85"},
+    {"q":"What is an example of a 'work-related' stressor for a correctional officer?","c":["Family issues","Lack of sleep","Shift work and supervisors","Poor eating habits"],"a":"2","e":"work-related-shift work, supervisors, co-workers, contact with the general public, court appearances, performance standards. Page: 84"},
+    {"q":"Which type of valid personal identification is issued to inmates at an intake or reception center?","c":["State driver's license","U.S. passport","Facility-issued inmate wristband","Student identification card"],"a":"2","e":"Valid forms of identification can include: ... facility-issued inmate wristband. Page: 88"},
+    {"q":"What is the purpose of the Prison Rape Elimination Act (PREA) protocols when collecting contraband?","c":["To ensure contraband is destroyed quickly.","To secure the clothing of the victim and suspect and collect DNA.","To allow inmates to keep certain personal items.","To punish officers who fail to find contraband."],"a":"1","e":"Officers should take special care to follow the protocols of the Prison Rape Elimination Act (PREA), such as securing the clothing of the victim and the suspect and DNA collection. Page: 96"},
+    {"q":"A search that involves visually searching an unclothed person and physically searching their clothing is a:","c":["Pat down","Clothed search","Custodial search","Strip search"],"a":"3","e":"strip search-visually searching an unclothed person and physically searching their clothing. Page: 95"},
+    {"q":"What is the primary reason for projecting a confident, competent, and capable demeanor?","c":["To impress supervisors.","To send a message to inmates that you can handle any situation.","To make friends with other officers.","It is not important to project this demeanor."],"a":"1","e":"Always project a confident, competent, and capable demeanor. This sends a message to inmates that you can handle any situation. Page: 83"},
+    {"q":"What should an officer do if an inmate's behavior begins to escalate into a more serious problem?","c":["Ignore the behavior.","Address the violation professionally and according to policy.","Ask another inmate to handle it.","Wait until the end of the shift to report it."],"a":"1","e":"Address violations professionally and according to your agency's policy. Failure to do so may result in inmates' behavior escalating into more serious problems... Page: 84"},
+    {"q":"What does ABIS stand for?","c":["Automated Biometric Identification Solution","Agency-Based Identification System","Automated Barcode Identification Scanner","Advanced Biometric Information Service"],"a":"0","e":"Automated Biometric Identification Solution (ABIS) (formerly known as AFIS). Page: 88"},
+    {"q":"What is the purpose of a raised or embossed seal on an ID card?","c":["To make the card look more official.","It is a security feature to prevent counterfeiting.","To provide a space for a signature.","To hold the photograph in place."],"a":"1","e":"security features... raised or embossed seal. Page: 89"},
+    {"q":"An inmate spreading rumors about one staff member to another is an example of what kind of manipulation tactic?","c":["Attempting to create bonds.","Distracting staff.","Attempting to turn one staff member against another.","Over-familiarizing with staff."],"a":"2","e":"spreading rumors about staff or attempting to turn one staff member against another-discussing information about staff members with you; 'I heard Sergeant Doe talking about you yesterday and he said that you were lazy.' Page: 92"},
+    {"q":"What is the primary reason an officer should avoid being overly friendly or giving out personal information to inmates?","c":["It is against agency policy.","It poses a serious safety and security risk by opening the door for manipulation.","It can make other officers jealous.","Inmates are not interested in an officer's personal life."],"a":"1","e":"To avoid inmate manipulation or deception, refrain from being overly friendly or giving out personal information. Engaging in personal conversations and talking about other staff pose a serious safety and security risk. Page: 93"},
+    {"q":"Giving one inmate authority over another inmate can create what type of environment?","c":["A more efficient work environment.","A hostile environment that can be exploited.","A stronger bond between inmates.","A safer and more secure facility."],"a":"1","e":"Another situation to avoid is giving one inmate authority over another inmate. This creates a power structure that can be exploited and generates a hostile environment. Page: 93"},
+    {"q":"Which of the following is a behavior an officer should display to avoid inmate manipulation?","c":["Engaging in sexual conversations.","Doing personal favors for inmates.","Being professional and truthful.","Sharing information about other staff members."],"a":"2","e":"Behaviors you should display to avoid inmate manipulation include: ... be truthful, be professional, be cautious. Page: 93"},
+    {"q":"What is the primary danger associated with contraband in a correctional facility?","c":["It can be used to harm inmates, officers, or for escape attempts.","It takes up valuable storage space.","It is difficult to document properly.","It can lead to minor rule infractions."],"a":"0","e":"Inmates often use contraband items to harm other inmates, officers, or themselves; contraband may also be used to attempt an escape, create a disturbance, damage property, and even spread infectious diseases. Page: 94"},
+    {"q":"Even if seemingly minor contraband enters a facility, it poses a security breach because:","c":["It is against the rules.","It shows the officer is not paying attention.","There is a high likelihood that more serious contraband may be introduced in the same way.","It can be sold for a high price within the facility."],"a":"2","e":"Even if seemingly minor contraband makes its way into the facility, there is a high likelihood that more serious contraband may be introduced in the same way. Page: 94"},
+    {"q":"What is the difference between nuisance contraband and hard/hazardous contraband?","c":["Nuisance contraband is illegal, while hard contraband is not.","Nuisance contraband usually does not pose an immediate threat, while hard/hazardous contraband does.","Hard contraband is easier to find than nuisance contraband.","There is no difference; the terms are interchangeable."],"a":"1","e":"Nuisance contraband is any authorized item found in excessive amounts or altered from its original state that usually does not pose an immediate threat... Hard/hazardous contraband is any item that poses a serious threat... Page: 94"},
+    {"q":"Which of the following can be turned into a weapon by an inmate?","c":["Sports equipment and food service equipment.","Office supplies and liquid substances like bleach.","Toothbrushes and writing utensils.","All of the above."],"a":"3","e":"Many common items can be turned into weapons. Sports equipment, food service equipment, office supplies, liquid substances (bleach, urine), toothbrushes, disposable razors, heavy objects placed in a sock, and writing utensils can all be used as weapons. Page: 95"},
+    {"q":"A search that involves visually and physically inspecting an area in a systematic manner is a:","c":["Pat down","Clothed search","Cell or area search","Strip search"],"a":"2","e":"cell or area search-visually and physically inspecting an area in a systematic manner. Page: 95"},
+    {"q":"What is the purpose of using metal detection in a search?","c":["To detect drugs and other non-metallic items.","To detect a metal object on or within a person or concealed within an item.","To visually inspect body openings.","To physically frisk a subject in a predetermined pattern."],"a":"1","e":"metal detection-using electronic devices to detect a metal object on or within a person or concealed within an item. Page: 95"},
+    {"q":"What should an officer always use when searching for and collecting contraband to avoid exposure to hazardous materials?","c":["Their bare hands for better sensitivity.","Universal precautions and personal protective equipment (PPE).","A metal detector.","A flashlight."],"a":"1","e":"Always use universal precautions and personal protective equipment (gloves, mask) when searching for and collecting contraband. Page: 96"},
+    {"q":"When is it necessary to issue a receipt to an individual for confiscated items?","c":["For all types of contraband.","Only for hard/hazardous contraband.","For unauthorized personal items.","A receipt is never necessary."],"a":"2","e":"It may be necessary to issue a receipt to the appropriate individuals for confiscated unauthorized personal items. Page: 96"},
+    {"q":"What is the purpose of documenting the final disposition of contraband?","c":["To create more paperwork.","To ensure a complete and comprehensive record of the process.","To track the value of confiscated items.","It is not necessary to document the final disposition."],"a":"1","e":"Document the final disposition of the collected contraband. Page: 97"},
+    {"q":"What happens to personal property considered contraband, according to agency policies?","c":["It is immediately destroyed.","It is given to another inmate.","It may be released or mailed to the inmate's family.","The officer who finds it can keep it."],"a":"2","e":"You must forward personal property considered contraband to the inmate property storage area. According to your agency's policies and procedures, these items may be released or mailed to the inmate's family. Page: 97"},
+    {"q":"What might the discovery of illegal drugs in a correctional facility lead to?","c":["A minor disciplinary report.","The inmate being released early.","Criminal charges.","The drugs being returned to the inmate."],"a":"2","e":"illegal drugs-the discovery of illegal drugs in a correctional facility may lead to criminal charges. Illegal drugs should be held as evidence by the investigating agency. Page: 98"},
+    {"q":"What is a critical aspect of maintaining safety and security in a correctional facility?","c":["Allowing inmates to regulate themselves.","Conducting searches to discover contraband.","Trusting that all visitors will follow the rules.","Searching only high-risk areas."],"a":"1","e":"Conducting searches is critical in discovering contraband and maintaining safety and security. Page: 99"},
+    {"q":"When examining visitor property, what should an officer look for?","c":["Only for weapons.","Hidden compartments that may conceal unauthorized items.","Items that are not in their original packaging.","Gifts for the inmates."],"a":"1","e":"Be sure to inspect all clothing items. Check containers for hidden compartments that may conceal unauthorized items. Page: 99"},
+    {"q":"What should an officer do if they find contraband during a search?","c":["Ignore it and continue the search.","Secure it and continue until the search is complete.","Stop the search immediately and report the finding.","Ask the inmate to dispose of it."],"a":"1","e":"If you find contraband, secure it and continue until you complete the search. Page: 100"},
+    {"q":"What is a key principle of conducting a systematic search of an area?","c":["Search random areas first.","Search one area or item completely before going to the next.","Allow inmates to remain in the area during the search.","Only visually scan the area."],"a":"1","e":"Search in a thorough and systematic manner. Search one area or item completely before going to the next. Page: 100"},
+    {"q":"What is the purpose of an X-ray scanner in a correctional facility?","c":["To detect metal objects on a person.","To detect contraband in articles like shoes and clothes.","To visually search body cavities.","To scan the entire facility for structural weaknesses."],"a":"1","e":"x-ray scanners-used to detect contraband in articles like shoes and clothes. Page: 102"},
+    {"q":"What should be done with all vehicles on facility property, including those of visitors and staff?","c":["They should be washed weekly.","They are subject to search.","They should be parked in a designated area and left alone.","They should be locked at all times."],"a":"1","e":"All vehicles on facility property are subject to search, including visitors and staff vehicles. Page: 103"},
+    {"q":"Which of the following is NOT a category of stress an officer may experience?","c":["Environmental","Personal","Financial","Work-related"],"a":"2","e":"The text lists four categories: environmental, personal, work-related, and self-induced. Financial stress would fall under the 'personal' category. Page: 84"},
+    {"q":"What is a key element of 'being alert' as a stage of situational awareness?","c":["Focusing only on the task at hand.","Paying attention to sights and sounds.","Waiting for a threat to appear before taking action.","Relying on other officers to spot threats."],"a":"1","e":"Being alert-be aware of what is going on around you at all times. Pay attention to sights and sounds to help maintain a high level of alertness. Page: 84"},
+    {"q":"What is the primary risk of an officer being complacent?","c":["They may get bored on the job.","They may not be aware of what is happening or what could happen.","They may become too friendly with inmates.","They may miss out on promotion opportunities."],"a":"1","e":"When complacent, you may not be aware of what is happening or what could happen in any given situation. Page: 84"},
+    {"q":"Which automated identification system recognizes distinct facial features?","c":["AVR hand scanner","Automated barcode scanner","Facial recognition software","Rapid Identification System"],"a":"2","e":"facial recognition software-recognizes distinct facial features and links to a database... Page: 87"},
+    {"q":"For an ID card to be acceptable, it should be unexpired, unaltered, and may contain what?","c":["The holder's favorite color.","Security features.","A list of their allergies.","Their social media handle."],"a":"1","e":"Valid identification is unexpired and unaltered and may contain security features. Page: 90"},
+    {"q":"What is the primary reason to document the identity of an inmate, staff, or visitor?","c":["To practice handwriting skills.","To create a permanent and official record of the verification.","To have something to do during a slow shift.","It is not necessary to document identity."],"a":"1","e":"Once you confirm identification, document the verification of the inmate, staff member, or visitor on the appropriate form or electronic Record. Page: 90"},
+    {"q":"An inmate testing the boundaries of a supervising officer by disobeying rules is an example of what manipulation method?","c":["Attempting to create bonds.","Circumventing or disobeying rules.","Using special circumstances.","Distracting staff."],"a":"1","e":"circumventing or disobeying rules-testing the boundaries of the supervising officer. Page: 92"},
+    {"q":"What is the risk of an officer engaging in personal conversations with an inmate?","c":["It can lead to a strong professional relationship.","It poses a serious safety and security risk.","The inmate may become bored.","There is no risk."],"a":"1","e":"Engaging in personal conversations and talking about other staff pose a serious safety and security risk. Page: 93"},
+    {"q":"What is an example of an item that can be both nuisance and hard/hazardous contraband?","c":["A firearm","A toothbrush","A photograph","A cell phone"],"a":"1","e":"Many common items can be turned into weapons... toothbrushes... can all be used as weapons. A standard toothbrush is authorized, but it can be altered into a shank, making it hard/hazardous contraband. Page: 95"},
+    {"q":"What should an officer do if they find nuisance contraband in a common area and cannot link it to an inmate?","c":["Leave it where it is.","Give it to the first inmate who claims it.","Confiscate and process it according to agency policy.","Hold it until someone claims it."],"a":"2","e":"If you find nuisance contraband in common areas and cannot link it to an inmate, confiscate and process it according to your agency's policies and procedures. Page: 97"},
+    {"q":"When searching a vehicle, which areas should be checked?","c":["Only the trunk and glove box.","Only the interior of the vehicle.","All compartments and areas, including above and below the vehicle.","Only the areas where inmates were seated."],"a":"2","e":"Make sure you search all compartments and areas, including above and below the vehicle, the interior, the exterior, the engine, the glove box, the consoles, and the toolbox. Page: 103"},
+    {"q":"What is the primary reason for being in good physical shape as a correctional officer?","c":["To look intimidating to inmates.","The duties are often physically demanding and require stamina and agility.","To get a discount at the local gym.","It is a requirement for all government jobs."],"a":"1","e":"The duties of a correctional officer are often physically demanding. Maintain good physical health by eating a balanced diet and exercising daily. Lack of stamina, agility, and mobility can hinder your ability to protect yourself... Page: 83"},
+    {"q":"What is an example of a 'personal' stressor that can affect an officer's focus?","c":["Shift work","Supervisors","Family issues or lack of sleep","Crowded areas"],"a":"2","e":"personal-family issues, health, lack of sleep, poor eating habits, financial situation, academic demands. Page: 84"},
+    {"q":"When an officer is 'watching groups and individuals,' why is it important to face inmates when speaking with them?","c":["To show respect.","It allows the use of peripheral vision to monitor other activities.","To make sure they can hear you clearly.","It is a sign of aggression."],"a":"1","e":"Always face inmates when speaking with them, because it allows you to use your peripheral vision to monitor activities. Page: 86"},
+    {"q":"What is the Rapid Identification System?","c":["A facial recognition system.","A fingerprint recognition system.","A barcode scanning system.","A manual logbook system."],"a":"1","e":"Rapid Identification System-fingerprint recognition system. Page: 88"},
+    {"q":"Which of the following is NOT a security feature found on a valid ID card?","c":["Hologram","Watermark","The holder's blood type","Magnetic stripe"],"a":"2","e":"security features... hologram... watermark... magnetic stripe or bar code... Page: 89"},
+    {"q":"What is a key characteristic of the 'turner' in an inmate manipulation team?","c":["They are the most obvious and aggressive member.","They are the least suspected by the correctional officer.","They are always the leader of the team.","They have no direct contact with the officer."],"a":"1","e":"turners-befriend the correctional officer and use the friendship to ultimately coerce the officer into engaging in rule infractions. They are the least suspected ones by the correctional officer. Page: 92"},
+    {"q":"What is the primary reason an officer should not take any contraband for personal use?","c":["It is unethical and against policy.","The items are usually not valuable.","It creates too much paperwork.","The inmate may want it back later."],"a":"0","e":"Never receive or take for personal use any contraband. This is an ethical and policy violation. Page: 97"},
+    {"q":"What is a key reason for searching outside transport destinations like courtrooms or medical offices?","c":["To ensure the locations are clean.","To prevent the introduction or acquisition of contraband outside the facility.","To check for structural damage.","To familiarize oneself with the layout."],"a":"1","e":"You must search outside transport destinations, including work-release sites, courtrooms, or medical offices. This is to prevent contraband from entering or leaving the facility's control. Page: 100"},
+    {"q":"What should an officer do if they are feeling stressed or anxious on the job?","c":["Ignore the feelings and hope they go away.","Take a sick day to avoid the situation.","Recognize the stress and use training and knowledge of policies to minimize it.","Vent their frustrations to the inmates."],"a":"2","e":"You can minimize stress with proper training, knowledge of policies and procedures, and familiarity with various inmate behaviors. Page: 84"},
+    {"q":"What is the primary danger of an officer developing a predictable pattern of movement?","c":["It can become boring for the officer.","Inmates may use it to gain a tactical advantage.","It may cause wear and tear on the officer's boots.","Supervisors may see it as a lack of initiative."],"a":"1","e":"Avoid establishing a set pattern-if inmates can predict what position you will take, they may be able to gain a tactical advantage. Page: 85"},
+    {"q":"Which valid form of identification is acceptable for minors younger than 12?","c":["A school report card.","A library card.","A birth certificate.","A verbal confirmation from a parent."],"a":"2","e":"birth certificate (for minors younger than 12). Page: 88"},
+    {"q":"What is the primary goal of an inmate who attempts to over-familiarize themselves with an officer?","c":["To become genuine friends with the officer.","To learn enough about the officer to notice changes in routine for manipulation purposes.","To get advice on personal problems.","To pass the time during their incarceration."],"a":"1","e":"over familiarizing with staff-knowing enough about you to notice a change in your routine. This is a method inmates use to manipulate and deceive. Page: 92"},
+    {"q":"Why must an officer be careful when handling nuisance contraband?","c":["It can be used to create hard/hazardous contraband.","It is often more valuable than hard contraband.","It is more difficult to document.","It takes up more storage space."],"a":"0","e":"Be aware, however, that some nuisance contraband can be used to create hard/hazardous contraband. Page: 94"},
+    {"q":"A visual and physical inspection of a vehicle to locate contraband is a:","c":["Pat down","Clothed search","Vehicle search","Strip search"],"a":"2","e":"vehicle search-visually and physically inspecting a vehicle to locate contraband. Page: 96"},
+    {"q":"What is a key reason to remove all people from an area before conducting a search?","c":["To make the area quieter.","To provide safety for the officer and prevent interference.","To protect the privacy of the people being removed.","To make the search go faster."],"a":"1","e":"This provides safety for the officer and prevents interference. Page: 100"},
+    {"q":"What is the main advantage of a grid search pattern over a strip/line search pattern?","c":["It is faster.","It requires fewer people.","It is more methodical and thorough due to the overlapping cross pattern.","It can only be used in small areas."],"a":"2","e":"grid search pattern-a variation of the strip/line search, this pattern overlaps a series of lanes in a cross pattern, making the search more methodical and thorough. Page: 101"},
+    {"q":"What is the primary function of a professional attitude in maintaining safety and security?","c":["It makes the officer popular with inmates.","It is the foundation for safety and security.","It is required for promotions.","It is only important during inspections."],"a":"1","e":"Safety and security begin with a professional attitude. Page: 83"},
+    {"q":"What is the purpose of practicing controlled behavior and avoiding distracting habits like foot tapping?","c":["To show inmates you are relaxed.","To demonstrate confidence and control.","To conserve energy during a long shift.","It has no real purpose."],"a":"1","e":"Practice controlled behavior by demonstrating confidence and control and avoiding such distracting behaviors as foot tapping, nail biting, and fidgeting. Page: 86"},
+    {"q":"What is the primary risk if a visitor is granted access without proper identification?","c":["It creates extra paperwork.","A security breach has occurred.","The visitor may get lost.","The inmate may receive an unauthorized gift."],"a":"1","e":"If a visitor is granted access without proper identification, a security breach has occurred. Page: 87"},
+    {"q":"Which of the following is NOT a common feature on a valid personal identification card?","c":["Photograph","Identification number","Social Security number","The holder's political affiliation"],"a":"3","e":"Common features may include: photograph, identification number, signature, personal information (name, address, date of birth), physical features... Page: 89"},
+    {"q":"What is the primary reason an officer should be suspicious and cautious in their interactions with inmates?","c":["All inmates are dangerous criminals.","To avoid being manipulated or deceived for personal gain or rule infractions.","It is part of the job description to be unfriendly.","To show other officers that you are tough."],"a":"1","e":"Behaviors you should display to avoid inmate manipulation include: ... be suspicious ... be cautious. This is to prevent falling for manipulation and deception. Page: 93"},
+    {"q":"Which of the following items requires special disposal and should not be thrown away?","c":["Excessive clothing","Money","Reading materials","Extra hygiene items"],"a":"1","e":"Items that require special disposal include: money... Money is not thrown away. Page: 97"},
+    {"q":"What is the first thing an officer should do when contraband is located and identified?","c":["Photograph it.","Document it in a report.","Remove or secure it immediately.","Ask the inmate why they have it."],"a":"2","e":"When contraband is located and identified, the items must be removed or secured immediately. Page: 96"},
+    {"q":"What should an officer do after a systematic search of an area is complete?","c":["Leave the area immediately.","Document the search details using logs or other identified methods.","Take a break before starting the next task.","Inform the inmates that the search is over."],"a":"1","e":"Once you complete the search, document the search details using logs, electronic databases, checklists, or any other identified method. Page: 103"},
+    {"q":"What is the main reason an officer should avoid missing a shift if possible?","c":["They will lose pay for the day.","It can result in fewer officers being available to watch inmates and respond to emergencies.","Their supervisor will be disappointed.","They will miss out on important announcements."],"a":"1","e":"When you miss a shift, someone else will have to cover it. This means fewer officers will be available to watch inmates and respond to an emergency. Page: 83"},
+    {"q":"Which of the four basic skills for evaluating a situation involves being aware of tone, volume, and inflammatory words?","c":["Positioning","Posture","Observing","Listening"],"a":"3","e":"Active listening... Be sure to pay attention to volume, pitch, tone, and inflection. Listen for key and inflammatory words that could indicate trouble... Page: 86"},
+    {"q":"What is the purpose of an automated barcode scanner in identification?","c":["To recognize fingerprints.","To read barcodes on wristbands or ID cards to verify information.","To recognize facial features.","To detect metal objects."],"a":"1","e":"automated barcode scanner-reads barcodes located on the wristband, armband, or identification card and verifies information. Page: 88"},
+    {"q":"What is a common sign of an altered identification card?","c":["The photograph is in color.","The card is made of plastic.","Raised lettering or photo re-lamination.","The card has an expiration date."],"a":"2","e":"Examine the identification, looking for obvious alterations or inconsistencies, such as... raised lettering or photo re-lamination... Page: 90"},
+    {"q":"An inmate asking an officer personal questions about their family or favorite sports team is likely an attempt at what?","c":["Making friendly conversation.","Engaging the officer in a non-job related conversation as a manipulation tactic.","Getting to know the officer better.","Passing the time."],"a":"1","e":"attempting to engage staff in casual non-job related conversation-requesting personal information regarding staff, such as asking where you are from... your age or marital status... or your favorite sports team. This is a method inmates use to manipulate and deceive. Page: 92"},
+    {"q":"What is the primary reason for photographing hard or hazardous contraband?","c":["To create a personal collection of interesting finds.","For possible presentation in criminal proceedings.","To post on social media.","To show other officers what was found."],"a":"1","e":"These items should always be photographed for possible presentation in criminal proceedings. Page: 96"},
+    {"q":"If an officer finds illegal drugs, they should be held as evidence by whom?","c":["The officer who found them.","The shift supervisor.","The investigating agency.","The facility's medical staff."],"a":"2","e":"illegal drugs-the discovery of illegal drugs in a correctional facility may lead to criminal charges. Illegal drugs should be held as evidence by the investigating agency. Page: 98"},
+    {"q":"What is the primary reason to search an inmate before conducting an area search?","c":["To make the inmate uncomfortable.","To ensure the officer's safety and prevent interference.","To find items the inmate may have stolen from the area.","It is not necessary to search the inmate first."],"a":"1","e":"Prior to the area search, subjects should also be searched and closely monitored... This provides safety for the officer and prevents interference. Page: 100"},
+    {"q":"What is a key benefit of using a metal detector to scan a mattress?","c":["It is faster than a physical search.","It protects the officer from possible injury and prevents property destruction.","It can detect non-metallic contraband.","It is the only way to find contraband in a mattress."],"a":"1","e":"Using this method will protect the officer from possible injury and prevent the destruction of property. Page: 102"},
+    {"q":"How can an officer minimize job-related stress?","c":["By avoiding difficult situations.","By ignoring policies and procedures.","With proper training, knowledge of policies, and familiarity with inmate behaviors.","By working as few hours as possible."],"a":"2","e":"You can minimize stress with proper training, knowledge of policies and procedures, and familiarity with various inmate behaviors. Page: 84"},
+    {"q":"What is an example of an officer using 'posture' to project confidence?","c":["Slouching and avoiding eye contact.","Tapping their foot and fidgeting.","Using command presence with a strong, controlled body language.","Leaning against a wall in a relaxed manner."],"a":"2","e":"Posture is holding your body in a manner that shows strength, confidence, interest, and control. Posture includes using command presence to project an image of confidence in your skills and abilities. Page: 86"},
+    {"q":"Which of the following is NOT a type of valid personal identification listed in the text?","c":["State driver's license","U.S. passport","Social Security card","Student identification card"],"a":"2","e":"The text lists state driver's license, U.S. passport, and student identification cards as valid forms. A Social Security card is not listed as a primary photo ID for this purpose. Page: 88"},
+    {"q":"In an inmate manipulation team, the 'contacts' are responsible for what?","c":["Observing officers for weaknesses.","Supplying information about the officer's habits.","Asking the officer for small favors.","Standing guard during a rule infraction."],"a":"1","e":"contacts-supply information about the correctional officer's work habits, likes, and dislikes. Page: 92"},
+    {"q":"What is the general rule for handling contraband that could be evidence?","c":["It should be handled as little as possible to preserve its value.","It should be cleaned and polished before being stored.","It should be passed around for all officers to see.","It should be stored in the officer's personal locker."],"a":"0","e":"Mishandling these items may compromise the value they have as evidence. The text also states to never 'handle suspected contraband more than is absolutely necessary.' Page: 96"},
+    {"q":"What is the first step in conducting a systematic search of an area?","c":["Start searching immediately.","Make a mental plan of how to conduct the search and select a starting point.","Ask inmates where contraband might be hidden.","Use a metal detector on the entire area."],"a":"1","e":"While visually scanning the area, make a mental plan of how to conduct the search and select a starting point. Page: 100"},
+    {"q":"A search pattern that is a variation of the strip/line search and is more methodical and thorough is the:","c":["Spiral search","Grid search","Zone search","Random search"],"a":"1","e":"grid search pattern-a variation of the strip/line search, this pattern overlaps a series of lanes in a cross pattern, making the search more methodical and thorough. Page: 101"},
+    {"q":"What is the primary reason for treating each inmate with respect?","c":["It shows weakness.","It can help avoid conflict as much as possible.","It is a way to make friends with inmates.","It is not necessary to treat inmates with respect."],"a":"1","e":"Practice good communication and listening skills to avoid conflict as much as possible. Treat each inmate with respect. Page: 83"},
+    {"q":"What is the primary purpose of the 'runner' in an inmate manipulation team?","c":["To observe the officer's habits.","To befriend the officer.","To expose themselves by asking for small items to test the officer.","To stand guard during illegal activities."],"a":"2","e":"runners-are usually the only paid members of the team because they must expose themselves to the correctional officer by asking for small items like candy, cigarettes, or pencils. Page: 92"},
+    {"q":"What is the final step in the process of handling contraband?","c":["Confiscation","Documentation","Storage","Final disposition and disposal"],"a":"3","e":"The final disposition of contraband includes either immediate disposal or storage... Document the final disposition... Page: 97"},
+    {"q":"What is a key safety rule when using your hands to search an area?","c":["Always wear two pairs of gloves.","Never put your hands where you cannot see.","Move your hands quickly to cover more area.","Use your fingertips to feel for sharp objects."],"a":"1","e":"Never put your hands in places where you cannot also see what you are inspecting. Page: 100"},
+    {"q":"Which of the following is a key component of 'observing' for situational awareness?","c":["Noticing an inmate's uniform is worn incorrectly.","Noticing a broken window or graffiti.","Noticing an inmate is limping or has a bloody nose.","All of the above."],"a":"3","e":"Examples of things you may observe include: an inmate uniform worn incorrectly... physical condition of inmate... physical structures during inspection or search... Page: 86"},
+    {"q":"What is the purpose of a facility-issued armband or wristband?","c":["It is a fashion accessory for inmates.","It serves as a form of manual identification.","It tracks the inmate's location via GPS.","It monitors the inmate's vital signs."],"a":"1","e":"MANUAL... armband or wristband-issued to inmates at intake or reception center. Page: 88"},
+    {"q":"An inmate offering an officer a candy bar could be the beginning of what?","c":["A friendly gesture.","Manipulation or deception.","A celebration.","A misunderstanding."],"a":"1","e":"Assume an inmate asks an officer one of the following: ... 'Would you like a candy bar?' ... While these questions might seem harmless, they could be the beginning of manipulation or deception by an inmate. Page: 91"},
+    {"q":"What is the most common way contraband enters a correctional facility?","c":["Thrown over the fence.","Through official deliveries.","Concealed by inmates, visitors, vendors, or staff.","Manufactured inside the facility."],"a":"2","e":"Contraband may enter correctional facilities by various means. Inmates, visitors, vendors, and even staff can conceal contraband in their clothing, on their person, or in other items. Page: 95"},
+    {"q":"What is the primary purpose of documenting a search?","c":["To create a record of the subjects, locations, items confiscated, and officers involved.","To provide a story for the local newspaper.","To justify overtime pay for the officers.","To punish inmates even if no contraband is found."],"a":"0","e":"Once you complete the search, document the search details using logs, electronic databases, checklists, or any other identified method. Details may include the subjects' names, locations, items confiscated, and the officers who conducted the search. Page: 103"}
+];
+
+function processAndCleanQuestions(questionArray) {
+    // Filter out any null or undefined entries from the initial array
+    const initialCleanedArray = questionArray.filter(q => q && typeof q === 'object');
+
+    return initialCleanedArray.map((q_orig, index) => {
+        // Deep copy the question object to avoid modifying the original
+        let q = JSON.parse(JSON.stringify(q_orig)); 
+        q.originalIndex = index; // Store original index
+
+        // Convert answer to a number if it's a string
+        if (typeof q.a === 'string') {
+          q.a = parseInt(q.a, 10);
+        }
+
+        // Convert letter-based answer (a_letter) to numeric index (a)
+        if (q.a_letter) { 
+            const letterMap = { A: 0, B: 1, C: 2, D: 3 };
+            q.a = letterMap[q.a_letter.toUpperCase()]; // Ensure uppercase for consistency
+            delete q.a_letter; 
+        }
+
+        // Validate the answer index; default to 0 if invalid
+        if (q.a === undefined || q.a < 0 || q.a >= q.c.length) {
+            console.warn("Initial invalid answer index for question:", q.q, "Original index:", q_orig.a, "Defaulting to 0.");
+            q.a = 0; 
+        }
+        
+        // Store the correct answer text before shuffling choices
+        let correctAnswerText = q.c[q.a]; 
+
+        // Standardize "All of the above." to "All answers listed"
+        q.c = q.c.map(choice => choice === "All of the above." ? "(All answers listed)" : choice);
+        if (correctAnswerText === "All of the above.") {
+            correctAnswerText = "(All answers listed)";
+        }
+        
+        // Shuffle the choices
+        let shuffledChoices = shuffleArray([...q.c]); 
+        // Find the new index of the correct answer after shuffling
+        let newCorrectIndex = shuffledChoices.indexOf(correctAnswerText);
+
+        // Handle cases where the correct answer text might not be found after shuffling (should be rare)
+        if (newCorrectIndex === -1) {
+            console.error("CRITICAL ERROR: Correct answer text '"+ correctAnswerText +"' not found after shuffling for question:", q.q, "Shuffled choices:", shuffledChoices, "Original choices were:", q.c);
+            // Fallback: try to find it in the original, unshuffled choices
+            newCorrectIndex = q.c.indexOf(correctAnswerText); 
+            if (newCorrectIndex !== -1) {
+                q.a = newCorrectIndex; 
+            } else {
+                q.a = 0; 
+                console.error("ABSOLUTE FALLBACK: Could not find '"+ correctAnswerText +"' even in original choices for q: " + q.q + ". Using original choices and index 0.");
+            }
+        } else {
+            q.c = shuffledChoices; 
+            q.a = newCorrectIndex; 
+        }
+        return q;
+    });
+}
+
+// Process the questions and store them in the questionPool
+const questionPool = processAndCleanQuestions(newQuestionsFromUser);
+
+
+let selectedQuestions = []; 
+let currentIndex = 0;
+const skipped = []; 
+const flagged = []; 
+let answers = []; 
+let choiceVisibility = {}; 
+let testId = ''; 
+let timerSeconds = 1800; 
+let isReviewMode = false;
+let isStudyMode = false;
+let incorrectlyAnswered = [];
+let usedQuestionIndicesInPool = [];
+let currentStudySetSize = 10;
+var timerInterval;
+
+function selectRandomQuestionsFromPool(pool, count) {
+  const shuffledFullPool = shuffleArray([...pool]); 
+  return shuffledFullPool.slice(0, count);
+}
+
+function renderQuiz() {
+  const form = document.getElementById("quizForm");
+  form.innerHTML = ''; 
+
+  if (selectedQuestions.length === 0 ) {
+    if(isStudyMode) showStudyEndActions();
+    return;
+  }
+  if (!selectedQuestions[currentIndex]){
+      // This can happen if we run out of incorrect questions to retry
+      showStudyEndActions();
+      return;
+  }
+
+  const q = selectedQuestions[currentIndex]; 
+  const questionDiv = document.createElement("div"); 
+  questionDiv.classList.add("question");
+  questionDiv.innerHTML = `<div class='question-header'>Question ${currentIndex + 1}</div><div class='question-text'>${q.q}</div>`;
+  
+  const hasBeenAnsweredInStudy = isStudyMode && answers[currentIndex] !== null;
+
+  q.c.forEach((choice, i) => {
+    const choiceKey = `q${currentIndex}_c${i}`;
+    const isVisuallyObscured = choiceVisibility[choiceKey] === true; 
+    const isSelected = answers[currentIndex] === i;
+    
+    const eyeIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+    const eyeOffIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+
+    const choiceWrapper = document.createElement('div');
+    choiceWrapper.className = 'choice-wrapper';
+    if (isSelected && !isStudyMode) {
+        choiceWrapper.classList.add('selected-wrapper');
+    }
+    
+    const radioId = `${choiceKey}_radio`;
+    choiceWrapper.innerHTML = `
+        <label class="choice-button-main-area" for="${radioId}">
+            <input type="radio" id="${radioId}" name="q${currentIndex}" value="${i}" ${isSelected ? 'checked' : ''} onclick="recordAnswer(${i})">
+            <span class="choice-text-container">
+              ${String.fromCharCode(65 + i)}. <span class="actual-choice-text ${isVisuallyObscured ? 'actual-choice-text-visually-obscured' : ''}">${choice}</span>
+            </span>
+        </label>
+        <button type="button" class="toggle-visibility-btn" onclick="toggleChoiceVisibility(${currentIndex}, ${i}, event)">
+          ${isVisuallyObscured ? eyeOffIconSVG : eyeIconSVG}
+        </button>
+    `;
+    questionDiv.appendChild(choiceWrapper);
+    
+    if (hasBeenAnsweredInStudy) {
+        const selectedAnswer = answers[currentIndex];
+        const isCorrect = selectedAnswer === q.a;
+        if (i === selectedAnswer) {
+            choiceWrapper.classList.add(isCorrect ? 'study-correct' : 'study-incorrect');
+        }
+        if (i === q.a) {
+            choiceWrapper.classList.add('study-correct');
+        }
+    }
+  });
+  
+  const explanationDiv = document.createElement('div');
+  explanationDiv.className = 'explanation';
+  explanationDiv.id = `explanation-${currentIndex}`;
+  explanationDiv.innerHTML = q.e;
+  if(hasBeenAnsweredInStudy) {
+      explanationDiv.style.display = 'block';
+  }
+  questionDiv.appendChild(explanationDiv);
+  
+  form.appendChild(questionDiv);
+  
+  document.getElementById("progressText").textContent = `Question ${currentIndex + 1} of ${selectedQuestions.length}`; 
+  document.getElementById("progressTextBottom").textContent = `Question ${currentIndex + 1} of ${selectedQuestions.length}`; 
+  
+  document.getElementById("submitBtn").style.display = answers.every(a => a !== null) && !isStudyMode ? 'inline-block' : 'none';
+
+  const flagButton = document.getElementById("flagButton");
+  if (flagButton) { 
+      flagButton.style.display = isStudyMode ? 'none' : 'inline-block';
+    if (flagged.includes(currentIndex)) {
+      flagButton.innerHTML = '✅ Unflag';
+    } else {
+      flagButton.innerHTML = '🚩 Flag';
+    }
+  }
+  highlightNavItem(currentIndex); 
+}
+
+function toggleChoiceVisibility(qIndex, cIndex, event) {
+    event.stopPropagation(); 
+    const choiceKey = `q${qIndex}_c${cIndex}`;
+    choiceVisibility[choiceKey] = !choiceVisibility[choiceKey]; 
+    
+    const buttonClicked = event.currentTarget; 
+    const choiceWrapper = buttonClicked.closest('.choice-wrapper');
+    if (!choiceWrapper) return;
+
+    const textSpan = choiceWrapper.querySelector('.actual-choice-text');
+    if (!textSpan) return;
+    
+    const eyeIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+    const eyeOffIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+
+    if (choiceVisibility[choiceKey]) { 
+        textSpan.classList.add('actual-choice-text-visually-obscured');
+        buttonClicked.innerHTML = eyeOffIconSVG;
+    } else {
+        textSpan.classList.remove('actual-choice-text-visually-obscured');
+        buttonClicked.innerHTML = eyeIconSVG;
+    }
+}
+
+
+function recordAnswer(selectedIndex) {
+    const alreadySelectedAndAnswered = answers[currentIndex] !== null;
+
+    if (alreadySelectedAndAnswered) {
+        if (isStudyMode) {
+            nextQuestion();
+        } else if (selectedIndex !== answers[currentIndex]) {
+            answers[currentIndex] = selectedIndex;
+            renderQuiz(); 
+            generateSidebar();
+        } else {
+             nextQuestion();
+        }
+        return;
+    }
+    
+    answers[currentIndex] = selectedIndex;
+
+    const idxInSkipped = skipped.indexOf(currentIndex);
+    if (idxInSkipped > -1) {
+        skipped.splice(idxInSkipped, 1);
+    }
+    
+    const questionDiv = document.getElementById("quizForm").querySelector(".question");
+    
+    if (isStudyMode) {
+        const q = selectedQuestions[currentIndex];
+        const isCorrect = selectedIndex === q.a;
+        const choiceWrappers = questionDiv.querySelectorAll('.choice-wrapper');
+
+        choiceWrappers.forEach((wrapper, i) => {
+            if (i === selectedIndex) {
+                wrapper.classList.add(isCorrect ? 'study-correct' : 'study-incorrect');
+            }
+            if (i === q.a) {
+                wrapper.classList.add('study-correct');
+            }
+        });
+        document.getElementById(`explanation-${currentIndex}`).style.display = 'block';
+
+        if (!isCorrect) {
+            if (!incorrectlyAnswered.some(item => item.originalIndex === q.originalIndex)) {
+                incorrectlyAnswered.push(q);
+            }
+        }
+        
+        if (currentIndex === selectedQuestions.length - 1) {
+            showStudyEndActions();
+        }
+    } else { 
+        if (questionDiv) {
+            const currentQuestionChoiceWrappers = questionDiv.querySelectorAll('.choice-wrapper');
+            currentQuestionChoiceWrappers.forEach((wrapper, idx) => {
+                wrapper.classList.remove('selected-wrapper');
+                if (idx === selectedIndex) {
+                    wrapper.classList.add('selected-wrapper');
+                }
+            });
+        }
+        document.getElementById("submitBtn").style.display = answers.every(a => a !== null) ? 'inline-block' : 'none';
+    }
+    
+    generateSidebar(); 
+}
+
+function showStudyEndActions() {
+    document.querySelector('.question-actions-bar').style.display = 'none';
+    const studyEndActions = document.getElementById('studyEndActions');
+    studyEndActions.style.display = 'block';
+
+    const retryBtn = document.getElementById('retryIncorrectBtn');
+    retryBtn.style.display = incorrectlyAnswered.length > 0 ? 'inline-block' : 'none';
+
+    const nextSetBtn = document.getElementById('nextSetBtn');
+    const remainingQuestions = questionPool.length - usedQuestionIndicesInPool.length;
+    nextSetBtn.style.display = remainingQuestions >= currentStudySetSize ? 'inline-block' : 'none';
+}
+
+function startNextStudySet() {
+    setupSession(true); // Call setupSession again, indicating it's the next set
+}
+
+function retryIncorrectQuestions() {
+    selectedQuestions = shuffleArray([...incorrectlyAnswered]);
+    currentIndex = 0;
+    answers = new Array(selectedQuestions.length).fill(null);
+    incorrectlyAnswered = [];
+    flagged.length = 0;
+    skipped.length = 0;
+
+    document.getElementById('studyEndActions').style.display = 'none';
+    document.querySelector('.question-actions-bar').style.display = 'flex';
+    document.getElementById('nextBtn').style.display = 'inline-block';
+    document.getElementById('prevBtn').style.display = 'inline-block';
+
+    renderQuiz();
+    generateSidebar();
+}
+
+function skipQuestion() {
+  const questionToSkip = currentIndex;
+  if (!skipped.includes(questionToSkip)) {
+    skipped.push(questionToSkip);
+  }
+  nextQuestion(); 
+}
+
+function flagQuestion() {
+  const indexInFlagged = flagged.indexOf(currentIndex);
+  if (indexInFlagged > -1) {
+    flagged.splice(indexInFlagged, 1); 
+  } else {
+    flagged.push(currentIndex); 
+  }
+  renderQuiz(); 
+  generateSidebar(); 
+}
+
+function nextQuestion() {
+  let potentialNextIndex = currentIndex + 1;
+
+  if (potentialNextIndex >= selectedQuestions.length) { 
+    if (isStudyMode) {
+      showStudyEndActions();
+      return;
+    }
+    potentialNextIndex = -1; 
+
+    for (const skippedIdx of skipped) {
+      if (answers[skippedIdx] === null) {
+        potentialNextIndex = skippedIdx;
+        break;
+      }
+    }
+
+    if (potentialNextIndex === -1) {
+      for (let i = 0; i < selectedQuestions.length; i++) {
+        if (answers[i] === null) {
+          potentialNextIndex = i;
+          break;
+        }
+      }
+    }
+    
+    if (potentialNextIndex === -1) {
+      potentialNextIndex = currentIndex; 
+    }
+  }
+  currentIndex = potentialNextIndex;
+  renderQuiz();
+  generateSidebar(); 
+}
+
+function prevQuestion() {
+  if (currentIndex > 0) {
+    currentIndex--;
+  }
+  renderQuiz();
+  generateSidebar(); 
+}
+
+function displayReview() {
+  isReviewMode = true; // Set review mode
+  choiceVisibility = {}; 
+  const form = document.getElementById("quizForm");
+  form.innerHTML = ''; 
+  let correctCount = 0;
+
+  const reviewActionsTop = document.getElementById("reviewActionsTop");
+  if(reviewActionsTop) reviewActionsTop.style.display = 'block';
+
+
+  selectedQuestions.forEach((q, i) => { 
+    const div = document.createElement("div");
+    div.id = `review-q-${i}`; // Add ID for scrolling
+    const isCorrect = answers[i] === q.a;
+    const statusClass = isCorrect ? 'correct' : 'incorrect';
+    const chosenAnswerText = (answers[i] !== null && q.c[answers[i]] !== undefined) ? q.c[answers[i]] : '<em>No answer provided</em>';
+    const correctAnswerText = (q.a !== undefined && q.c[q.a] !== undefined) ? q.c[q.a] : '<em>Error: Correct answer not found</em>';
+    
+    div.className = statusClass; 
+    div.innerHTML = `<div class='question-header'>Question ${i + 1}</div>` +
+                      `<div class='question-text'>${q.q}</div>` +
+                      `<p>Your Answer: ${chosenAnswerText}</p>` +
+                      `<p>Correct Answer: ${correctAnswerText}</p>` +
+                      `<div class='explanation' style="display:block;">${q.e}</div><hr>`;
+    if (isCorrect) correctCount++;
+    form.appendChild(div);
+  });
+  
+  const scoreHeader = document.createElement("h2");
+  scoreHeader.id = "reviewSummaryHeader"; 
+  scoreHeader.style.textAlign = "center";
+  scoreHeader.innerHTML = `Review Summary<br>You answered ${correctCount} out of ${selectedQuestions.length} correctly.`; 
+  
+  const quizContentScrollable = document.getElementById("quizContentScrollable");
+  const referenceNodeForHeader = document.getElementById("quizForm"); 
+
+  if (reviewActionsTop && reviewActionsTop.parentNode === quizContentScrollable) {
+      quizContentScrollable.insertBefore(scoreHeader, reviewActionsTop.nextSibling);
+  } else if (referenceNodeForHeader && referenceNodeForHeader.parentNode === quizContentScrollable) {
+      quizContentScrollable.insertBefore(scoreHeader, referenceNodeForHeader);
+  } else {
+      const progressDiv = document.getElementById('progress');
+      if (progressDiv && progressDiv.parentNode === quizContentScrollable) {
+          quizContentScrollable.insertBefore(scoreHeader, progressDiv.nextSibling);
+      } else {
+          quizContentScrollable.prepend(scoreHeader); 
+      }
+  }
+  
+  document.getElementById("progressText").textContent = "Review Mode";
+  document.getElementById("progressTextBottom").textContent = "Review Mode";
+  
+  const questionActionsBar = document.querySelector(".question-actions-bar");
+  if(questionActionsBar) questionActionsBar.style.display = 'none';
+  document.getElementById("flagButton").style.display = 'none';
+  
+  const reviewActionsBottom = document.getElementById("reviewActionsBottom");
+  if(reviewActionsBottom) reviewActionsBottom.style.display = 'block';
+  generateSidebar(); // Refresh sidebar with review colors
+}
+
+function returnToHome() {
+    isReviewMode = false; // Exit review mode
+    isStudyMode = false;
+    const reviewActionsTop = document.getElementById("reviewActionsTop");
+    if(reviewActionsTop) reviewActionsTop.style.display = 'none';
+    const reviewActionsBottom = document.getElementById("reviewActionsBottom");
+    if(reviewActionsBottom) reviewActionsBottom.style.display = 'none';
+    const studyEndActions = document.getElementById("studyEndActions");
+    if(studyEndActions) studyEndActions.style.display = 'none';
+    
+    const scoreHeader = document.getElementById("reviewSummaryHeader");
+    if (scoreHeader) {
+        scoreHeader.remove();
+    }
+    
+    document.getElementById('mainQuizContainer').style.display = 'none';
+    document.getElementById('resultsScreen').style.display = 'none'; 
+    document.getElementById('introScreen').style.display = 'flex';
+    document.getElementById('homeBtn').style.display = 'none'; 
+
+    const timerDisplay = document.getElementById('timer');
+    if(timerDisplay) timerDisplay.textContent = "30:00"; 
+    
+    currentIndex = 0;
+    answers = [];
+    skipped.length = 0; 
+    flagged.length = 0;
+    choiceVisibility = {};
+    selectedQuestions = []; 
+    incorrectlyAnswered = [];
+    usedQuestionIndicesInPool = [];
+}
+
+
+function submitAll() {
+  let correct = 0;
+  selectedQuestions.forEach((q, i) => { 
+    if (answers[i] === q.a) correct++;
+  });
+  const scorePercentage = selectedQuestions.length > 0 ? (correct / selectedQuestions.length) * 100 : 0;
+
+  document.getElementById("mainQuizContainer").style.display = "none";
+  document.getElementById("resultsScreen").style.display = "flex";
+  document.getElementById("finalScore").textContent = `${scorePercentage.toFixed(0)}%`;
+  document.getElementById("testIdDisplay").textContent = testId; 
+
+  clearInterval(timerInterval); 
+  const timerDisplay = document.getElementById('timer');
+  if(timerDisplay) timerDisplay.textContent = "00:00"; 
+}
+
+function showReviewPage() {
+  isReviewMode = true; // Set review mode
+  document.getElementById("resultsScreen").style.display = "none";
+  document.getElementById("submitScreen").style.display = "none"; 
+  document.getElementById("mainQuizContainer").style.display = "block"; 
+  
+  const questionActionsBar = document.querySelector(".question-actions-bar");
+  if(questionActionsBar) questionActionsBar.style.display = 'none'; 
+  document.getElementById("flagButton").style.display = 'none'; 
+
+  displayReview(); 
+}
+
+function startExam() {
+    isStudyMode = false;
+    isReviewMode = false;
+    usedQuestionIndicesInPool = []; // Reset used questions for a new exam
+    setupSession();
+}
+
+function startStudy() {
+    isStudyMode = true;
+    isReviewMode = false;
+    usedQuestionIndicesInPool = []; // Reset used questions for a new study session
+    setupSession();
+}
+
+function setupSession(isNextSet = false) {
+    if(!isNextSet) {
+        usedQuestionIndicesInPool = [];
+    }
+  document.getElementById('introScreen').style.display = 'none';
+  document.getElementById('mainQuizContainer').style.display = 'block'; 
+  document.getElementById('homeBtn').style.display = 'flex';
+  
+  const mainHeader = document.getElementById('mainHeaderTitle');
+  const timerDisplay = document.getElementById('timer');
+  const questionActionsBar = document.querySelector(".question-actions-bar");
+  const flagButton = document.getElementById("flagButton");
+  const studyEndActions = document.getElementById("studyEndActions");
+
+  studyEndActions.style.display = 'none';
+  questionActionsBar.style.display = 'flex'; 
+
+  if (isStudyMode) {
+      mainHeader.textContent = "Answer & Study";
+      timerDisplay.style.display = 'none';
+      document.getElementById('submitBtn').style.display = 'none';
+      document.getElementById('skipBtn').style.display = 'none';
+  } else {
+      mainHeader.textContent = 'Exam';
+      timerDisplay.style.display = 'block';
+      document.getElementById('submitBtn').style.display = 'none';
+      document.getElementById('skipBtn').style.display = 'inline-block';
+  }
+
+
+  const reviewActionsTop = document.getElementById("reviewActionsTop");
+  if(reviewActionsTop) reviewActionsTop.style.display = 'none';
+  const reviewActionsBottom = document.getElementById("reviewActionsBottom");
+  if(reviewActionsBottom) reviewActionsBottom.style.display = 'none';
+  
+  const oldScoreHeader = document.getElementById("reviewSummaryHeader");
+  if (oldScoreHeader) oldScoreHeader.remove();
+
+  if(flagButton) flagButton.style.display = isStudyMode ? 'none' : 'inline-block';
+
+  const questionCountSelect = document.getElementById('questionCount');
+  let numberOfQuestions;
+
+  if (questionCountSelect && questionCountSelect.value === 'all') {
+    numberOfQuestions = questionPool.length;
+  } else if (questionCountSelect) {
+    numberOfQuestions = parseInt(questionCountSelect.value, 10);
+  } else {
+    numberOfQuestions = 10; // Fallback
+  }
+  currentStudySetSize = numberOfQuestions;
+
+  // Select questions for the session
+    let availableQuestions = questionPool.filter(q => !usedQuestionIndicesInPool.includes(q.originalIndex));
+    let shuffled = shuffleArray(availableQuestions);
+    selectedQuestions = shuffled.slice(0, currentStudySetSize);
+    selectedQuestions.forEach(q => usedQuestionIndicesInPool.push(q.originalIndex));
+
+  
+  answers = new Array(selectedQuestions.length).fill(null); 
+  choiceVisibility = {}; 
+  testId = `TEST-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  currentIndex = 0;
+  skipped.length = 0; 
+  flagged.length = 0;
+  incorrectlyAnswered = [];
+
+  adjustFooterPadding(); 
+
+  generateSidebar(); 
+  renderQuiz(); 
+
+  if (!isStudyMode) {
+    timerSeconds = numberOfQuestions * 60; 
+    const initialMin = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+    const initialSec = String(timerSeconds % 60).padStart(2, '0');
+    if(timerDisplay) timerDisplay.textContent = `${initialMin}:${initialSec}`;
+
+    clearInterval(timerInterval); 
+    timerInterval = setInterval(() => {
+      if (timerSeconds > 0) {
+        timerSeconds--;
+        const min = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+        const sec = String(timerSeconds % 60).padStart(2, '0');
+        if(timerDisplay) timerDisplay.textContent = `${min}:${sec}`;
+      } else {
+        submitAll(); 
+        clearInterval(timerInterval);
+      }
+    }, 1000);
+  }
+}
+
+function showSubmitScreen() {
+  document.getElementById("submitScreen").style.display = "flex"; 
+}
+function hideSubmitScreen() {
+  document.getElementById("submitScreen").style.display = "none";
+}
+function confirmAndSubmit() {
+  const confirmMessageDiv = document.getElementById("confirmSubmitMessage");
+  const confirmSubmitCheckbox = document.getElementById("confirmSubmit");
+
+  if (confirmSubmitCheckbox && confirmSubmitCheckbox.checked) {
+    if(confirmMessageDiv) confirmMessageDiv.textContent = ""; 
+    submitAll();
+  } else {
+    if(confirmMessageDiv) confirmMessageDiv.textContent = "Please confirm you have completed the exam.";
+    setTimeout(() => { 
+        if(confirmMessageDiv) confirmMessageDiv.textContent = ""; 
+    }, 3000);
+  }
+}
+
+function generateSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  if (sidebar && getComputedStyle(sidebar).display === 'none' && window.innerWidth <= 767) {
+      return; 
+  }
+
+  const ul = document.getElementById("questionNav");
+  if (!ul) return; 
+  ul.innerHTML = ''; 
+  for (let i = 0; i < selectedQuestions.length; i++) {
+    const li = document.createElement("li");
+    li.innerHTML = `<button ondblclick="jumpToQuestion(${i})" onclick="jumpToQuestion(${i})" id="nav-${i}" style="width: 40px; height: 40px; margin: 5px auto; border-radius: 50%; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;">${i + 1}</button>`;
+    ul.appendChild(li);
+    highlightNavItem(i); 
+  }
+}
+
+function jumpToQuestion(index) {
+  currentIndex = index; // Always update the current index
+
+  if (isReviewMode) {
+    const element = document.getElementById(`review-q-${index}`);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  } else {
+    renderQuiz();
+  }
+  generateSidebar(); // Update sidebar for both modes
+}
+
+function highlightNavItem(index) {
+    const btn = document.getElementById(`nav-${index}`);
+    if (!btn) return;
+
+    const isCurrent = index === currentIndex;
+    let bg, color, border, iconText;
+    iconText = `${index + 1}`;
+    border = '2px solid transparent';
+
+    const mode = isReviewMode || (isStudyMode && answers[index] !== null) ? 'review' : 'quiz';
+
+    switch (mode) {
+        case 'review':
+            const isCorrect = answers[index] === selectedQuestions[index].a;
+            if (answers[index] === null) {
+                bg = '#6b7280'; // Gray for unanswered/skipped in review
+                color = '#fff';
+            } else if (isCorrect) {
+                bg = '#22c55e'; // Green for correct
+                color = '#fff';
+            } else {
+                bg = '#ef4444'; // Red for incorrect
+                color = '#fff';
+            }
+            break;
+        case 'quiz':
+        default:
+            const isAnswered = answers[index] !== null;
+            const isSkipped = skipped.includes(index);
+            const isFlagged = flagged.includes(index);
+
+            bg = '#d0d0d0';
+            color = '#000';
+
+            if (isAnswered) {
+                bg = '#3b82f6';
+                color = '#fff';
+            } else if (isSkipped) {
+                bg = '#6b7280';
+                color = '#fff';
+                iconText += ' ⏸';
+            }
+
+            if (isFlagged) {
+                iconText += ' 🚩';
+            }
+            break;
+    }
+
+    if (isCurrent) {
+        border = '2px solid #1d4ed8'; // Highlight current item in both modes
+        if (!isReviewMode && !isStudyMode && answers[index] === null && !skipped.includes(index)) {
+            bg = '#e5e7eb';
+            color = '#000';
+        }
+    }
+
+    btn.style.background = bg;
+    btn.style.color = color;
+    btn.style.border = border;
+    btn.innerHTML = iconText.trim();
+
+    if (isCurrent && !isReviewMode && !isStudyMode && btn.scrollIntoView) {
+        btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+
+function adjustFooterPadding() {
+    const footer = document.querySelector('.quiz-controls');
+    const sidebar = document.getElementById('sidebar');
+    if (footer && getComputedStyle(footer).position === 'fixed') {
+        let footerHeight = footer.offsetHeight;
+        document.body.style.paddingBottom = footerHeight + 'px';
+        if (sidebar && getComputedStyle(sidebar).display !== 'none') { 
+            sidebar.style.bottom = footerHeight + 'px';
+        }
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    adjustFooterPadding(); 
+    window.addEventListener('resize', adjustFooterPadding); 
+
+    if (document.getElementById('introScreen').style.display !== 'none') {
+        const mainQuizContainer = document.getElementById('mainQuizContainer');
+        if (mainQuizContainer) mainQuizContainer.style.display = 'none';
+    }
+
+    const questionCountSelect = document.getElementById('questionCount');
+    if (questionCountSelect) {
+        questionCountSelect.innerHTML = ''; // Clear existing options
+
+        const options = [10, 25, 50]; // Define standard options
+        options.forEach(num => {
+            if (questionPool.length >= num) { // Only add option if there are enough questions
+                const option = document.createElement('option');
+                option.value = num;
+                option.textContent = num;
+                questionCountSelect.appendChild(option);
+            }
+        });
+
+        // Set a default selected value
+        if (questionCountSelect.options.length > 0) {
+            const defaultOption = questionCountSelect.querySelector('option[value="50"]') || questionCountSelect.options[questionCountSelect.options.length - 1];
+            if(defaultOption) defaultOption.selected = true;
+        }
+
+        // Add the "All Questions" option
+        const allQuestionsOption = document.createElement('option');
+        allQuestionsOption.value = 'all';
+        allQuestionsOption.textContent = `All (${questionPool.length} Questions)`;
+        questionCountSelect.appendChild(allQuestionsOption);
+    }
+});
+
+</script>
+</body>
+</html>
