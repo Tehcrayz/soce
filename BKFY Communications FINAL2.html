@@ -1,0 +1,1703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Communications</title>
+  <style>
+    body {  
+      font-family: Arial, sans-serif;  
+      margin: 0;  
+      line-height: 1.6;  
+      background: #f4f8fb;  
+      padding-bottom: 70px;  
+    }
+    .question-header { font-size: 18px; font-weight: bold; margin-bottom: 5px; }
+    .question-text { font-size: 16px; margin-bottom: 10px; }
+    
+    /* New structure for choice rendering */
+    .choice-wrapper {
+      display: flex;
+      align-items: center;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 10px;
+      margin: 10px 0;
+      background: #ffffff;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .choice-wrapper:hover {
+      background: #e6f0ff;
+    }
+    .choice-wrapper.selected-wrapper { /* Applied to the wrapper when selected */
+      background: #d0ebff;
+      border-color: #3b82f6;
+    }
+    /* Styles for study mode feedback */
+    .choice-wrapper.study-correct {
+        background-color: #dcfce7;
+        border-color: #22c55e;
+    }
+    .choice-wrapper.study-incorrect {
+        background-color: #fee2e2;
+        border-color: #ef4444;
+    }
+
+
+    .choice-button-main-area { /* This is the label now */
+      flex-grow: 1;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      padding-right: 10px; /* Space before the eye icon button */
+    }
+    .choice-button-main-area input[type="radio"] {
+      margin-right: 10px;  
+      -webkit-appearance: radio;  
+      -moz-appearance: radio;
+      appearance: radio;
+    }
+    .choice-text-container {
+        /* flex-grow: 1; */ /* No longer needed here, label is flex-grow */
+    }
+    .actual-choice-text-visually-obscured {  
+        opacity: 0.3;
+        text-decoration: line-through;
+    }
+    .toggle-visibility-btn {
+        background: none;
+        border: none;
+        font-size: 1em;  
+        cursor: pointer;
+        padding: 0 5px;
+        /* margin-left: auto; /* No longer needed due to flex on wrapper */
+        color: #555;
+        display: flex;  
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0; /* Prevent button from shrinking */
+    }
+    .toggle-visibility-btn svg {  
+        width: 20px;
+        height: 20px;
+    }
+    .toggle-visibility-btn:hover {
+        color: #000;
+    }
+
+    .correct { border: 2px solid green; background: #e0ffe0; padding: 10px; margin-bottom:10px; border-radius: 5px; }
+    .incorrect { border: 2px solid red; background: #ffe0e0; padding: 10px; margin-bottom:10px; border-radius: 5px; }
+    .explanation { font-style: italic; color: #555; margin-top: 10px; display: none;} /* Hidden by default */
+
+    .question-actions-bar {
+      display: flex;
+      justify-content: center;  
+      align-items: center;
+      flex-wrap: wrap;  
+      gap: 10px;  
+      padding: 15px 10px;  
+      margin-top: 20px;  
+      margin-bottom: 10px;  
+    }
+    .question-actions-bar button {
+      padding: 10px 15px;  
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      background-color: #fff;  
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      transition: background-color 0.2s ease, border-color 0.2s ease;
+    }
+    .question-actions-bar button:hover {
+      background-color: #f8f9fa;
+      border-color: #bbb;
+    }
+    .question-actions-bar button#submitBtn {
+        background-color: #22c55e;  
+        color: white;
+        border-color: #22c55e;
+    }
+    .question-actions-bar button#submitBtn:hover {
+        background-color: #16a34a;
+    }
+    .review-actions-bar {  
+        text-align: center;
+        padding: 10px 0 20px 0;  
+    }
+    .review-actions-bar button {
+        padding: 10px 20px;  
+        font-size: 1rem;
+        cursor: pointer;
+        border-radius: 5px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        margin: 5px;  
+    }
+    .review-actions-bar button:hover {
+        background-color: #0056b3;
+    }
+
+
+    .quiz-controls { /* Footer */
+      justify-content: center;  
+      align-items: center;
+      padding: 10px 20px;  
+      background: #dbeafe;
+      position: fixed;
+      bottom: 0;
+      left: 0;  
+      right: 0;  
+      display: flex;
+      z-index: 100;  
+      box-sizing: border-box;  
+    }
+    .quiz-controls .progress-info {  
+        display: flex;
+        align-items: center;
+        justify-content: space-between;  
+        width: 100%;
+    }
+    
+    #progressText { font-size: 16px; margin: 0 10px 0 0; }
+    /* .choice-button.selected is replaced by .choice-wrapper.selected-wrapper */
+    
+
+    #resultsScreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #4a90e2;  
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;  
+      padding: 10px;
+      box-sizing: border-box;
+    }
+
+    .results-card {
+      display: flex;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      overflow: auto;  
+      width: 95%;  
+      max-width: 900px;  
+      max-height: 90vh;  
+      flex-direction: column;  
+    }
+
+    .results-left-panel {
+      flex-shrink: 0;  
+      background: #37474f;  
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      border-top-left-radius: 10px;  
+      border-top-right-radius: 10px;
+      border-bottom-left-radius: 0;
+    }
+
+    .results-right-panel {
+      flex-grow: 1;  
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      text-align: center;
+      border-bottom-left-radius: 10px;  
+      border-bottom-right-radius: 10px;
+      border-top-right-radius: 0;
+    }
+     @media (min-width: 768px) {  
+      .results-card {
+        flex-direction: row;  
+        min-height: 400px;  
+        overflow: hidden;  
+      }
+      .results-left-panel {
+        border-top-right-radius: 0;
+        border-bottom-left-radius: 10px;
+        flex-basis: 300px;  
+      }
+      .results-right-panel {
+        border-top-right-radius: 10px;
+        border-bottom-left-radius: 0;
+      }
+    }
+
+
+    .score-circle {
+      width: 100px;  
+      height: 100px;
+      border-radius: 50%;
+      border: 6px solid #e0e0e0;  
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;  
+      font-weight: bold;
+      color: #4CAF50;  
+      margin-bottom: 15px;  
+      position: relative;
+    }
+
+    .score-circle::before {
+      content: '';
+      position: absolute;
+      top: -6px;  
+      left: -6px;
+      width: calc(100% + 12px);  
+      height: calc(100% + 12px);
+      border-radius: 50%;
+      border: 6px solid transparent;  
+      border-top-color: #4CAF50;  
+      border-right-color: #4CAF50;
+      transform: rotate(-45deg);  
+      box-sizing: border-box;
+    }
+
+    .upload-button {  
+      padding: 12px 25px;  
+      font-size: 16px;  
+      background-color: #4CAF50;  
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;  
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: background-color 0.3s ease;
+    }
+
+    .upload-button:hover {
+      background-color: #45a049;
+    }
+
+    .attention-message {
+      background: white;
+      padding: 15px;  
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-top: 15px;  
+      width: 90%;
+      max-width: 800px;
+      text-align: center;
+      font-size: 14px;  
+      color: #333;
+    }
+
+    #quizContentScrollable {
+      max-height: calc(100vh - 100px);  
+      overflow-y: auto;
+      padding: 10px 15px 0 0;  
+    }
+    
+    #mainQuizLayout {  
+        display: flex;
+        padding-top: 40px;  
+    }
+
+    #sidebar {
+      width: 60px;
+      background: #e3edf8;
+      position: fixed;
+      top: 40px;  
+      bottom: 50px;  
+      overflow-y: auto;  
+      z-index: 50;  
+      padding-top: 10px;  
+      padding-bottom: 10px;
+      transition: width 0.3s ease, opacity 0.3s ease, bottom 0.3s ease;
+    }
+
+    #sidebar::-webkit-scrollbar {
+      width: 0px;  
+      background: transparent;  
+    }
+    #sidebar::-webkit-scrollbar-thumb {
+      background: transparent;  
+    }
+
+    #questionNav {
+      list-style: none;
+      padding: 0;  
+      margin: 0;  
+      text-align: center;
+    }
+    
+    #quizFormContainer {  
+        margin-left: 75px;  
+        flex-grow: 1;
+        padding-right: 15px;  
+        transition: margin-left 0.3s ease;
+    }
+
+
+    .header-bar {  
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #1f2937;
+      color: white;
+      padding: 10px 20px;
+      font-size: 14px;
+      position: fixed;  
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;  
+      box-sizing: border-box;
+    }
+
+    .intro-screen-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #fbbf24;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      flex-direction: column;
+      padding: 15px;  
+      box-sizing: border-box;
+    }
+
+    .intro-card-container {
+      background: white;
+      padding: 20px;  
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+      width: 90%;
+      max-width: 450px;  
+    }
+    .intro-card-container h2 {
+        font-size: 1.4rem;  
+        margin-bottom: 0.5em;
+    }
+    .intro-card-container p {
+        font-size: 0.85rem;  
+        margin-bottom: 1em;
+    }
+    .intro-buttons-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+
+    .intro-start-button {
+      /* margin-top: 15px;   */
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background-color: #10b981;
+      color: white;
+      border: none;
+      border-radius: 5px;
+    }
+
+    .question-count-select-container {
+      margin-top: 15px;  
+      margin-bottom: 15px; /* Added margin for spacing */
+    }
+
+    .question-count-label {
+      font-size: 1rem;  
+      margin-right: 8px;
+    }
+
+    .question-count-select {
+      padding: 8px 10px;  
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 1rem;  
+    }
+    
+    #homeBtn {
+      position: fixed;
+      bottom: 80px; 
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      background-color: #0d6efd;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      display: none; /* Hidden by default */
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      cursor: pointer;
+      z-index: 1001;
+      transition: background-color 0.3s ease;
+    }
+    #homeBtn:hover {
+      background-color: #0b5ed7;
+    }
+
+    #submitScreen {
+      display: none;  
+      position: fixed;  
+      top: 0;  
+      left: 0;  
+      width: 100%;  
+      height: 100%;  
+      background: rgba(0,0,0,0.6);  
+      z-index: 9998;  
+      align-items: center;
+      justify-content: center;
+      padding: 15px;
+      box-sizing: border-box;
+    }
+    .submit-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.25);  
+      width: 100%;
+      max-width: 550px;  
+      display: flex;
+      flex-direction: column;  
+    }
+    .submit-panel {
+      padding: 20px;
+      text-align: center;
+      flex: 1;
+    }
+    .submit-panel-left {
+      background: #f0f4f8;  
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;  
+    }
+    .submit-panel-right {
+      background: #ffffff;
+      border-bottom-left-radius: 10px;
+      border-bottom-right-radius: 10px;
+    }
+     .submit-panel button {
+        padding: 12px 22px;  
+        font-size: 1rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 15px;
+        transition: background-color 0.2s ease;
+    }
+    .submit-go-back-btn { background: #4b5563; color: white; }  
+    .submit-go-back-btn:hover { background: #374151; }
+    .submit-confirm-btn { background: #22c55e; color: white; }  
+    .submit-confirm-btn:hover { background: #16a34a; }
+
+
+    @media (min-width: 640px) {  
+        .submit-card {
+            flex-direction: row;  
+        }
+        .submit-panel-left {
+            border-top-right-radius: 0;
+            border-bottom-left-radius: 10px;
+        }
+        .submit-panel-right {
+            border-top-right-radius: 10px;  
+            border-bottom-left-radius: 0;  
+            border-bottom-right-radius: 10px;  
+        }
+    }
+    #confirmSubmitMessage {
+        color: red;
+        font-size: 0.9em;
+        margin-top: 10px;
+        min-height: 1.2em;  
+    }
+
+    @media (max-width: 767px) {
+        body {
+            padding-bottom: 60px;  
+        }
+        #sidebar {
+            display: none;  
+        }
+        #quizFormContainer {
+            margin-left: 15px;  
+            padding-right: 15px;
+        }
+        .choice-wrapper {  
+            padding: 10px;
+        }
+        .choice-button-main-area {  
+            font-size: 1rem;
+        }
+         .choice-button-main-area input[type="radio"] {
+            margin-right: 8px;
+        }
+        .toggle-visibility-btn {
+            padding: 0 2px;  
+        }
+        .quiz-controls {  
+            padding: 8px 10px;  
+        }
+        .quiz-controls .progress-info span {
+             font-size: 0.85rem;
+        }
+        
+         .header-bar {
+            padding: 10px 15px;
+        }
+        .header-bar div {
+            font-size: 0.85rem;  
+        }
+        #progressText {
+            font-size: 0.9rem;
+        }
+        .question-header { font-size: 1.1rem; }
+        .question-text { font-size: 0.95rem; }
+
+        #homeBtn {
+            bottom: 70px;
+            right: 15px;
+            width: 45px;
+            height: 45px;
+        }
+
+        .results-card { max-height: 85vh; }  
+        .score-circle { width: 90px; height: 90px; font-size: 28px; border-width: 5px; }
+        .score-circle::before { top: -5px; left: -5px; width: calc(100% + 10px); height: calc(100% + 10px); border-width: 5px;}
+        .upload-button { padding: 10px 20px; font-size: 1rem; }
+        .attention-message { font-size: 0.85rem; padding: 10px; }
+
+        .question-actions-bar button {
+            padding: 8px 12px;
+            font-size: 0.9rem;
+            flex-grow: 1;  
+            min-width: 80px;  
+        }
+         .question-actions-bar {
+            gap: 5px;  
+         }
+    }
+
+    @media (max-width: 480px) {  
+        .question-actions-bar button {
+            font-size: 0.85rem;
+        }
+        .intro-card-container h2 { font-size: 1.2rem; }
+        .intro-card-container p { font-size: 0.8rem; }
+        .question-count-label, .question-count-select { font-size: 0.9rem; }
+    }
+
+  </style>
+</head>
+<body>
+  <div id="introScreen" class="intro-screen-container">
+    <div class="intro-card-container">
+      <svg width="120" height="120" viewBox="0 0 200 200" style="margin-bottom: 15px; margin-left: auto; margin-right: auto;">
+        <defs>
+          <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#0284c7;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#38bdf8;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+        <path d="M 20 150 L 50 20 L 90 20 L 90 120 L 110 120 L 110 20 L 150 20 L 180 150 L 150 150 L 130 90 L 70 90 L 50 150 Z" fill="url(#grad1)"></path>
+        <rect x="55" y="25" width="30" height="90" fill="#1e293b" transform="skewX(-10)"></rect>
+        <rect x="115" y="25" width="30" height="90" fill="#0ea5e9" transform="skewX(-10)"></rect>
+        <text x="100" y="180" font-family="Arial, sans-serif" font-size="28" fill="#37474f" text-anchor="middle" font-weight="bold">BKRDI-FY</text>
+        <text x="100" y="200" font-family="Arial, sans-serif" font-size="14" fill="#6b7280" text-anchor="middle" font-weight="bold">TEST & STUDY</text>
+      </svg>
+      <h2>Do Not Start Until Instructed</h2>
+      <p>Activity conducted during this exam might actually matter.</p>
+      
+      <div class="question-count-select-container">
+        <label for="questionCount" class="question-count-label">Number of Questions:</label>
+        <select id="questionCount" class="question-count-select">
+          <option value="10">10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <!-- "All Questions" option will be added here by JavaScript -->
+        </select>
+      </div>
+
+      <div class="intro-buttons-container">
+        <button onclick="startExam()" class="intro-start-button">Start Exam</button>
+        <button onclick="startStudy()" class="intro-start-button" style="background-color: #f59e0b;">Answer & Study</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="mainQuizContainer" style="display:none;">  
+    <div class="header-bar">  
+      <div><strong>Class 45</strong></div>
+      <div id="mainHeaderTitle">CJF</div> 
+      <div><strong id="timer">30:00</strong></div>
+    </div>
+
+    <div id="mainQuizLayout">
+      <nav id="sidebar">
+        <ul id="questionNav"></ul>
+      </nav>
+      <div id="quizFormContainer">
+        <div id="quizContentScrollable">
+          <div id="progress" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; padding-top:10px;">
+            <button type="button" onclick="flagQuestion()" id="flagButton" style="font-size: 14px; padding: 5px 10px;">🚩 Flag</button>
+            <span id="progressText"></span>
+          </div>
+          <div class="review-actions-bar" id="reviewActionsTop" style="display:none;"> <button onclick="returnToHome()">Retake Test</button>
+          </div>
+          <form id="quizForm"></form>
+          <div class="question-actions-bar">
+            <button id="prevBtn" type="button" onclick="prevQuestion()">⟵ Previous</button>
+            <button id="skipBtn" type="button" onclick="skipQuestion()">⏭ Skip</button>
+            <button id="submitBtn" type="button" onclick="showSubmitScreen()" style="display: none;">✅ Submit</button>
+            <button id="nextBtn" type="button" onclick="nextQuestion()">Next ⟶</button>
+          </div>
+          <div id="studyEndActions" class="review-actions-bar" style="display:none;">
+            <button id="nextSetBtn" onclick="startNextStudySet()">Next Set of Questions</button>
+            <button id="retryIncorrectBtn" onclick="retryIncorrectQuestions()">Retry Incorrect Questions</button>
+            <button onclick="returnToHome()">Return to Home</button>
+          </div>
+          <div class="review-actions-bar" id="reviewActionsBottom" style="display:none;"> <button onclick="returnToHome()">Retake Test</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="quiz-controls">  
+      <div class="progress-info">
+        <span id="progressTextBottom">Question 1 of 60</span>
+        <span style='font-size: 0.8em;'>BKRDIFY Version 2.1.87</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="submitScreen">  
+    <div class="submit-card">
+      <div class="submit-panel submit-panel-left">
+        <h2>Return to Exam</h2>
+        <p>By clicking this button, you will be directed back to the exam.</p>
+        <button onclick="hideSubmitScreen()" class="submit-go-back-btn">Go Back</button>
+      </div>
+      <div class="submit-panel submit-panel-right">
+        <h2>Exit Exam</h2>
+        <p>Click 'Submit Exam' to upload and close this exam file.</p>
+        <label style="margin: 20px 0; display: flex; align-items: center; justify-content: center; font-size: 14px;">
+          <input type="checkbox" id="confirmSubmit" style="margin-right: 10px; transform: scale(1.5);">
+          I confirm that I have completed my exam.
+        </label>
+        <button onclick="confirmAndSubmit()" class="submit-confirm-btn">Submit Exam</button>
+        <div id="confirmSubmitMessage"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="resultsScreen" style="display: none;">
+    <div class="results-card">
+      <div class="results-left-panel">
+        <svg width="100" height="100" viewBox="0 0 200 200">
+            <path d="M 20 150 L 50 20 L 90 20 L 90 120 L 110 120 L 110 20 L 150 20 L 180 150 L 150 150 L 130 90 L 70 90 L 50 150 Z" fill="#0ea5e9"></path>
+            <rect x="55" y="25" width="30" height="90" fill="#1e293b" transform="skewX(-10)"></rect>
+            <rect x="115" y="25" width="30" height="90" fill="#38bdf8" transform="skewX(-10)"></rect>
+            <text x="100" y="180" font-family="Arial, sans-serif" font-size="28" fill="#fff" text-anchor="middle" font-weight="bold">BKRDI-FY</text>
+        </svg>
+      </div>
+      <div class="results-right-panel">
+        <h3 style="font-size: 1.3rem; margin-bottom: 10px;">Preliminary Results</h3> <p style="font-size: 1rem; margin-bottom: 15px;">Objective Question Score *</p> <div class="score-circle">
+          <span id="finalScore">75%</span>
+        </div>
+        <p style="font-size: 0.8rem; color: #555; margin-top: 10px;">This is the score for the objective questions only and I'm not sure what objective means</p> <p style="font-size: 0.8rem; color: #555; margin-top: 5px;">Test ID: <span id="testIdDisplay"></span></p> <button class="upload-button" onclick="showReviewPage()">Review</button>
+      </div>
+    </div>
+    <div class="attention-message">
+      <p><strong>ATTENTION:</strong></p>
+      <p>You will be informed of your final score, which is this score, so yeah</p>
+    </div>
+  </div>
+
+  <button id="homeBtn" onclick="returnToHome()" title="Return to Home Screen" style="display: none;">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+  </button>
+
+  <script>
+// Function to shuffle an array (Fisher-Yates algorithm)
+function shuffleArray(array) {
+  let newArray = [...array]; // Work on a copy
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}
+
+const newQuestionsFromUser = [ 
+{"q":"According to the text, what do correctional officers use to communicate with and manage a diverse correctional facility population?","c":["Only verbal commands","Only non-verbal communication","A variety of skills including interpersonal communication and situational awareness","Strictly disciplinary actions"],"a":"2","e":"The correct answer is A variety of skills including interpersonal communication and situational awareness. The text lists interpersonal verbal and non-verbal communication, situational awareness, verbal commands, command presence, and courtesy as skills used by officers. Page: 45"},
+{"q":"What does interpersonal communication involve?","c":["The exchange of ideas, messages, or information between two or more people.","The use of technology to send messages.","A one-way directive from a supervisor to a subordinate.","The internal process of thinking through a problem."],"a":"0","e":"The correct answer is The exchange of ideas, messages, or information between two or more people. The text defines interpersonal communication as the exchange of ideas, messages, or information between two or more people through speaking, writing, or body language. Page: 45"},
+{"q":"What is the first basic element of effective communication mentioned in the text?","c":["Convey the message via verbal or non-verbal format.","Allow time for the person to receive the message.","Consider what you want to say and construct the message in your head.","Gauge whether you have received an appropriate response."],"a":"2","e":"The correct answer is Consider what you want to say and construct the message in your head. This is listed as the first step in planning interactions. Page: 45"},
+{"q":"What is the final basic element of communication listed in the text?","c":["Constructing the message in your head.","Conveying the message to the intended person.","Allowing time for the person to understand the message.","Gauging whether you have received an appropriate response or change in behavior."],"a":"3","e":"The correct answer is Gauging whether you have received an appropriate response or change in behavior. This is the final step in the communication process to ensure the message was effective. Page: 45"},
+{"q":"Non-verbal communication includes which of the following behaviors?","c":["Gestures and facial expressions.","Eye contact and posture.","Written memos and emails.","Both Gestures and facial expressions. and Eye contact and posture."],"a":"3","e":"The correct answer is Both Gestures and facial expressions and Eye contact and posture. The text states that non-verbal behaviors may send strong messages and can include gestures, facial expressions, eye contact, and posture. Page: 46"},
+{"q":"What should an officer do when an inmate's verbal expressions do not align with their non-verbal cues?","c":["Ignore the non-verbal cues and focus only on the words.","Assume the inmate is being truthful.","Recognize the inconsistency as a potential sign of deception or a safety issue.","Immediately issue a disciplinary report for lying."],"a":"2","e":"The correct answer is Recognize the inconsistency as a potential sign of deception or a safety issue. The text emphasizes that watching for inconsistencies between non-verbal and verbal communication can help keep you safe. Page: 46"},
+{"q":"According to the text, what might sweating, rapid breathing, and fidgeting indicate?","c":["Anger or rage","Friendliness or being at ease","Nervousness","Confusion or displeasure"],"a":"2","e":"The correct answer is nervousness. The text lists sweating, rapid breathing, fidgeting, blinking, or rocking back and forth as potential indicators of nervousness. Page: 46"},
+{"q":"Clenched fists, pacing briskly, and clenched teeth are non-verbal cues that may indicate what?","c":["Shyness or fear","Friendliness or being at ease","Anger, rage, or irritation","Confusion or poor understanding"],"a":"2","e":"The correct answer is anger, rage, or irritation. The text lists these specific behaviors as potential indicators of anger, rage, or irritation. Page: 46"},
+{"q":"What might crossed arms and legs indicate about a person's state of mind?","c":["That the person is friendly or at ease.","That the person is closed off or resistant.","That the person is experiencing shock or fear.","That the person is nervous."],"a":"1","e":"The correct answer is that the person is closed off or resistant. The text provides this as a specific example of non-verbal communication. Page: 46"},
+{"q":"Avoiding eye contact can be an indicator of which of the following?","c":["Shyness or uneasiness.","Shamefulness or fear.","Deception or guilt.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text states that avoiding eye contact may indicate the person is shy, uneasy, shameful, fearful, deceptive, guilty, or experiencing strong emotion. Page: 46"},
+{"q":"Direct eye contact from an inmate may indicate that the person is being truthful or what else?","c":["Shy","Confused","Challenging","Nervous"],"a":"2","e":"The correct answer is challenging. The text states that direct eye contact may indicate the person is being truthful or challenging. Page: 46"},
+{"q":"According to the text, what might frowning indicate?","c":["Friendliness or pleasure","Uneasiness or confusion, as well as displeasure","Truthfulness or honesty","Shock or fear"],"a":"1","e":"The correct answer is uneasiness or confusion, as well as displeasure. The text provides these as possible meanings for a frown. Page: 46"},
+{"q":"A lack of obvious emotion in a person's expression may indicate shock, fear, not being focused, or what else?","c":["Anger","Pleasure","Poor understanding or not hearing","Deception"],"a":"2","e":"The correct answer is poor understanding or not hearing. The text lists these as potential reasons for a lack of obvious emotion. Page: 47"},
+{"q":"Interpreting an inmate's non-verbal behavior allows an officer to do what?","c":["Make an accurate diagnosis of a mental health issue.","Stay alert to signs of stress, deception, or aggression.","Justify immediate use of force.","Determine the inmate's guilt or innocence in an incident."],"a":"1","e":"The correct answer is stay alert to signs of stress, deception, or aggression. The text explains that interpreting non-verbal behavior helps an officer stay alert to these signs. Page: 47"},
+{"q":"Which of the following is listed as a potential barrier to effective communication?","c":["Using profane or disrespectful language.","Stereotyping.","Failure to listen actively.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text includes use of profane language, stereotyping, and failure to listen actively in its list of barriers to effective communication. Page: 47"},
+{"q":"What is the term for vocabulary used in a profession that has meaning only to people who work in that field?","c":["Slang","Jargon","Dialect","Textspeak"],"a":"1","e":"The correct answer is Jargon. The text identifies use of jargon as a barrier to effective communication. Page: 47"},
+{"q":"Why is it important to consider cultural diversity when communicating?","c":["Because some gestures may have different meanings to different people.","Because all cultures communicate in the exact same way.","Because cultural diversity is not a factor in a correctional setting.","Because it is required by federal law."],"a":"0","e":"The correct answer is because some gestures may have different meanings to different people. The text provides examples like lack of eye contact, shaking hands, and use of personal space as gestures that can have different cultural meanings. Page: 47"},
+{"q":"When interacting with younger inmates, what professional behavior should an officer demonstrate?","c":["Being impatient and dismissive.","Being inconsistent with instructions.","Being patient, firm, and fair.","Avoiding communication altogether."],"a":"2","e":"The correct answer is being patient, firm, and fair. The text advises officers to be a role model and demonstrate professional behavior by being patient, firm, and fair with younger inmates. Page: 48"},
+{"q":"What are some of the normal aging changes older inmates may experience?","c":["Loss of memory and impairment of judgment.","Sensitivity to touch and decrease in mobility.","Decrease in cognitive ability.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text lists loss of memory, impairment of judgment, sensitivity to touch, and decreases in mobility and cognitive ability as normal aging changes. Page: 48"},
+{"q":"When dealing with inmates of the opposite sex, what does the text recommend to avoid the appearance of impropriety?","c":["Spending extra time with them to build rapport.","Becoming overly friendly and familiar.","Avoiding too much time together and keeping conversations neutral.","Sharing personal information to show trust."],"a":"2","e":"The correct answer is Avoiding too much time together and keeping conversations neutral. The text advises taking extra precautions such as avoiding too much time, not being overly friendly, and keeping conversations neutral. Page: 48"},
+{"q":"What is the term for body language that projects confidence, poise, and a professional demeanor?","c":["Situational awareness","Command presence","Active listening","Courtesy"],"a":"1","e":"The correct answer is Command presence. The text defines command presence as body language that projects confidence, poise, and a professional demeanor. Page: 48"},
+{"q":"How should an officer position themselves when approaching an inmate to convey command presence?","c":["Stand far away to maintain maximum safety.","Avoid eye contact to appear non-threatening.","Face the inmate directly, look them in the eye, and stand upright.","Stand with arms crossed and lean back."],"a":"2","e":"The correct answer is Face the inmate directly, look them in the eye, and stand upright. The text gives these specific instructions for using positioning to communicate command presence. Page: 48"},
+{"q":"What is an authoritative statement used to direct, influence, or give orders to a person or group?","c":["A suggestion","A request","A verbal command","A question"],"a":"2","e":"The correct answer is a verbal command. The text provides this specific definition for a verbal command. Page: 48"},
+{"q":"The text states that a show of force is not always the best response and that inmates should be treated with what?","c":["Disrespect","Indifference","Suspicion","Respect"],"a":"3","e":"The correct answer is Respect. The text states, \"Just because inmates are confined does not mean they should be treated with disrespect.\" Page: 49"},
+{"q":"What is defined as showing consideration, respect, and cooperation when interacting with others?","c":["Command presence","Courtesy","Active listening","Authority"],"a":"1","e":"The correct answer is Courtesy. The text provides this definition for courtesy. Page: 49"},
+{"q":"Why is maintaining a professional and courteous relationship with inmates important?","c":["It shows weakness to other inmates.","It is a sign of unprofessionalism.","It may help you avoid or de-escalate potentially violent situations.","It has no impact on safety or facility operations."],"a":"2","e":"The correct answer is It may help you avoid or de-escalate potentially violent situations. The text states that maintaining this type of relationship is important for this reason. Page: 49"},
+{"q":"What does active listening require?","c":["Interrupting the speaker to ask questions.","Forming a judgment while the person is speaking.","Giving full attention to what is being said and taking time to understand.","Focusing only on the keywords and ignoring the rest of the message."],"a":"2","e":"The correct answer is giving full attention to what is being said and taking time to understand. The text defines active listening as giving full attention and taking time to understand without interrupting. Page: 49"},
+{"q":"Which of the following is an element of active listening?","c":["Maintaining eye contact and facing the speaker.","Keeping an open mind and avoiding bias.","Identifying key words that should alert you.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text lists maintaining eye contact, keeping an open mind, and identifying key words as elements of active listening. Page: 49"},
+{"q":"What is the purpose of paraphrasing back to someone what they said?","c":["To show that you disagree with their statement.","To correct their grammar and word choice.","To ensure you properly understood the message.","To end the conversation quickly."],"a":"2","e":"The correct answer is to ensure you properly understood the message. Paraphrasing is listed as an element of active listening for this purpose. Page: 50"},
+{"q":"What can active listening help an inmate do?","c":["Formulate a plan to manipulate an officer.","Release frustrations.","Identify weaknesses in facility security.","Organize other inmates."],"a":"1","e":"The correct answer is release frustrations. The text notes that active listening can be a way to help an inmate release frustrations. Page: 50"},
+{"q":"What is the primary method of communication for correctional officers?","c":["The landline telephone","Written memos","The portable radio","Hand signals"],"a":"2","e":"The correct answer is the portable radio. The text explicitly states, \"The portable radio is the primary method of communication for correctional officers.\" Page: 51"},
+{"q":"If you experience radio transmission difficulties, what should you do immediately?","c":["Turn the radio off and on again.","Try a different channel.","Use a landline telephone to report the malfunction.","Wait for the radio to start working again."],"a":"2","e":"The correct answer is use a landline telephone to report the malfunction. The text instructs officers to immediately use a landline to report the issue. Page: 51"},
+{"q":"The Federal Communications Commission (FCC) prohibits which of the following radio behaviors?","c":["Transmitting non-essential or excessive signals.","Using profane, indecent, or obscene language.","Maliciously interfering with another unit's radio transmission.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text lists transmitting non-essential signals, using profane language, and malicious interference as behaviors prohibited by the FCC. Page: 51"},
+{"q":"Before speaking into a radio, how long should you depress and hold the transmit button?","c":["There is no need to wait.","About one second.","Three to five seconds.","Until you hear a beep."],"a":"1","e":"The correct answer is about one second. The text instructs to \"Depress and hold the transmit button for about one second before speaking.\" Page: 52"},
+{"q":"How far should your mouth be from the radio microphone when speaking?","c":["Touching the microphone.","1 to 3 inches.","6 to 8 inches.","At least one foot."],"a":"1","e":"The correct answer is 1 to 3 inches. The text specifies, \"Make sure your mouth is 1 to 3 inches away from the microphone, and speak directly into it.\" Page: 52"},
+{"q":"What is the term for a circuit that suppresses the output of a radio receiver if the signal strength falls below a certain level?","c":["A transmitter","A channel selector","Squelch","An antenna"],"a":"2","e":"The correct answer is Squelch. The text provides this specific definition for squelch. Page: 52"},
+{"q":"Why is transmitting radio messages in plain English becoming the preferred method in many agencies?","c":["It saves airtime.","It is ideal during emergency situations due to interagency involvement.","It prevents inmates from understanding the messages.","It is required by the FCC in all situations."],"a":"1","e":"The correct answer is it is ideal during emergency situations due to interagency involvement. The text notes that plain English is ideal during emergencies because of the need for interagency coordination. Page: 52"},
+{"q":"What is a system of communication using numbers that are preceded by the word \"signal\"?","c":["Phonetic-alphabet codes","10 or numeric codes","Signals","Numeric-alpha codes"],"a":"2","e":"The correct answer is Signals. The text defines signals as a system of communication using numbers preceded by the word \"signal.\" Page: 53"},
+{"q":"A system of verbal communication using the letters of the English alphabet only is known as:","c":["10-codes","Signals","Phonetic-alphabet","Numeric-alpha codes"],"a":"2","e":"The correct answer is Phonetic-alphabet. The text defines the phonetic-alphabet as a system using only the letters of the English alphabet. Page: 53"},
+{"q":"Which type of radio system has the ability to override the portable radio system in an emergency?","c":["The mobile radio in a vehicle","A handheld radio with a special feature","The radio base station","Any officer's radio"],"a":"2","e":"The correct answer is the radio base station. The text states that radio base station operators have the ability to override the portable radio system in an emergency. Page: 53"},
+{"q":"What is the goal of a conversation between a correctional officer and an interviewee?","c":["To obtain a confession.","To obtain factual information.","To establish a friendly relationship.","To issue a disciplinary action."],"a":"1","e":"The correct answer is to obtain factual information. The text defines an interview as a conversation with the goal of obtaining factual information. Page: 54"},
+{"q":"What should an officer do if it is determined during an interview that a crime has occurred?","c":["Immediately arrest the individual.","Continue the interview to gather more details.","Follow the agency's policies and procedures.","End the interview and take no further action."],"a":"2","e":"The correct answer is follow the agency's policies and procedures. The text states that if a crime is discovered, you must follow your agency's policies and procedures. Page: 54"},
+{"q":"An interview may be used for which of the following purposes?","c":["Conducting investigations.","Obtaining facts for incident reports.","Documenting disciplinary actions and use of force.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text lists conducting investigations, obtaining facts for reports, and documenting disciplinary actions and use of force as purposes for an interview. Page: 54"},
+{"q":"When should an officer conduct questioning after an incident?","c":["After a 24-hour waiting period.","As soon as possible after securing the well-being of others and their own safety.","Only after receiving written permission from a supervisor.","At the end of their shift."],"a":"1","e":"The correct answer is as soon as possible after securing the well-being of others and their own safety. The text advises that questioning should be conducted as soon as possible after safety is secured. Page: 54"},
+{"q":"Why should all people involved in an incident be kept separate before an interview?","c":["To make it easier to manage them.","To discourage them from discussing or rehearsing their stories.","To prevent potential intimidation.","Both to discourage them from discussing or rehearsing their stories. and to prevent potential intimidation."],"a":"3","e":"The correct answer is both to discourage them from discussing or rehearsing their stories and to prevent potential intimidation. The text states that keeping people separate is done to discourage discussion and avoid potential intimidation. Page: 55"},
+{"q":"If an interviewee with an autism spectrum disorder requests it, who has the right to be present at all interviews?","c":["A family member","A mental health or other related professional","An attorney","Another inmate"],"a":"1","e":"The correct answer is a mental health or other related professional. The text states that an interviewee with ASD has the right to have a mental health professional present upon request. Page: 55"},
+{"q":"Which type of questioning encourages conversation and requires the interviewee to think, reflect, and provide their opinions?","c":["Closed-ended questions","Leading questions","Open-ended questions","Forced-choice questions"],"a":"2","e":"The correct answer is open-ended questions. The text defines open-ended questions as those that encourage conversation and require the interviewee to think and reflect. Page: 55"},
+{"q":"Which type of question is framed in such a way as to produce a specific response and should be avoided?","c":["Open-ended questions","Closed-ended questions","Direct questions","Leading questions"],"a":"3","e":"The correct answer is leading questions. The text defines leading questions as being framed to produce a specific response and states they should be avoided. Page: 56"},
+{"q":"What is a permanent oral or written record of a person's account of an incident or occurrence?","c":["A report","A statement","A note","A log entry"],"a":"1","e":"The correct answer is a statement. The text provides this definition for a statement. Page: 56"},
+{"q":"When an interviewee provides a written statement, it should be:","c":["Dictated by the interviewer.","In the interviewee's own words.","As brief as possible.","Signed by a supervisor before it is written."],"a":"1","e":"The correct answer is in the interviewee's own words. The text specifies that a written statement should be in the interviewee's own words and not dictated by the interviewer. Page: 56"},
+{"q":"Which of the following is a physical sign of deception during questioning?","c":["Increased perspiration.","Flushed or pale skin.","Dry mouth and increased pulse rate.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text lists increased perspiration, flushed or pale skin, dry mouth, and an increased pulse rate as potential physical signs of deception. Page: 57"},
+{"q":"Which of the following is a behavioral sign of deception?","c":["Consistent responses.","Direct eye contact.","Nervous movements or voice inflections.","A calm demeanor."],"a":"2","e":"The correct answer is nervous movements or voice inflections. The text lists nervous movements, voice inflections, and avoidance of eye contact as behavioral signs of deception. Page: 57"},
+{"q":"What is a written account that communicates all the available facts of an incident, situation, person, or event?","c":["A statement","A log","A report","A memo"],"a":"2","e":"The correct answer is a report. The text provides this specific definition for a report. Page: 58"},
+{"q":"Why are reports important in a correctional setting?","c":["They record what an officer observes and knows.","They can be used for legal cases, investigations, and discipline.","They can protect an officer from liability.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text states that reports are important because they record information, are used for legal and disciplinary purposes, and can protect an officer from liability. Page: 58"},
+{"q":"Once a report is written, submitted, and approved, it becomes what?","c":["A temporary record","A confidential document for internal use only","A permanent public record","The officer's personal property"],"a":"2","e":"The correct answer is a permanent public record. The text states that once a report is approved, it becomes a permanent public record. Page: 58"},
+{"q":"Which type of report is used for minor disciplinary violations to detail counseling and corrective actions taken?","c":["Incident Report","Corrective Consultation (CC) form","Disciplinary Report (DR)","Use of Force Report"],"a":"1","e":"The correct answer is Corrective Consultation (CC) form. The text defines the CC form as being used for minor disciplinary violations and to detail counseling and corrective actions. Page: 59"},
+{"q":"Which report is used to provide a detailed account of the facts surrounding an inmate's rule violation and sets in motion a series of events to ensure due process?","c":["Incident Report","Corrective Consultation (CC) form","Disciplinary Report (DR)","Special Watch Form"],"a":"2","e":"The correct answer is Disciplinary Report (DR). The text defines the DR as the report that details an inmate's rule violation and initiates the due process sequence. Page: 59"},
+{"q":"When is a Use of Force Report required?","c":["Only when an inmate is seriously injured.","Only when a firearm is discharged.","Any time there is use of force.","Only when requested by a supervisor."],"a":"2","e":"The correct answer is any time there is use of force. The text states that a Use of Force Report is used any time there is use of force and is attached to another report. Page: 59"},
+{"q":"What is the purpose of a Special Watch Form?","c":["To record inmate counts.","To record the location of all equipment at each post.","To record activities of inmates under any type of special watch, such as suicide watch.","To detail any incidents involving inmates."],"a":"2","e":"The correct answer is to record activities of inmates under any type of special watch, such as suicide watch. The text specifies that this form is used for special watches like suicide watch or 15-minute watch. Page: 59"},
+{"q":"What is a chronological timeline of activities performed during a shift that officers are required to start?","c":["An Incident Report","A log","A Corrective Consultation","A Disciplinary Report"],"a":"1","e":"The correct answer is a log. The text states that at the start of each shift, agencies require officers to start a log, which is a chronological timeline of activities. Page: 60"},
+{"q":"At a minimum, a report should answer who, what, where, when, how, and what other question?","c":["Why","To what extent","With what cost","Under what authority"],"a":"0","e":"The correct answer is Why. The text states that a report should answer who, what, where, when, how, and why, and state the follow-up action. Page: 60"},
+{"q":"Which question in a report should detail the activity, rule violations, or crimes committed?","c":["Who","What","Where","When"],"a":"1","e":"The correct answer is What. The text specifies that the \"What\" section should include the activity, rule violations, or crimes committed. Page: 60"},
+{"q":"Which section of a report would include the date and time, or approximate time, of an incident?","c":["Who","What","Where","When"],"a":"3","e":"The correct answer is When. The text specifies that the \"When\" section should include the date and time of the incident. Page: 61"},
+{"q":"Arrangement of transportation for a sick or injured inmate is an example of what?","c":["The 'How' section of a report","A disciplinary action","A follow-up action","A criminal act"],"a":"2","e":"The correct answer is a follow-up action. The text lists arranging for transportation for the sick or injured as a type of follow-up action that may be required. Page: 61"},
+{"q":"What are the five basic steps to follow when writing a corrections report?","c":["Gather information, record facts, organize facts, write the report, and evaluate the report.","Interview, document, submit, file, and follow-up.","Observe, decide, act, report, and review.","Draft, edit, proofread, sign, and submit."],"a":"0","e":"The correct answer is Gather information, record facts, organize facts, write the report, and evaluate the report. The text lists these five specific steps. Page: 62"},
+{"q":"What consists of writing down brief observations or quotes from people involved?","c":["Report writing","Note-taking","Organizing facts","Evaluating the report"],"a":"1","e":"The correct answer is Note-taking. The text defines note-taking as writing down brief observations or quotes from people involved. Page: 63"},
+{"q":"Which of the following is a rule for effective note-taking?","c":["Use a notebook, not loose paper.","Write legibly and in ink.","Record all relevant facts as soon as possible.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text includes using a notebook, writing legibly in ink, and recording facts as soon as possible in its list of important rules for note-taking. Page: 63"},
+{"q":"What are the two ways to organize facts for report writing?","c":["Alphabetically and numerically","Chronologically and categorically","By importance and by witness","By time of day and by location"],"a":"1","e":"The correct answer is chronologically and categorically. The text states that there are two ways to organize facts: chronologically and categorically. Page: 64"},
+{"q":"What does arranging information chronologically involve?","c":["Grouping information by the type of source.","Grouping information by date and timeline from the first event to the last.","Grouping information based on the severity of the rule violation.","Grouping information by the location where it was obtained."],"a":"1","e":"The correct answer is grouping information by date and timeline from the first event to the last. The text defines arranging information chronologically this way. Page: 64"},
+{"q":"Grouping recorded information into types of collection sources, such as informants, victims, and witnesses, is known as what?","c":["Chronological organization","Categorical organization","Narrative organization","Alphabetical organization"],"a":"1","e":"The correct answer is categorical organization. The text defines organizing information categorically as grouping it into types of collection sources. Page: 64"},
+{"q":"What is the form of language used when speaking and writing wherever English is spoken and understood?","c":["Non-standard English","Slang","Jargon","Standard English"],"a":"3","e":"The correct answer is Standard English. The text defines Standard English this way and states that reports should always be prepared using it. Page: 65"},
+{"q":"What are the rules and guidelines that govern a language's usage?","c":["Vocabulary","Grammar","Punctuation","Spelling"],"a":"1","e":"The correct answer is Grammar. The text defines proper grammar as the rules and guidelines that govern a language's usage. Page: 65"},
+{"q":"A group of words that contains a subject, a verb, and usually an object, and that expresses a complete thought is a:","c":["Clause","Phrase","Sentence","Fragment"],"a":"2","e":"The correct answer is a sentence. The text provides this definition for a sentence. Page: 65"},
+{"q":"A word that describes a noun or pronoun, such as 'large' or 'dangerous', is what part of speech?","c":["Verb","Adverb","Adjective","Preposition"],"a":"2","e":"The correct answer is an adjective. The table on parts of speech defines an adjective as a word that describes a noun or pronoun. Page: 66"},
+{"q":"A word that joins other words, phrases, or sentences, such as 'and,' 'but,' or 'because,' is what part of speech?","c":["Adverb","Preposition","Conjunction","Pronoun"],"a":"2","e":"The correct answer is a conjunction. The table defines a conjunction as a word that joins other words, phrases, clauses, or sentences. Page: 66"},
+{"q":"A group of words that lacks a subject or verb or fails to express a complete thought is known as a:","c":["Sentence fragment","Run-on sentence","Clause","Phrase"],"a":"0","e":"The correct answer is a sentence fragment. The text defines a sentence fragment this way and advises to avoid them in reports. Page: 67"},
+{"q":"What is the likely consequence of having incorrect grammar and sentence structure in a report?","c":["It can make the report more interesting to read.","It will not be noticed by supervisors.","It can damage your credibility by affecting the report's accuracy and readability.","It is required for certain types of informal reports."],"a":"2","e":"The correct answer is it can damage your credibility by affecting the report's accuracy and readability. The text warns that incorrect grammar and structure can damage credibility. Page: 67"},
+{"q":"Which of the following words is spelled correctly?","c":["posession","possession","possesion","possesion"],"a":"1","e":"The correct answer is possession. The 'Commonly Misspelled Words' table shows the correct spelling of possession. Page: 67"},
+{"q":"Which of the following words is spelled correctly?","c":["lieutenant","leutenant","lieutenent","leutenant"],"a":"0","e":"The correct answer is lieutenant. The 'Commonly Misspelled Words' table shows the correct spelling of lieutenant. Page: 67"},
+{"q":"Which of the following is a capitalization rule for report writing?","c":["Capitalize the names of people, cities, states, and streets.","Capitalize days, months, and holidays.","Capitalize titles of professionals only when names are used.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text lists capitalizing names, dates, and titles with names as specific capitalization rules. Page: 68"},
+{"q":"What are words that are easily confused because they sound the same but have different spellings and meanings?","c":["Synonyms","Antonyms","Homophones","Acronyms"],"a":"2","e":"The correct answer is Homophones. The text defines homophones as words that sound the same but have different spellings and meanings. Page: 68"},
+{"q":"Which sentence uses the words 'their,' 'they're,' and 'there' correctly?","c":["Their going to put there car over they're.","They're going to put their car over there.","There going to put they're car over their.","They're going to put there car over their."],"a":"1","e":"The correct answer is 'They're going to put their car over there.' This correctly uses 'they're' as a contraction for 'they are,' 'their' as a possessive pronoun, and 'there' as a location. Page: 68"},
+{"q":"The most misused punctuation mark, which should not be inserted whenever a writer desires a pause, is the:","c":["Period","Semicolon","Comma","Apostrophe"],"a":"2","e":"The correct answer is the comma. The text states, \"The comma is probably the most misused punctuation mark, and they should be not inserted whenever the writer desires a pause.\" Page: 69"},
+{"q":"A comma should be used to separate two complete sentences joined by what?","c":["A semicolon","A colon","A coordinating conjunction","An introductory clause"],"a":"2","e":"The correct answer is a coordinating conjunction. The text states that a comma is used to separate two complete sentences joined by a coordinating conjunction (for, and, nor, but, or, yet, so). Page: 69"},
+{"q":"What is the result of combining two words, such as 'do' and 'not' to make 'don't'?","c":["A possession","A conjunction","A contraction","A homophone"],"a":"2","e":"The correct answer is a contraction. The text defines a contraction as the result of combining two words. Page: 70"},
+{"q":"When are contractions acceptable in a report?","c":["In the introduction section only.","When documenting a direct quote.","Whenever the writer wants to save space.","They are never acceptable in a report."],"a":"1","e":"The correct answer is when documenting a direct quote. The text states that contractions should not be used in reports except when documenting a direct quote. Page: 70"},
+{"q":"The way information is organized and presented in a report is the:","c":["Content","Format","Introduction","Body"],"a":"1","e":"The correct answer is format. The text defines format as the way information is organized and presented. Page: 72"},
+{"q":"The significant facts of an incident in a report are referred to as the:","c":["Format","Conclusion","Content","Introduction"],"a":"2","e":"The correct answer is content. The text defines content in this context as the significant facts of the incident. Page: 72"},
+{"q":"A report format is generally arranged in which three parts?","c":["Preface, body, and appendix","Introduction, body, and closing","Summary, details, and recommendation","Opening, narrative, and signature"],"a":"1","e":"The correct answer is introduction, body, and closing. The text states that a report format is generally arranged in these three parts. Page: 72"},
+{"q":"Which section of a report contains the detailed, typically chronological, account of the incident?","c":["Introduction or opening","Body","Closing","Summary"],"a":"1","e":"The correct answer is the body. The text defines the body section as the detailed, chronological account of the incident. Page: 72"},
+{"q":"Which section of a report explains the action taken, how the incident was resolved, and any recommendations for disciplinary action?","c":["Introduction","Body","Closing","Appendix"],"a":"2","e":"The correct answer is the closing. The text states the closing section explains the action taken, how the incident was resolved, and any recommendations. Page: 72"},
+{"q":"Informal vocabulary composed of invented words or expressions often used by a specific group is known as:","c":["Jargon","Slang","Textspeak","Standard English"],"a":"1","e":"The correct answer is slang. The text provides this definition for slang. Page: 73"},
+{"q":"Language used in text messages and digital communications, typically using abbreviations and not following standard grammar, is:","c":["Jargon","Slang","Textspeak","Standard English"],"a":"2","e":"The correct answer is textspeak. The text defines textspeak this way and advises not to use it in reports. Page: 74"},
+{"q":"An effective report should be factual, concise, accurate, clear, and what else?","c":["Grammatically and structurally correct.","Legible and timely.","Complete and compliant with agency policies.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text lists all of these as characteristics of an effective report. Page: 74"},
+{"q":"To be factual, a report should never include what?","c":["Direct quotes from witnesses.","A chronological account of events.","Personal opinions from the writer.","The names of all individuals involved."],"a":"2","e":"The correct answer is personal opinions from the writer. The text states, \"Never include personal opinions from the writer, other officers, or witnesses in a report.\" Page: 74"},
+{"q":"What is the process of ensuring that all pertinent facts have been included in a report in an organized and accurate manner?","c":["Proofreading","Editing","Formatting","Finalizing"],"a":"1","e":"The correct answer is editing. The text provides this specific definition for editing. Page: 77"},
+{"q":"What is the process of checking a report to ensure all words are spelled correctly and that proper punctuation and grammar are used?","c":["Proofreading","Editing","Organizing","Outlining"],"a":"0","e":"The correct answer is proofreading. The text defines proofreading as checking for correct spelling, punctuation, capitalization, and grammar. Page: 77"},
+{"q":"Which of the following is a method recommended to help catch mistakes when evaluating a report?","c":["Taking a break between writing and evaluating.","Reading the report aloud.","Sliding a blank sheet of paper down the page to review line-by-line.","All answers listed."],"a":"3","e":"The correct answer is All answers listed. The text lists taking a break, reading aloud, and using a cover sheet as methods to help catch mistakes. Page: 77"},
+{"q":"When finalizing a report, you should ensure all details are answered, rule violations are included, and ask yourself what final question?","c":["Will my supervisor be impressed with this report?","Is the report long enough?","If I was not involved, would I have a clear picture of what happened after reading this report?","Did I use enough professional jargon?"],"a":"2","e":"The correct answer is 'If I was not involved, would I have a clear picture of what happened after reading this report?' The text suggests asking this specific question to verify the report's clarity and completeness. Page: 79"},
+{"q":"Smiling may indicate pleasure or what else, according to the text?","c":["Anger","Sadness","A failure to understand","Deception"],"a":"2","e":"The correct answer is a failure to understand. The text states that smiling may indicate a failure to understand, as well as pleasure. Page: 47"},
+{"q":"What is one of the first things an officer should do when approaching an inmate to communicate command presence?","c":["Stand as close as possible.","Keep a safe distance.","Immediately issue a verbal command.","Avoid direct eye contact."],"a":"1","e":"The correct answer is to keep a safe distance. The text advises to 'keep yourself at a safe distance yet close enough to see and hear' as part of conveying command presence. Page: 48"},
+{"q":"What is a key word that should alert an officer during active listening?","c":["'Lunch'","'Visit'","'Suicide'","'Game'"],"a":"2","e":"The correct answer is 'suicide'. The text lists 'kill,' 'suicide,' 'getting out,' and 'hang' as key words that should alert an officer. Page: 49"},
+{"q":"Which of the following is a prohibited radio behavior according to the FCC?","c":["Using plain English","Willfully damaging radio apparatuses","Speaking slowly and distinctly","Reporting an emergency"],"a":"1","e":"The correct answer is willfully damaging radio apparatuses. The text lists this as one of the prohibitions by the Federal Communications Commission. Page: 51"},
+{"q":"What is the recommended distance to hold a radio microphone from your mouth?","c":["0 inches","1 to 3 inches","4 to 6 inches","More than 6 inches"],"a":"1","e":"The correct answer is 1 to 3 inches. The text specifies to 'make sure your mouth is 1 to 3 inches away from the microphone.' Page: 52"},
+{"q":"What is the purpose of a radio base station operator during communications?","c":["To only listen to transmissions.","To send and receive messages and monitor frequencies.","To repair broken radios.","To assign radio codes."],"a":"1","e":"The correct answer is to send and receive messages and monitor frequencies. The text states that radio base station operators send and receive messages and monitor radio frequencies. Page: 53"},
+{"q":"What is an interview defined as in the text?","c":["A formal interrogation under oath.","A casual chat with an inmate.","A conversation with the goal of obtaining factual information.","A method for issuing disciplinary action."],"a":"2","e":"The correct answer is a conversation with the goal of obtaining factual information. The text defines an interview as a conversation with an interviewee with the goal of obtaining factual information. Page: 54"},
+{"q":"What is a 'Corrective Consultation (CC) form' used for?","c":["Major rule violations.","Minor disciplinary violations.","Use of force incidents.","Recording inmate counts."],"a":"1","e":"The correct answer is for minor disciplinary violations. The text states it is 'used for minor disciplinary violations to detail the counseling and corrective actions taken.' Page: 59"},
+{"q":"What does the 'How' section of a report detail?","c":["The names of the people involved.","The location of the incident.","How the incident started and progressed.","The reason the incident happened."],"a":"2","e":"The correct answer is how the incident started and progressed. The text specifies that the 'How' section details how the incident started and progressed. Page: 61"},
+{"q":"What is the second step in the five basic steps of writing a corrections report?","c":["Gather information","Record facts","Organize facts","Write the report"],"a":"1","e":"The correct answer is to record facts. The text lists the five steps as: Gather information, Record facts, Organize facts, Write the report, and Evaluate the report. Page: 62"},
+{"q":"What is the primary purpose of note-taking for a report?","c":["To practice handwriting.","To have something to do during an incident.","To ensure pertinent information is recorded accurately.","To create a permanent public record on the spot."],"a":"2","e":"The correct answer is to ensure pertinent information is recorded accurately. The text states that 'Taking notes is a way to make sure that pertinent information is recorded, as it is difficult to rely on memory alone.' Page: 63"},
+{"q":"What does it mean to organize facts chronologically?","c":["By witness type.","By the severity of the incident.","By date and timeline of events.","By the location of the evidence."],"a":"2","e":"The correct answer is by date and timeline of events. The text defines arranging information chronologically as 'grouping of recorded information by date and timeline, usually from the first event to the last.' Page: 64"},
+{"q":"What part of speech is 'they' in the sentence 'They are brothers'?","c":["Noun","Verb","Pronoun","Adjective"],"a":"2","e":"The correct answer is a pronoun. The table on page 66 identifies 'they' as a pronoun, which is a substitute for a noun. Page: 66"},
+{"q":"What is a sentence fragment?","c":["A very long sentence.","A group of words that lacks a subject or verb, or fails to express a complete thought.","A sentence with incorrect punctuation.","A sentence that contains slang."],"a":"1","e":"The correct answer is a group of words that lacks a subject or verb, or fails to express a complete thought. The text provides this definition on page 67."},
+{"q":"Which word is spelled correctly?","c":["surveillance","surveilance","survelance","survaillance"],"a":"0","e":"The correct answer is surveillance. This is listed in the 'Commonly Misspelled Words' table. Page: 67"},
+{"q":"When should a title of a professional be capitalized?","c":["Always","Never","Only when their name is used","Only when the title is at the beginning of a sentence"],"a":"2","e":"The correct answer is only when their name is used. Rule 5 for capitalization states to 'Capitalize titles of professionals only when names are used,' for example, 'Inmate Smith'. Page: 68"},
+{"q":"What is the correct use of 'to', 'too', and 'two' in a sentence?","c":["He went too the store two buy to items.","He went to the store to buy two items.","He went two the store to buy too items.","He went to the store too buy two items."],"a":"1","e":"The correct answer is 'He went to the store to buy two items.' 'To' is a preposition, 'two' is a number, and 'too' means also or excessively. Page: 68"},
+{"q":"When should a comma be used to separate adjectives?","c":["Always","Never","When they separately describe the same noun and make sense with 'and' between them.","Only when there are more than three adjectives."],"a":"2","e":"The correct answer is when they separately describe the same noun and the phrase makes sense with 'and' between them. Rule 5 for comma usage explains this principle. Page: 70"},
+{"q":"What is the purpose of an apostrophe in a report?","c":["To indicate a long pause.","To show possession or create a contraction.","To separate items in a list.","To end a sentence."],"a":"1","e":"The correct answer is to show possession or create a contraction. The text explains this on page 70."},
+{"q":"What is the 'body' of a report?","c":["The introduction with the date and time.","The closing with recommendations.","The detailed, chronological account of the incident.","The list of witnesses."],"a":"2","e":"The correct answer is the detailed, chronological account of the incident. The text defines the body section this way on page 72."},
+{"q":"What is the correctional jargon for a 'cell/pat down/strip search'?","c":["PC","Shakedown","DC","CERT"],"a":"1","e":"The correct answer is shakedown. The jargon table on page 73 defines 'shakedown' as a cell/pat down/strip search."},
+{"q":"What does the slang term 'rabbit' refer to?","c":["A new inmate.","An escape risk inmate.","A homemade weapon.","Tobacco."],"a":"1","e":"The correct answer is an escape risk inmate. The slang table on page 74 provides this definition."},
+{"q":"What does it mean for a report to be 'concise'?","c":["To be very long and detailed.","To be brief, but not leave out important information.","To include personal opinions.","To be written in all capital letters."],"a":"1","e":"The correct answer is to be brief, but not leave out important information. The text defines 'concise' on page 75."},
+{"q":"What is the process of checking a report for spelling, punctuation, and grammar errors called?","c":["Editing","Proofreading","Organizing","Finalizing"],"a":"1","e":"The correct answer is proofreading. The text defines proofreading as 'the checking of a report to ensure that all words are spelled correctly, punctuation is used accurately, appropriate words are capitalized, and proper grammar is used.' Page: 77"},
+{"q":"What is a recommended method for catching mistakes when evaluating your own report?","c":["Submitting it immediately.","Reading it silently to yourself.","Reading it aloud or having someone else read it aloud.","Assuming the spell checker caught everything."],"a":"2","e":"The correct answer is reading it aloud or having someone else read it aloud. The text suggests this method on page 77 to help find errors."},
+{"q":"What is the final action an officer should take after evaluating and finalizing a report?","c":["Destroy the notes.","Ask the inmate to sign it.","Sign, date, and distribute the report according to agency policies.","Post it on the bulletin board."],"a":"2","e":"The correct answer is to sign, date, and distribute the report according to agency policies. This is the final step mentioned on page 79."},
+{"q":"According to the text, what is a primary reason to maintain courtesy with inmates?","c":["To make them like you.","Because it is an agency requirement.","It may help avoid or de-escalate potentially violent situations.","It shows other officers you are in charge."],"a":"2","e":"The correct answer is that it may help avoid or de-escalate potentially violent situations. The text states this on page 49."},
+{"q":"Which of the following is NOT an element of active listening?","c":["Maintaining eye contact.","Keeping an open mind.","Interrupting to ask questions.","Paraphrasing back what was said."],"a":"2","e":"The correct answer is interrupting to ask questions. The text emphasizes giving full attention and taking time to understand the message *without interrupting*. Page: 49."},
+{"q":"What is the term for a system of communication using numbers preceded by '10'?","c":["Signals","Phonetic-alphabet","10 or numeric codes","Numeric-alpha codes"],"a":"2","e":"The correct answer is 10 or numeric codes. The text defines this system on page 53."},
+{"q":"What is the first thing an officer should do before conducting an interview after an incident?","c":["Take notes.","Write the report.","Remove the interviewee from the scene.","Ask them to write a statement."],"a":"2","e":"The correct answer is to remove the interviewee from the scene. The text advises to 'remove the interviewee from the scene of the incident' before conducting an interview. Page: 55."},
+{"q":"What type of question is 'Did you take the inmate's shoes?'","c":["Open-ended question","Direct question","Forced-choice question","A question to be avoided"],"a":"1","e":"The correct answer is a direct question. The table on page 15 provides this as an example of a direct question, which combines closed-ended and leading questions."},
+{"q":"What is a key difference between a written statement and a report?","c":["A statement is always under oath.","A report is a person's account, while a statement communicates all available facts.","A statement is a person's account, while a report communicates all available facts.","A report is always written by the inmate."],"a":"2","e":"The correct answer is that a statement is a person's account, while a report communicates all available facts. A statement is a record of a person's account of an incident (page 56), while a report is a written account that communicates all available facts of an incident (page 58)."},
+{"q":"What does a 'Use of Force Report' get attached to?","c":["The officer's personnel file.","An Incident or Disciplinary Report.","The inmate's commissary account.","The daily log book."],"a":"1","e":"The correct answer is an Incident or Disciplinary Report. The text states it 'is attached to an Incident or disciplinary report.' Page: 59."},
+{"q":"What is the purpose of an 'Equipment Check Form'?","c":["To order new equipment.","To record the location of all equipment at each post.","To document when an officer's equipment is broken.","To check out equipment for personal use."],"a":"1","e":"The correct answer is to record the location of all equipment at each post. The text provides this definition on page 59."},
+{"q":"In report writing, what does the question 'Why' attempt to do?","c":["State the officer's opinion on the motive.","Verify the reasons for the incident.","Assign blame to one party.","Ignore the motive completely."],"a":"1","e":"The correct answer is to verify the reasons for the incident. The text states to 'Attempt to verify reasons for the incident and the facts submitted in the interviewee's statement.' Page: 61."},
+{"q":"What is the primary format for documenting incidents in a correctional facility?","c":["Checklist format","Narrative format","Multiple-choice format","Oral format"],"a":"1","e":"The correct answer is narrative format. The text states that 'Incidents in a correctional facility are primarily documented in a narrative format.' Page: 62."},
+{"q":"When taking notes, what should an officer use?","c":["Loose pieces of paper.","A notebook.","The back of their hand.","A computer tablet."],"a":"1","e":"The correct answer is a notebook. The text advises to 'Use a notebook (not loose pieces of paper) to record notes.' Page: 63."},
+{"q":"What is categorical organization of facts?","c":["Arranging them by date and time.","Arranging them by importance.","Grouping them by source (e.g., victims, witnesses).","Arranging them alphabetically."],"a":"2","e":"The correct answer is grouping them by source. The text defines organizing information categorically as 'grouping of recorded information into types of collection sources, such as informants, victims, witnesses, suspects, weapons, rule violations, evidence, and crime elements.' Page: 64."},
+{"q":"What part of speech is 'quickly' in the sentence 'Backup officers arrived quickly'?","c":["Adjective","Verb","Adverb","Noun"],"a":"2","e":"The correct answer is an adverb. The table on page 66 shows 'quickly' as an example of an adverb, which describes a verb. Page: 66."},
+{"q":"What is a common error to avoid in sentence structure?","c":["Using complete sentences.","Sentence fragments.","Using correct verb tense.","Subject-verb agreement."],"a":"1","e":"The correct answer is sentence fragments. The text advises to avoid sentence fragments on page 67."},
+{"q":"Which of the following is a correct capitalization rule?","c":["Capitalize all nouns.","Do not capitalize brand names.","Capitalize the names of specific organizations.","Do not capitalize the names of cities."],"a":"2","e":"The correct answer is to capitalize the names of specific organizations. Rule 2 for capitalization states to 'Capitalize the names of specific organizations and buildings.' Page: 68."},
+{"q":"What are 'their', 'they're', and 'there' examples of?","c":["Synonyms","Homophones","Antonyms","Contractions"],"a":"1","e":"The correct answer is homophones. The text lists these as examples of homophones on page 68."},
+{"q":"What is a coordinating conjunction?","c":["A word that describes a noun.","A word that shows a relationship like 'above' or 'near'.","A word like 'for, and, nor, but, or, yet, so' that joins sentences.","A word that describes an action."],"a":"2","e":"The correct answer is a word like 'for, and, nor, but, or, yet, so' that joins sentences. The text lists the seven coordinating conjunctions on page 69."},
+{"q":"When should quotation marks be used in a report?","c":["For all inmate statements.","To emphasize a word.","When documenting a direct quote.","When paraphrasing a statement."],"a":"2","e":"The correct answer is when documenting a direct quote. Rule 3 for apostrophes and quotation marks explains this on page 71."},
+{"q":"What is the 'closing' section of a report for?","c":["Listing the date and time.","Giving a detailed account of the incident.","Explaining the action taken and how the incident was resolved.","Introducing the people involved."],"a":"2","e":"The correct answer is explaining the action taken and how the incident was resolved. The text describes the closing section this way on page 72."},
+{"q":"What is 'textspeak'?","c":["Professional language for reports.","Language used in text messages with abbreviations and acronyms.","A type of correctional jargon.","A formal way of speaking."],"a":"1","e":"The correct answer is language used in text messages with abbreviations and acronyms. The text defines textspeak on page 74 and advises against its use in reports."},
+{"q":"An effective report should be factual, concise, accurate, clear, and what else?","c":["Legible, timely, and complete.","Humorous and engaging.","Filled with personal opinions.","Written in slang."],"a":"0","e":"The correct answer is legible, timely, and complete. The text lists these as characteristics of an effective report on pages 74-76."},
+{"q":"What does 'editing' a report involve?","c":["Only checking for spelling errors.","Ensuring all pertinent facts are included in an organized and accurate manner.","Making the report longer.","Adding personal opinions."],"a":"1","e":"The correct answer is ensuring all pertinent facts are included in an organized and accurate manner. The text provides this definition for editing on page 77."},
+{"q":"What is the final step in the report writing process?","c":["Gathering information.","Writing the report.","Organizing facts.","Evaluating the report."],"a":"3","e":"The correct answer is evaluating the report. This is listed as the fifth and final step on page 62."},
+{"q":"What is an example of a non-verbal cue for friendliness or being at ease?","c":["Clenched fists","Crossed arms","Arms down by the side","Avoiding eye contact"],"a":"2","e":"The correct answer is arms down by the side. The text provides 'Arms down by the side or comfortably placed in the lap' as an example of being friendly or at ease. Page: 46."},
+{"q":"What is a potential barrier to communication related to the environment?","c":["Use of jargon","Negative attitude","Background noise","Stereotyping"],"a":"2","e":"The correct answer is background noise. The text lists 'environmental distractions, such as background noise' as a barrier. Page: 47."},
+{"q":"What is the likely result of an officer regularly addressing inmates with contempt?","c":["The development of hostile relationships.","The inmates will become more compliant.","The officer will gain respect.","It will de-escalate situations."],"a":"0","e":"The correct answer is the development of hostile relationships. The text states, 'If you regularly address inmates with contempt or disregard, you are likely to develop hostile relationships.' Page: 49."},
+{"q":"What is the purpose of the 'squelch' circuit on a radio?","c":["To increase the volume.","To change the channel.","To suppress the receiver's output if the signal is weak.","To transmit a signal."],"a":"2","e":"The correct answer is to suppress the receiver's output if the signal is weak. The text defines squelch as 'a circuit that suppresses the output of a radio receiver if the signal strength falls below a certain level.' Page: 52."},
+{"q":"Who is authorized to adjust, repair, or alter a radio transmitter?","c":["Any correctional officer.","A supervisor.","An agency-authorized radio technician.","The officer in the control room."],"a":"2","e":"The correct answer is an agency-authorized radio technician. The text specifies this on page 52."},
+{"q":"What is a 'phonetic-alphabet' system of communication?","c":["A system using numbers.","A system using the letters of the English alphabet.","A system using a combination of numbers and letters.","A system using hand signals."],"a":"1","e":"The correct answer is a system using the letters of the English alphabet. The text defines it as 'a system of verbal communication using the letters of the English alphabet only.' Page: 53."},
+{"q":"What right does an interviewee with autism spectrum disorder have upon request?","c":["To have a family member present.","To have a mental health professional present.","To refuse the interview.","To have another inmate present."],"a":"1","e":"The correct answer is to have a mental health professional present. The text states they have the right 'to have a mental health or other related professional present at all interviews.' Page: 55."},
+{"q":"What kind of question is 'What happened next?'","c":["Closed-ended","Leading","Open-ended","Forced-choice"],"a":"2","e":"The correct answer is an open-ended question. The table on page 55 provides this as an example of an open-ended question that encourages conversation."},
+{"q":"Which of the following is a physical sign of deception?","c":["Calm demeanor","Consistent story","Dry mouth","Direct eye contact"],"a":"2","e":"The correct answer is dry mouth. The text lists 'dry mouth' as a potential physical sign of deception. Page: 57."},
+{"q":"What does a 'Disciplinary Report (DR)' initiate for an inmate?","c":["Early release.","A series of events to ensure due process.","A transfer to another facility.","A loss of all privileges."],"a":"1","e":"The correct answer is a series of events to ensure due process. The text states that a DR 'sets in motion a series of events that ensure that the inmate receives due process.' Page: 59."},
+{"q":"What is a 'Counts Form' used for?","c":["To count contraband items.","To record inmate counts.","To count the number of visitors.","To count staff members on duty."],"a":"1","e":"The correct answer is to record inmate counts. The text specifies this form is 'used to record inmate counts as required by Florida Statutes.' Page: 59."},
+{"q":"Which of the following is an activity that may need to be documented in a report?","c":["An officer's break time.","A routine conversation with a coworker.","Confiscation and disposal of contraband.","The weather outside."],"a":"2","e":"The correct answer is confiscation and disposal of contraband. The text lists this as an activity that may need to be documented. Page: 59."},
+{"q":"What is a key rule for note-taking?","c":["Use loose paper for easy filing.","Write in pencil to make corrections.","Use as many abbreviations as possible.","Record all relevant facts as soon as possible."],"a":"3","e":"The correct answer is to record all relevant facts as soon as possible. This is listed as an important rule on page 63."},
+{"q":"What is a verb in grammar?","c":["The name of a person, place, or thing.","A word that describes a noun.","A word that describes action or state of being.","A word that joins other words."],"a":"2","e":"The correct answer is a word that describes action or state of being. The table on page 66 defines a verb this way."},
+{"q":"The sentence 'They is brothers' is incorrect because:","c":["The subject is singular and the verb is plural.","The subject is plural and the verb is singular.","It contains a sentence fragment.","It uses a pronoun."],"a":"1","e":"The correct answer is that the subject is plural and the verb is singular. The text explains that the plural subject 'they' does not agree with the singular verb 'is'. Page: 66."},
+{"q":"Which word is spelled correctly?","c":["concious","conshus","conscious","consious"],"a":"2","e":"The correct answer is conscious. This is listed in the 'Commonly Misspelled Words' table. Page: 67."},
+{"q":"Which of the following should be capitalized?","c":["The season 'winter'.","The direction 'north'.","The holiday 'Independence Day'.","The building 'courthouse'."],"a":"2","e":"The correct answer is the holiday 'Independence Day'. Rule 3 for capitalization states to 'Capitalize days, months, and holidays.' Page: 68."},
+{"q":"Which sentence uses 'its' and 'it's' correctly?","c":["The dog wagged it's tail because its happy.","The dog wagged its tail because it's happy.","The dog wagged its tail because its happy.","The dog wagged it's tail because it's happy."],"a":"1","e":"The correct answer is 'The dog wagged its tail because it's happy.' 'Its' is possessive, while 'it's' is a contraction for 'it is'. Page: 68."},
+{"q":"A comma should be used after what type of clause?","c":["A concluding clause.","An introductory clause.","A main clause.","A restrictive clause."],"a":"1","e":"The correct answer is an introductory clause. Rule 2 for comma usage states, 'Use a comma after an introductory clause.' Page: 70."},
+{"q":"In the sentence, 'The inmate used a small, metal object,' why is there a comma?","c":["It's an introductory clause.","It separates items in a series.","The adjectives separately describe the same noun.","It introduces a quote."],"a":"2","e":"The correct answer is that the adjectives separately describe the same noun. Rule 5 for comma usage explains this principle. Page: 70."},
+{"q":"What is the introduction of a report likely to contain?","c":["The detailed account of the incident.","Recommendations for disciplinary action.","The date, time, and location of the incident.","The officer's personal opinion."],"a":"2","e":"The correct answer is the date, time, and location of the incident. The text lists these as typical components of the introduction section. Page: 72."},
+{"q":"What does the correctional jargon 'PC' stand for?","c":["Personal Computer","Protective Custody","Patrol Car","Phone Call"],"a":"1","e":"The correct answer is Protective Custody. The jargon table on page 73 provides this definition."},
+{"q":"What is the slang term for a new inmate or correctional officer?","c":["Rabbit","Fish/new Jack","Shank","Buck"],"a":"1","e":"The correct answer is Fish/new Jack. The slang table on page 74 provides this definition."},
+{"q":"A report that is 'factual' should be based on what?","c":["The officer's feelings.","Information, statements, and physical evidence.","Rumors and assumptions.","What the officer thinks probably happened."],"a":"1","e":"The correct answer is information, statements, and physical evidence. The text emphasizes that reports should be factual and not include personal opinions or inferences. Page: 74."},
+{"q":"A handwritten report must be what?","c":["Written in cursive.","Legible.","Written in blue ink.","Signed by a supervisor."],"a":"1","e":"The correct answer is legible. The text states, 'Your reports must be easy to read when written by hand.' Page: 76."},
+{"q":"What is a key question to ask yourself when finalizing a report?","c":["Is this report long enough?","Will my supervisor like this report?","If I was not involved, would I have a clear picture of what happened?","Did I use enough slang?"],"a":"2","e":"The correct answer is 'If I was not involved, would I have a clear picture of what happened after reading this report?' The text suggests asking this question to verify the report's clarity and completeness. Page: 79."},
+{"q":"What should an officer be mentally and physically prepared for when interpreting an inmate's non-verbal behavior?","c":["A friendly conversation.","A request for assistance.","A threatening physical situation.","A compliment."],"a":"2","e":"The correct answer is a threatening physical situation. The text states, 'You should be mentally and physically prepared to take immediate action if a threatening physical situation occurs.' Page: 47."},
+{"q":"What is an example of a verbal command?","c":["'Would you like to clean your cell?'","'Your cell is messy.'","'Clean your cell before breakfast.'","'I wish someone would clean this cell.'"],"a":"2","e":"The correct answer is 'Clean your cell before breakfast.' The text provides this as an example of a direct verbal command. Page: 49."},
+{"q":"What is the primary reason for using plain English in radio transmissions?","c":["It is harder for inmates to understand.","It is ideal for interagency coordination during emergencies.","It uses less battery power.","It is the only format allowed by the FCC."],"a":"1","e":"The correct answer is that it is ideal for interagency coordination during emergencies. The text states, 'Plain English transmission is especially ideal during emergency situations, due to interagency involvement and coordination.' Page: 52."},
+{"q":"What is a 'numeric-alpha code' system?","c":["A system using only numbers.","A system using only letters.","A system that combines numbers and letters.","A system that uses hand signals."],"a":"2","e":"The correct answer is a system that combines numbers and letters. The text defines it as 'a system of communication that combines numbers and letters of the alphabet.' Page: 53."},
+{"q":"Which of the following is a behavioral sign of deception?","c":["Rehearsed answers.","Calm demeanor.","Consistent responses.","Willingness to help."],"a":"0","e":"The correct answer is rehearsed answers. The text lists 'rehearsed answers' as a potential behavioral sign of deception. Page: 57."},
+{"q":"What is the purpose of a 'Special Watch Form'?","c":["To watch special television programs.","To record activities of inmates under any type of special watch.","To document visits from special guests.","To request special meals for inmates."],"a":"1","e":"The correct answer is to record activities of inmates under any type of special watch. The text specifies this form is used for inmates under special watch, such as suicide watch. Page: 59."},
+{"q":"Which of the following is a correct use of a comma?","c":["I met with the victim, she gave me a statement.","The inmate, who was angry, yelled at me.","The inmate was, angry and hostile.","The inmate, was angry."],"a":"1","e":"The correct answer is 'The inmate, who was angry, yelled at me.' This correctly uses commas to separate a non-restrictive phrase. Page: 70."},
+{"q":"What should a report be free of, unless directly quoting someone?","c":["Facts","Standard English","Jargon, slang, and textspeak","Proper grammar"],"a":"2","e":"The correct answer is jargon, slang, and textspeak. The text advises that reports should be free of these. Page: 73."},
+{"q":"What does 'timely' mean in the context of report writing?","c":["Written at the end of the week.","Written without delay after an incident.","Written whenever the officer has free time.","Written before the incident occurs."],"a":"1","e":"The correct answer is written without delay after an incident. The text defines a timely report as one 'written without delay after an incident.' Page: 76."},
+{"q":"What is one of the methods recommended to help catch mistakes in a report?","c":["Writing as fast as possible.","Knowing your personal writing weaknesses.","Using as much jargon as possible.","Avoiding proofreading."],"a":"1","e":"The correct answer is knowing your personal writing weaknesses. The text lists 'Know personal weaknesses' as a method to help find errors. Page: 77."}
+
+];
+
+function processAndCleanQuestions(questionArray) {
+    // Use a Set to track unique question strings
+    const uniqueQuestions = new Set();
+    const deDupedArray = [];
+
+    questionArray.forEach(q => {
+        if (q && typeof q === 'object' && q.q && !uniqueQuestions.has(q.q)) {
+            uniqueQuestions.add(q.q);
+            deDupedArray.push(q);
+        }
+    });
+
+    return deDupedArray.map((q_orig, index) => {
+        // Deep copy the question object to avoid modifying the original
+        let q = JSON.parse(JSON.stringify(q_orig)); 
+        q.originalIndex = index; // Store original index
+
+        // Convert answer to a number if it's a string
+        if (typeof q.a === 'string') {
+          q.a = parseInt(q.a, 10);
+        }
+
+        // Convert letter-based answer (a_letter) to numeric index (a)
+        if (q.a_letter) { 
+            const letterMap = { A: 0, B: 1, C: 2, D: 3 };
+            q.a = letterMap[q.a_letter.toUpperCase()]; // Ensure uppercase for consistency
+            delete q.a_letter; 
+        }
+
+        // Validate the answer index; default to 0 if invalid
+        if (q.a === undefined || q.a < 0 || q.a >= q.c.length) {
+            console.warn("Initial invalid answer index for question:", q.q, "Original index:", q_orig.a, "Defaulting to 0.");
+            q.a = 0; 
+        }
+        
+        // Store the correct answer text before shuffling choices
+        let correctAnswerText = q.c[q.a]; 
+
+        // Standardize "All of the above." to "(All answers listed)"
+        q.c = q.c.map(choice => choice === "All of the above." ? "(All answers listed)" : choice);
+        if (correctAnswerText === "All of the above.") {
+            correctAnswerText = "(All answers listed)";
+        }
+        
+        // Shuffle the choices
+        let shuffledChoices = shuffleArray([...q.c]); 
+        // Find the new index of the correct answer after shuffling
+        let newCorrectIndex = shuffledChoices.indexOf(correctAnswerText);
+
+        // Handle cases where the correct answer text might not be found after shuffling (should be rare)
+        if (newCorrectIndex === -1) {
+            console.error("CRITICAL ERROR: Correct answer text '"+ correctAnswerText +"' not found after shuffling for question:", q.q, "Shuffled choices:", shuffledChoices, "Original choices were:", q.c);
+            // Fallback: try to find it in the original, unshuffled choices
+            newCorrectIndex = q.c.indexOf(correctAnswerText); 
+            if (newCorrectIndex !== -1) {
+                q.a = newCorrectIndex; 
+            } else {
+                q.a = 0; 
+                console.error("ABSOLUTE FALLBACK: Could not find '"+ correctAnswerText +"' even in original choices for q: " + q.q + ". Using original choices and index 0.");
+            }
+        } else {
+            q.c = shuffledChoices; 
+            q.a = newCorrectIndex; 
+        }
+        return q;
+    });
+}
+
+// Process the questions and store them in the questionPool
+const questionPool = processAndCleanQuestions(newQuestionsFromUser);
+
+
+let selectedQuestions = []; 
+let currentIndex = 0;
+const skipped = []; 
+const flagged = []; 
+let answers = []; 
+let choiceVisibility = {}; 
+let testId = ''; 
+let timerSeconds = 1800; 
+let isReviewMode = false;
+let isStudyMode = false;
+let incorrectlyAnswered = [];
+let usedQuestionIndicesInPool = [];
+let currentStudySetSize = 10;
+var timerInterval;
+
+function selectRandomQuestionsFromPool(pool, count) {
+  const shuffledFullPool = shuffleArray([...pool]); 
+  return shuffledFullPool.slice(0, count);
+}
+
+function renderQuiz() {
+  const form = document.getElementById("quizForm");
+  form.innerHTML = ''; 
+
+  if (selectedQuestions.length === 0 ) {
+    if(isStudyMode) showStudyEndActions();
+    return;
+  }
+  if (!selectedQuestions[currentIndex]){
+      // This can happen if we run out of incorrect questions to retry
+      showStudyEndActions();
+      return;
+  }
+
+  const q = selectedQuestions[currentIndex]; 
+  const questionDiv = document.createElement("div"); 
+  questionDiv.classList.add("question");
+  questionDiv.innerHTML = `<div class='question-header'>Question ${currentIndex + 1}</div><div class='question-text'>${q.q}</div>`;
+  
+  const hasBeenAnsweredInStudy = isStudyMode && answers[currentIndex] !== null;
+
+  q.c.forEach((choice, i) => {
+    const choiceKey = `q${currentIndex}_c${i}`;
+    const isVisuallyObscured = choiceVisibility[choiceKey] === true; 
+    const isSelected = answers[currentIndex] === i;
+    
+    const eyeIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+    const eyeOffIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+
+    const choiceWrapper = document.createElement('div');
+    choiceWrapper.className = 'choice-wrapper';
+    if (isSelected && !isStudyMode) {
+        choiceWrapper.classList.add('selected-wrapper');
+    }
+    
+    const radioId = `${choiceKey}_radio`;
+    choiceWrapper.innerHTML = `
+        <label class="choice-button-main-area" for="${radioId}">
+            <input type="radio" id="${radioId}" name="q${currentIndex}" value="${i}" ${isSelected ? 'checked' : ''} onclick="recordAnswer(${i})">
+            <span class="choice-text-container">
+              ${String.fromCharCode(65 + i)}. <span class="actual-choice-text ${isVisuallyObscured ? 'actual-choice-text-visually-obscured' : ''}">${choice}</span>
+            </span>
+        </label>
+        <button type="button" class="toggle-visibility-btn" onclick="toggleChoiceVisibility(${currentIndex}, ${i}, event)">
+          ${isVisuallyObscured ? eyeOffIconSVG : eyeIconSVG}
+        </button>
+    `;
+    questionDiv.appendChild(choiceWrapper);
+    
+    if (hasBeenAnsweredInStudy) {
+        const selectedAnswer = answers[currentIndex];
+        const isCorrect = selectedAnswer === q.a;
+        if (i === selectedAnswer) {
+            choiceWrapper.classList.add(isCorrect ? 'study-correct' : 'study-incorrect');
+        }
+        if (i === q.a) {
+            choiceWrapper.classList.add('study-correct');
+        }
+    }
+  });
+  
+  const explanationDiv = document.createElement('div');
+  explanationDiv.className = 'explanation';
+  explanationDiv.id = `explanation-${currentIndex}`;
+  explanationDiv.innerHTML = q.e;
+  if(hasBeenAnsweredInStudy) {
+      explanationDiv.style.display = 'block';
+  }
+  questionDiv.appendChild(explanationDiv);
+  
+  form.appendChild(questionDiv);
+  
+  document.getElementById("progressText").textContent = `Question ${currentIndex + 1} of ${selectedQuestions.length}`; 
+  document.getElementById("progressTextBottom").textContent = `Question ${currentIndex + 1} of ${selectedQuestions.length}`; 
+  
+  document.getElementById("submitBtn").style.display = answers.every(a => a !== null) && !isStudyMode ? 'inline-block' : 'none';
+
+  const flagButton = document.getElementById("flagButton");
+  if (flagButton) { 
+      flagButton.style.display = isStudyMode ? 'none' : 'inline-block';
+    if (flagged.includes(currentIndex)) {
+      flagButton.innerHTML = '✅ Unflag';
+    } else {
+      flagButton.innerHTML = '🚩 Flag';
+    }
+  }
+  highlightNavItem(currentIndex); 
+}
+
+function toggleChoiceVisibility(qIndex, cIndex, event) {
+    event.stopPropagation(); 
+    const choiceKey = `q${qIndex}_c${cIndex}`;
+    choiceVisibility[choiceKey] = !choiceVisibility[choiceKey]; 
+    
+    const buttonClicked = event.currentTarget; 
+    const choiceWrapper = buttonClicked.closest('.choice-wrapper');
+    if (!choiceWrapper) return;
+
+    const textSpan = choiceWrapper.querySelector('.actual-choice-text');
+    if (!textSpan) return;
+    
+    const eyeIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+    const eyeOffIconSVG = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+
+    if (choiceVisibility[choiceKey]) { 
+        textSpan.classList.add('actual-choice-text-visually-obscured');
+        buttonClicked.innerHTML = eyeOffIconSVG;
+    } else {
+        textSpan.classList.remove('actual-choice-text-visually-obscured');
+        buttonClicked.innerHTML = eyeIconSVG;
+    }
+}
+
+
+function recordAnswer(selectedIndex) {
+    const alreadySelectedAndAnswered = answers[currentIndex] !== null;
+
+    if (alreadySelectedAndAnswered) {
+        if (isStudyMode) {
+            nextQuestion();
+        } else if (selectedIndex !== answers[currentIndex]) {
+            answers[currentIndex] = selectedIndex;
+            renderQuiz(); 
+            generateSidebar();
+        } else {
+             nextQuestion();
+        }
+        return;
+    }
+    
+    answers[currentIndex] = selectedIndex;
+
+    const idxInSkipped = skipped.indexOf(currentIndex);
+    if (idxInSkipped > -1) {
+        skipped.splice(idxInSkipped, 1);
+    }
+    
+    const questionDiv = document.getElementById("quizForm").querySelector(".question");
+    
+    if (isStudyMode) {
+        const q = selectedQuestions[currentIndex];
+        const isCorrect = selectedIndex === q.a;
+        const choiceWrappers = questionDiv.querySelectorAll('.choice-wrapper');
+
+        choiceWrappers.forEach((wrapper, i) => {
+            if (i === selectedIndex) {
+                wrapper.classList.add(isCorrect ? 'study-correct' : 'study-incorrect');
+            }
+            if (i === q.a) {
+                wrapper.classList.add('study-correct');
+            }
+        });
+        document.getElementById(`explanation-${currentIndex}`).style.display = 'block';
+
+        if (!isCorrect) {
+            if (!incorrectlyAnswered.some(item => item.originalIndex === q.originalIndex)) {
+                incorrectlyAnswered.push(q);
+            }
+        }
+        
+        if (currentIndex === selectedQuestions.length - 1) {
+            showStudyEndActions();
+        }
+    } else { 
+        if (questionDiv) {
+            const currentQuestionChoiceWrappers = questionDiv.querySelectorAll('.choice-wrapper');
+            currentQuestionChoiceWrappers.forEach((wrapper, idx) => {
+                wrapper.classList.remove('selected-wrapper');
+                if (idx === selectedIndex) {
+                    wrapper.classList.add('selected-wrapper');
+                }
+            });
+        }
+        document.getElementById("submitBtn").style.display = answers.every(a => a !== null) ? 'inline-block' : 'none';
+    }
+    
+    generateSidebar(); 
+}
+
+function showStudyEndActions() {
+    document.querySelector('.question-actions-bar').style.display = 'none';
+    const studyEndActions = document.getElementById('studyEndActions');
+    studyEndActions.style.display = 'block';
+
+    const retryBtn = document.getElementById('retryIncorrectBtn');
+    retryBtn.style.display = incorrectlyAnswered.length > 0 ? 'inline-block' : 'none';
+
+    const nextSetBtn = document.getElementById('nextSetBtn');
+    const remainingQuestions = questionPool.length - usedQuestionIndicesInPool.length;
+    nextSetBtn.style.display = remainingQuestions >= currentStudySetSize ? 'inline-block' : 'none';
+}
+
+function startNextStudySet() {
+    setupSession(true); // Call setupSession again, indicating it's the next set
+}
+
+function retryIncorrectQuestions() {
+    selectedQuestions = shuffleArray([...incorrectlyAnswered]);
+    currentIndex = 0;
+    answers = new Array(selectedQuestions.length).fill(null);
+    incorrectlyAnswered = [];
+    flagged.length = 0;
+    skipped.length = 0;
+
+    document.getElementById('studyEndActions').style.display = 'none';
+    document.querySelector('.question-actions-bar').style.display = 'flex';
+    document.getElementById('nextBtn').style.display = 'inline-block';
+    document.getElementById('prevBtn').style.display = 'inline-block';
+
+    renderQuiz();
+    generateSidebar();
+}
+
+function skipQuestion() {
+  const questionToSkip = currentIndex;
+  if (!skipped.includes(questionToSkip)) {
+    skipped.push(questionToSkip);
+  }
+  nextQuestion(); 
+}
+
+function flagQuestion() {
+  const indexInFlagged = flagged.indexOf(currentIndex);
+  if (indexInFlagged > -1) {
+    flagged.splice(indexInFlagged, 1); 
+  } else {
+    flagged.push(currentIndex); 
+  }
+  renderQuiz(); 
+  generateSidebar(); 
+}
+
+function nextQuestion() {
+  let potentialNextIndex = currentIndex + 1;
+
+  if (potentialNextIndex >= selectedQuestions.length) { 
+    if (isStudyMode) {
+      showStudyEndActions();
+      return;
+    }
+    potentialNextIndex = -1; 
+
+    for (const skippedIdx of skipped) {
+      if (answers[skippedIdx] === null) {
+        potentialNextIndex = skippedIdx;
+        break;
+      }
+    }
+
+    if (potentialNextIndex === -1) {
+      for (let i = 0; i < selectedQuestions.length; i++) {
+        if (answers[i] === null) {
+          potentialNextIndex = i;
+          break;
+        }
+      }
+    }
+    
+    if (potentialNextIndex === -1) {
+      potentialNextIndex = currentIndex; 
+    }
+  }
+  currentIndex = potentialNextIndex;
+  renderQuiz();
+  generateSidebar(); 
+}
+
+function prevQuestion() {
+  if (currentIndex > 0) {
+    currentIndex--;
+  }
+  renderQuiz();
+  generateSidebar(); 
+}
+
+function displayReview() {
+  isReviewMode = true; // Set review mode
+  choiceVisibility = {}; 
+  const form = document.getElementById("quizForm");
+  form.innerHTML = ''; 
+  let correctCount = 0;
+
+  const reviewActionsTop = document.getElementById("reviewActionsTop");
+  if(reviewActionsTop) reviewActionsTop.style.display = 'block';
+
+
+  selectedQuestions.forEach((q, i) => { 
+    const div = document.createElement("div");
+    div.id = `review-q-${i}`; // Add ID for scrolling
+    const isCorrect = answers[i] === q.a;
+    const statusClass = isCorrect ? 'correct' : 'incorrect';
+    const chosenAnswerText = (answers[i] !== null && q.c[answers[i]] !== undefined) ? q.c[answers[i]] : '<em>No answer provided</em>';
+    const correctAnswerText = (q.a !== undefined && q.c[q.a] !== undefined) ? q.c[q.a] : '<em>Error: Correct answer not found</em>';
+    
+    div.className = statusClass; 
+    div.innerHTML = `<div class='question-header'>Question ${i + 1}</div>` +
+                      `<div class='question-text'>${q.q}</div>` +
+                      `<p>Your Answer: ${chosenAnswerText}</p>` +
+                      `<p>Correct Answer: ${correctAnswerText}</p>` +
+                      `<div class='explanation' style="display:block;">${q.e}</div><hr>`;
+    if (isCorrect) correctCount++;
+    form.appendChild(div);
+  });
+  
+  const scoreHeader = document.createElement("h2");
+  scoreHeader.id = "reviewSummaryHeader"; 
+  scoreHeader.style.textAlign = "center";
+  scoreHeader.innerHTML = `Review Summary<br>You answered ${correctCount} out of ${selectedQuestions.length} correctly.`; 
+  
+  const quizContentScrollable = document.getElementById("quizContentScrollable");
+  const referenceNodeForHeader = document.getElementById("quizForm"); 
+
+  if (reviewActionsTop && reviewActionsTop.parentNode === quizContentScrollable) {
+      quizContentScrollable.insertBefore(scoreHeader, reviewActionsTop.nextSibling);
+  } else if (referenceNodeForHeader && referenceNodeForHeader.parentNode === quizContentScrollable) {
+      quizContentScrollable.insertBefore(scoreHeader, referenceNodeForHeader);
+  } else {
+      const progressDiv = document.getElementById('progress');
+      if (progressDiv && progressDiv.parentNode === quizContentScrollable) {
+          quizContentScrollable.insertBefore(scoreHeader, progressDiv.nextSibling);
+      } else {
+          quizContentScrollable.prepend(scoreHeader); 
+      }
+  }
+  
+  document.getElementById("progressText").textContent = "Review Mode";
+  document.getElementById("progressTextBottom").textContent = "Review Mode";
+  
+  const questionActionsBar = document.querySelector(".question-actions-bar");
+  if(questionActionsBar) questionActionsBar.style.display = 'none';
+  document.getElementById("flagButton").style.display = 'none';
+  
+  const reviewActionsBottom = document.getElementById("reviewActionsBottom");
+  if(reviewActionsBottom) reviewActionsBottom.style.display = 'block';
+  generateSidebar(); // Refresh sidebar with review colors
+}
+
+function returnToHome() {
+    isReviewMode = false; // Exit review mode
+    isStudyMode = false;
+    const reviewActionsTop = document.getElementById("reviewActionsTop");
+    if(reviewActionsTop) reviewActionsTop.style.display = 'none';
+    const reviewActionsBottom = document.getElementById("reviewActionsBottom");
+    if(reviewActionsBottom) reviewActionsBottom.style.display = 'none';
+    const studyEndActions = document.getElementById("studyEndActions");
+    if(studyEndActions) studyEndActions.style.display = 'none';
+    
+    const scoreHeader = document.getElementById("reviewSummaryHeader");
+    if (scoreHeader) {
+        scoreHeader.remove();
+    }
+    
+    document.getElementById('mainQuizContainer').style.display = 'none';
+    document.getElementById('resultsScreen').style.display = 'none'; 
+    document.getElementById('introScreen').style.display = 'flex';
+    document.getElementById('homeBtn').style.display = 'none'; 
+
+    const timerDisplay = document.getElementById('timer');
+    if(timerDisplay) timerDisplay.textContent = "30:00"; 
+    
+    currentIndex = 0;
+    answers = [];
+    skipped.length = 0; 
+    flagged.length = 0;
+    choiceVisibility = {};
+    selectedQuestions = []; 
+    incorrectlyAnswered = [];
+    usedQuestionIndicesInPool = [];
+}
+
+
+function submitAll() {
+  let correct = 0;
+  selectedQuestions.forEach((q, i) => { 
+    if (answers[i] === q.a) correct++;
+  });
+  const scorePercentage = selectedQuestions.length > 0 ? (correct / selectedQuestions.length) * 100 : 0;
+
+  document.getElementById("mainQuizContainer").style.display = "none";
+  document.getElementById("resultsScreen").style.display = "flex";
+  document.getElementById("finalScore").textContent = `${scorePercentage.toFixed(0)}%`;
+  document.getElementById("testIdDisplay").textContent = testId; 
+
+  clearInterval(timerInterval); 
+  const timerDisplay = document.getElementById('timer');
+  if(timerDisplay) timerDisplay.textContent = "00:00"; 
+}
+
+function showReviewPage() {
+  isReviewMode = true; // Set review mode
+  document.getElementById("resultsScreen").style.display = "none";
+  document.getElementById("submitScreen").style.display = "none"; 
+  document.getElementById("mainQuizContainer").style.display = "block"; 
+  
+  const questionActionsBar = document.querySelector(".question-actions-bar");
+  if(questionActionsBar) questionActionsBar.style.display = 'none'; 
+  document.getElementById("flagButton").style.display = 'none'; 
+
+  displayReview(); 
+}
+
+function startExam() {
+    isStudyMode = false;
+    isReviewMode = false;
+    usedQuestionIndicesInPool = []; // Reset used questions for a new exam
+    setupSession();
+}
+
+function startStudy() {
+    isStudyMode = true;
+    isReviewMode = false;
+    usedQuestionIndicesInPool = []; // Reset used questions for a new study session
+    setupSession();
+}
+
+function setupSession(isNextSet = false) {
+    if(!isNextSet) {
+        usedQuestionIndicesInPool = [];
+    }
+  document.getElementById('introScreen').style.display = 'none';
+  document.getElementById('mainQuizContainer').style.display = 'block'; 
+  document.getElementById('homeBtn').style.display = 'flex';
+  
+  const mainHeader = document.getElementById('mainHeaderTitle');
+  const timerDisplay = document.getElementById('timer');
+  const questionActionsBar = document.querySelector(".question-actions-bar");
+  const flagButton = document.getElementById("flagButton");
+  const studyEndActions = document.getElementById("studyEndActions");
+
+  studyEndActions.style.display = 'none';
+  questionActionsBar.style.display = 'flex'; 
+
+  if (isStudyMode) {
+      mainHeader.textContent = "Answer & Study";
+      timerDisplay.style.display = 'none';
+      document.getElementById('submitBtn').style.display = 'none';
+      document.getElementById('skipBtn').style.display = 'none';
+  } else {
+      mainHeader.textContent = 'Exam';
+      timerDisplay.style.display = 'block';
+      document.getElementById('submitBtn').style.display = 'none';
+      document.getElementById('skipBtn').style.display = 'inline-block';
+  }
+
+
+  const reviewActionsTop = document.getElementById("reviewActionsTop");
+  if(reviewActionsTop) reviewActionsTop.style.display = 'none';
+  const reviewActionsBottom = document.getElementById("reviewActionsBottom");
+  if(reviewActionsBottom) reviewActionsBottom.style.display = 'none';
+  
+  const oldScoreHeader = document.getElementById("reviewSummaryHeader");
+  if (oldScoreHeader) oldScoreHeader.remove();
+
+  if(flagButton) flagButton.style.display = isStudyMode ? 'none' : 'inline-block';
+
+  const questionCountSelect = document.getElementById('questionCount');
+  let numberOfQuestions;
+
+  if (questionCountSelect && questionCountSelect.value === 'all') {
+    numberOfQuestions = questionPool.length;
+  } else if (questionCountSelect) {
+    numberOfQuestions = parseInt(questionCountSelect.value, 10);
+  } else {
+    numberOfQuestions = 10; // Fallback
+  }
+  currentStudySetSize = numberOfQuestions;
+
+  // Select questions for the session
+    let availableQuestions = questionPool.filter(q => !usedQuestionIndicesInPool.includes(q.originalIndex));
+    let shuffled = shuffleArray(availableQuestions);
+    selectedQuestions = shuffled.slice(0, currentStudySetSize);
+    selectedQuestions.forEach(q => usedQuestionIndicesInPool.push(q.originalIndex));
+
+  
+  answers = new Array(selectedQuestions.length).fill(null); 
+  choiceVisibility = {}; 
+  testId = `TEST-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  currentIndex = 0;
+  skipped.length = 0; 
+  flagged.length = 0;
+  incorrectlyAnswered = [];
+
+  adjustFooterPadding(); 
+
+  generateSidebar(); 
+  renderQuiz(); 
+
+  if (!isStudyMode) {
+    timerSeconds = numberOfQuestions * 60; 
+    const initialMin = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+    const initialSec = String(timerSeconds % 60).padStart(2, '0');
+    if(timerDisplay) timerDisplay.textContent = `${initialMin}:${initialSec}`;
+
+    clearInterval(timerInterval); 
+    timerInterval = setInterval(() => {
+      if (timerSeconds > 0) {
+        timerSeconds--;
+        const min = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+        const sec = String(timerSeconds % 60).padStart(2, '0');
+        if(timerDisplay) timerDisplay.textContent = `${min}:${sec}`;
+      } else {
+        submitAll(); 
+        clearInterval(timerInterval);
+      }
+    }, 1000);
+  }
+}
+
+function showSubmitScreen() {
+  document.getElementById("submitScreen").style.display = "flex"; 
+}
+function hideSubmitScreen() {
+  document.getElementById("submitScreen").style.display = "none";
+}
+function confirmAndSubmit() {
+  const confirmMessageDiv = document.getElementById("confirmSubmitMessage");
+  const confirmSubmitCheckbox = document.getElementById("confirmSubmit");
+
+  if (confirmSubmitCheckbox && confirmSubmitCheckbox.checked) {
+    if(confirmMessageDiv) confirmMessageDiv.textContent = ""; 
+    submitAll();
+  } else {
+    if(confirmMessageDiv) confirmMessageDiv.textContent = "Please confirm you have completed the exam.";
+    setTimeout(() => { 
+        if(confirmMessageDiv) confirmMessageDiv.textContent = ""; 
+    }, 3000);
+  }
+}
+
+function generateSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  if (sidebar && getComputedStyle(sidebar).display === 'none' && window.innerWidth <= 767) {
+      return; 
+  }
+
+  const ul = document.getElementById("questionNav");
+  if (!ul) return; 
+  ul.innerHTML = ''; 
+  for (let i = 0; i < selectedQuestions.length; i++) {
+    const li = document.createElement("li");
+    li.innerHTML = `<button ondblclick="jumpToQuestion(${i})" onclick="jumpToQuestion(${i})" id="nav-${i}" style="width: 40px; height: 40px; margin: 5px auto; border-radius: 50%; border: none; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center;">${i + 1}</button>`;
+    ul.appendChild(li);
+    highlightNavItem(i); 
+  }
+}
+
+function jumpToQuestion(index) {
+  currentIndex = index; // Always update the current index
+
+  if (isReviewMode) {
+    const element = document.getElementById(`review-q-${index}`);
+    if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  } else {
+    renderQuiz();
+  }
+  generateSidebar(); // Update sidebar for both modes
+}
+
+function highlightNavItem(index) {
+    const btn = document.getElementById(`nav-${index}`);
+    if (!btn) return;
+
+    const isCurrent = index === currentIndex;
+    let bg, color, border, iconText;
+    iconText = `${index + 1}`;
+    border = '2px solid transparent';
+
+    const mode = isReviewMode || (isStudyMode && answers[index] !== null) ? 'review' : 'quiz';
+
+    switch (mode) {
+        case 'review':
+            const isCorrect = answers[index] === selectedQuestions[index].a;
+            if (answers[index] === null) {
+                bg = '#6b7280'; // Gray for unanswered/skipped in review
+                color = '#fff';
+            } else if (isCorrect) {
+                bg = '#22c55e'; // Green for correct
+                color = '#fff';
+            } else {
+                bg = '#ef4444'; // Red for incorrect
+                color = '#fff';
+            }
+            break;
+        case 'quiz':
+        default:
+            const isAnswered = answers[index] !== null;
+            const isSkipped = skipped.includes(index);
+            const isFlagged = flagged.includes(index);
+
+            bg = '#d0d0d0';
+            color = '#000';
+
+            if (isAnswered) {
+                bg = '#3b82f6';
+                color = '#fff';
+            } else if (isSkipped) {
+                bg = '#6b7280';
+                color = '#fff';
+                iconText += ' ⏸';
+            }
+
+            if (isFlagged) {
+                iconText += ' 🚩';
+            }
+            break;
+    }
+
+    if (isCurrent) {
+        border = '2px solid #1d4ed8'; // Highlight current item in both modes
+        if (!isReviewMode && !isStudyMode && answers[index] === null && !skipped.includes(index)) {
+            bg = '#e5e7eb';
+            color = '#000';
+        }
+    }
+
+    btn.style.background = bg;
+    btn.style.color = color;
+    btn.style.border = border;
+    btn.innerHTML = iconText.trim();
+
+    if (isCurrent && !isReviewMode && !isStudyMode && btn.scrollIntoView) {
+        btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+
+function adjustFooterPadding() {
+    const footer = document.querySelector('.quiz-controls');
+    const sidebar = document.getElementById('sidebar');
+    if (footer && getComputedStyle(footer).position === 'fixed') {
+        let footerHeight = footer.offsetHeight;
+        document.body.style.paddingBottom = footerHeight + 'px';
+        if (sidebar && getComputedStyle(sidebar).display !== 'none') { 
+            sidebar.style.bottom = footerHeight + 'px';
+        }
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    adjustFooterPadding(); 
+    window.addEventListener('resize', adjustFooterPadding); 
+
+    if (document.getElementById('introScreen').style.display !== 'none') {
+        const mainQuizContainer = document.getElementById('mainQuizContainer');
+        if (mainQuizContainer) mainQuizContainer.style.display = 'none';
+    }
+    
+    const questionCountSelect = document.getElementById('questionCount');
+    if (questionCountSelect) {
+        questionCountSelect.innerHTML = ''; // Clear existing options
+
+        const options = [10, 25, 50]; // Define standard options
+        options.forEach(num => {
+            if (questionPool.length >= num) { // Only add option if there are enough questions
+                const option = document.createElement('option');
+                option.value = num;
+                option.textContent = num;
+                questionCountSelect.appendChild(option);
+            }
+        });
+
+        // Set a default selected value
+        if (questionCountSelect.options.length > 0) {
+            const defaultOption = questionCountSelect.querySelector('option[value="50"]') || questionCountSelect.options[questionCountSelect.options.length - 1];
+            if(defaultOption) defaultOption.selected = true;
+        }
+
+        // Add the "All Questions" option
+        const allQuestionsOption = document.createElement('option');
+        allQuestionsOption.value = 'all';
+        allQuestionsOption.textContent = `All (${questionPool.length} Questions)`;
+        questionCountSelect.appendChild(allQuestionsOption);
+    }
+});
+
+</script>
+</body>
+</html>
