@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Guide: Supervising Special Populations </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Arial&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background: #f4f8fb;
+            color: #1f2937;
+        }
+        .header-bar {
+            background-color: #1f2937;
+            color: white;
+        }
+        .footer-bar {
+            background: #dbeafe;
+        }
+        /* Card styles for menu and games */
+        .game-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+
+        /* Flip animation for flashcards */
+        .perspective-1000 { perspective: 1000px; }
+        .flip-card-inner { transition: transform 0.6s; transform-style: preserve-3d; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+        .flip-card-back { transform: rotateY(180deg); }
+        .flashcard-container.large .flip-card { height: 28rem; }
+        .flashcard-container.large .game-card { max-width: 48rem; }
+
+
+        /* Styles for matching game */
+        .match-item.selected { background-color: #3b82f6; color: white; border-color: #2563eb; }
+        .match-item.matched { background-color: #16a34a; color: white; border-color: #15803d; opacity: 0.7; pointer-events: none; }
+        .match-item.incorrect-match { background-color: #dc2626; color: white; animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Styles for list game */
+        .list-item { transition: all 0.3s ease; border: 1px solid #d1d5db; }
+        .list-item-btn-container { flex-shrink: 0; }
+        .list-item-btn {
+            cursor: pointer;
+            border-radius: 9999px;
+            width: 2rem;
+            height: 2rem;
+            font-weight: bold;
+            transition: all 0.2s ease-in-out;
+            border: 2px solid transparent;
+        }
+        .check-btn { background-color: #dcfce7; color: #15803d; }
+        .check-btn:hover { background-color: #22c55e; color: white; border-color: #15803d; }
+        .x-btn { background-color: #fee2e2; color: #b91c1c; }
+        .x-btn:hover { background-color: #ef4444; color: white; border-color: #991b1b; }
+        
+        .correct-placeholder {
+             background-color: #e5e7eb;
+             border: 2px dashed #9ca3af;
+             transition: all 0.5s ease;
+             min-height: 2.5rem;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             padding: 0.5rem;
+             word-break: break-word;
+        }
+        .correct-placeholder.filled {
+            background-color: #dcfce7;
+            border-color: #16a34a;
+            color: #14532d;
+            font-weight: 600;
+            border-style: solid;
+        }
+        .correct-placeholder.purple {
+            background-color: #f3e8ff;
+            border-color: #8b5cf6;
+            color: #5b21b6;
+        }
+
+        .list-item.strobing-green { animation: strobe-green 1s forwards; }
+        .list-item.strobing-red { animation: incorrect-answer-animation 2.5s forwards; }
+        .list-item.strobing-purple { animation: strobe-purple 1s forwards; }
+        .list-item.fading-out { animation: fade-out 0.5s forwards; }
+        
+        @keyframes fade-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.9); } }
+        
+        @keyframes strobe-green {
+            0%, 100% { background-color: white; }
+            50% { background-color: #22c55e; color: white; }
+        }
+
+        @keyframes strobe-purple {
+            0%, 100% { background-color: white; }
+            50% { background-color: #a855f7; color: white; }
+        }
+
+        @keyframes incorrect-answer-animation {
+            0% { transform: translateX(0); background-color: #fee2e2; }
+            10%, 30%, 50%, 70% { background-color: #b91c1c; color: white; }
+            20%, 40%, 60%, 80% { background-color: #fee2e2; color: #1f2937; }
+            0%, 20%, 40%, 60% { transform: translateX(5px); }
+            10%, 30%, 50%, 70% { transform: translateX(-5px); }
+            85% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.9); }
+        }
+        
+        /* Fill in the blank game styles */
+        .fill-blank-input {
+            border: 2px solid #ccc;
+            transition: border-color 0.3s;
+        }
+        .fill-blank-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .feedback-correct {
+            color: #16a34a;
+        }
+        .feedback-incorrect {
+            color: #dc2626;
+        }
+        #statute-answer-display span {
+            display: inline-block;
+            width: 1.2ch; /* Character unit */
+            text-align: center;
+        }
+
+        /* Ordered List Game Styles */
+        .draggable-item { cursor: grab; }
+        .drop-zone { border: 2px dashed #9ca3af; transition: background-color 0.2s; }
+        .drop-zone.drag-over { background-color: #e0f2fe; }
+        .drop-zone.correct { background-color: #dcfce7; border-color: #16a34a; }
+        .drop-zone.incorrect { background-color: #fee2e2; border-color: #b91c1c; animation: shake 0.5s; }
+        .dragging { opacity: 0.5; }
+
+
+        /* Hide scrollbar for the main content area */
+        #mainContentArea::-webkit-scrollbar { display: none; }
+        #mainContentArea { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- JSON Question Bank -->
+    <script id="questionBank" type="application/json">
+    {
+        "flashcards": [
+    { "term": "Special populations", "definition": "Groups of inmates who have unique mental, physical, or social characteristics that distinguish them from the general population." },
+    { "term": "Inmate societies", "definition": "Groups that tend to form around race, religion, medical needs, geographical identity, ethnicity, cultural background, and socioeconomic status." },
+    { "term": "s. 874.03, F.S.", "definition": "Defines a criminal gang as a formal or informal ongoing organization, association, or group of three or more people with a common name or identifying signs, colors, or symbols, whose primary activities are to commit criminal or delinquent acts." },
+    { "term": "Security Threat Group (STG)", "definition": "A criminal enterprise, or an organization of a continuing nature, that engages repeatedly in acts of crime individually, or collectively, and poses a safety or security threat within, as well as outside of, a correctional facility." },
+    { "term": "Traditional STGs", "definition": "STGs that have a documented history, a written set of laws or codes, and an organizational structure (e.g., Latin Kings, Bloods, Crips)." },
+    { "term": "Non-traditional STGs", "definition": "STGs that do not fall under the criteria of a traditional STG but may have an organizational structure (e.g., Haitian STGs, Jamaican Posse)." },
+    { "term": "Hybrid STGs", "definition": "STGs that form within schools, neighborhoods, or regions, composed of members from other STGs (e.g., MOB Boyz, Zoe Mafia)." },
+    { "term": "Transitional STGs", "definition": "STG members who come to prison and realign themselves with other STGs." },
+    { "term": "Female STGs", "definition": "Can be part of male STGs or all-female groups; their crime rate is low but often violent when it occurs." },
+    { "term": "Prison-Based STGs", "definition": "STGs that originate within the prison system and predominantly base their operations from within (e.g., Mexican Mafia, Neta)." },
+    { "term": "Extremists", "definition": "Individuals or groups who may act solo or as a group, follow an extreme ideology, and are usually very tight-knit and unpredictable." },
+    { "term": "STG Code", "definition": "A form of cryptic communication using written symbols and letters, broken by matching the letter with the symbol." },
+    { "term": "Fishing (STG communication)", "definition": "A method of passing paper messages between cells using a string." },
+    { "term": "Pyramid structure (STG)", "definition": "An STG structure with one strong leader and at least two or more sublevels of command; the strongest and most organized structure." },
+    { "term": "Linear structure (STG)", "definition": "An STG structure with a single leader for each clique, where leaders do not answer to a higher command." },
+    { "term": "Flux or circular structure (STG)", "definition": "An STG structure with continually changing leadership, common in school-based or hybrid gangs." },
+    { "term": "Committee Rule (STG)", "definition": "An STG structure with no single leader, where members make decisions by consensus." },
+    { "term": "Tagging", "definition": "A marking on a wall, a fence, or the ground that identifies STG territory." },
+    { "term": "Substance misuse (substance abuse)", "definition": "A pattern of substance use that leads to significant impairment or distress." },
+    { "term": "Drug addiction", "definition": "The consistent and excessive use of a substance despite its negative consequences." },
+    { "term": "Detoxification", "definition": "The process of ridding the body of a drug." },
+    { "term": "Withdrawal", "definition": "The physical and emotional symptoms experienced when a person is ridding their body of a drug." },
+    { "term": "Disability (ADA)", "definition": "A physical or mental impairment that substantially limits one or more of a person's major life activities." },
+    { "term": "Major life activities", "definition": "Includes caring for oneself, performing manual tasks, walking, seeing, hearing, speaking, breathing, learning, and working." },
+    { "term": "Physical impairment", "definition": "Any physical disorder or condition, disfigurement, or anatomical loss affecting one or more body systems." },
+    { "term": "Mental impairment", "definition": "Any mental or psychological disorder, such as intellectual disability, neurocognitive disorder, emotional or mental illness, or specific learning disabilities." },
+    { "term": "Reasonable accommodation", "definition": "Any modification or adjustment that will allow a qualified inmate with a disability to participate in the programs, services, or activities of an institution or facility." },
+    { "term": "Mental illness (s. 394.455, F.S.)", "definition": "An impairment of the mental or emotional processes that exercise the conscious control of one's actions, which can interfere with a person's ability to perceive or understand reality." },
+    { "term": "s. 394.459, F.S.", "definition": "States that inmates with mental illness have the right to individual dignity and treatment." },
+    { "term": "Hallucination", "definition": "A sensory experience in which someone can smell, taste, or feel something that is not there." },
+    { "term": "Delusion", "definition": "A false belief firmly held despite obvious proof or evidence to the contrary." },
+    { "term": "Schizophrenia", "definition": "A brain disorder caused by a chemical imbalance that distorts the way a person thinks, acts, expresses emotion, and perceives reality." },
+    { "term": "Major depressive disorder (MDD)", "definition": "A clinically diagnosed mental illness for a person having multiple, major depressive episodes." },
+    { "term": "Bipolar disorder (BD)", "definition": "A clinically diagnosed mental illness with alternating episodes of depression and mania." },
+    { "term": "Anxiety disorder", "definition": "A disorder characterized by excessive nervousness, tension, apprehension, 'fight or flight' behavior, excessive fear, or anticipation of looming danger, flashbacks, or ritualistic behavior." },
+    { "term": "Panic disorder", "definition": "An anxiety disorder characterized by extreme panic attacks with a racing heartbeat, sweating, and tension." },
+    { "term": "Obsessive compulsive disorder (OCD)", "definition": "An anxiety disorder characterized by intrusive thoughts and impulses resulting in ritualistic behavior." },
+    { "term": "Post-traumatic stress disorder (PTSD)", "definition": "An anxiety disorder caused by a traumatic event, characterized by lasting thoughts and memories of terror causing emotional numbness." },
+    { "term": "Phobia", "definition": "An intense fear of a specific object or situation." },
+    { "term": "Personality disorder", "definition": "A deeply ingrained, non-psychotic, inflexible pattern of relating, perceiving, and behaving." },
+    { "term": "The Baker Act", "definition": "Also known as the Florida Mental Health Act, it provides for emergency services, temporary detention for evaluation, and voluntary or involuntary short-term community inpatient treatment, if necessary." },
+    { "term": "s. 394.463, F.S.", "definition": "Allows a law enforcement officer to take an inmate to a receiving facility for involuntary examination if there is reason to believe the inmate has a mental illness and is unable to care for themselves or may harm themselves or others." },
+    { "term": "Intellectual disability", "definition": "A type of developmental disability, and it is a lifelong condition characterized by slow intellectual development." },
+    { "term": "Personal care attendant", "definition": "An inmate assigned to assist a significantly disabled inmate with tasks such as pushing a wheelchair, feeding, and hygiene assistance." },
+    { "term": "Chronic disease", "definition": "A long-lasting medical condition in which medicine can control the symptoms but not cure the disease." },
+    { "term": "Communicable disease", "definition": "A disease that spreads through direct contact with an infected person or indirectly through means like a biting insect or drinking glasses." },
+    { "term": "Terminally ill", "definition": "Inmates known to have a fatal disease and have less than six months to live." },
+    { "term": "Juvenile adjudication", "definition": "Occurs when the court charges, sentences, adjudicates as delinquent, and commits a juvenile younger than 18 to the Department of Juvenile Justice." },
+    { "term": "Juvenile inmate", "definition": "An inmate who is not legally an adult, or adjudicated as an adult, that the court assigns to the Department of Juvenile Justice." },
+    { "term": "Youthful offender", "definition": "Any offender younger than 24, who the court sentences as an adult or who the Department of Corrections assigns youthful offender status." },
+    { "term": "ss. 958.03 and 958.04, F.S.", "definition": "Florida Statutes according to which the Department of Corrections assigns youthful offender status." },
+    { "term": "Juvenile Justice and Delinquency Prevention Act", "definition": "A federal act that sets the standards for state and local juvenile justice systems for incarcerating youth." },
+    { "term": "s. 985.265, F.S.", "definition": "Requires that juveniles are housed separately from adult inmates to prohibit sight and sound contact." },
+    { "term": "Elderly inmates", "definition": "Inmates who are 50 years of age and over." },
+    { "term": "Dementia", "definition": "A progressive mental disorder characterized by loss of memory, impairment of judgment and abstract thinking, and changes in personality." },
+    { "term": "Sundown syndrome", "definition": "A condition that may affect inmates with dementia, causing them to wander, have mood swings, or become disoriented after dinner or at sundown." },
+    { "term": "Surrogate families", "definition": "A characteristic of female inmates who form small groups with hierarchies (mother, father, child figures) to take the place of their families on the outside." },
+    { "term": "Transgender (PREA)", "definition": "A person whose gender identity is different from the sex they were assigned at birth." },
+    { "term": "Prison Rape Elimination Act (PREA)", "definition": "A federal act that provides regulations to protect all inmates from sexual abuse." },
+    { "term": "Sexual orientation", "definition": "Describes the group of people with which a person is most likely to find satisfying and fulfilling romantic relationships." },
+    { "term": "Institutional homosexuality", "definition": "Same-sex relationships that begin when inmates are confined for long periods without access to the opposite sex." },
+    { "term": "Sexual abuse (PREA)", "definition": "Sexual abuse of an inmate by another inmate, staff member, contractor, or volunteer, where the victim does not consent, is coerced, or is unable to consent." },
+    { "term": "Voyeurism (PREA)", "definition": "An invasion of privacy of an inmate by staff for reasons unrelated to official duties." },
+    { "term": "Sexual harassment (PREA)", "definition": "Includes repeated and unwelcome sexual advances, requests for sexual favors, or derogatory comments of a sexual nature." },
+    { "term": "Hypervigilance", "definition": "A behavior associated with trauma where a person is constantly on guard to a degree that makes it difficult to disengage from stressful situations." },
+    { "term": "Administrative confinement", "definition": "The temporary removal of an inmate from the general population to provide for safety and security until a more permanent inmate management process is in place." },
+    { "term": "Protective management", "definition": "A special management status for the protection of an inmate from other inmates; it is not disciplinary." },
+    { "term": "Disciplinary confinement", "definition": "A form of punishment in which an inmate, found guilty of committing violations, is in confinement for a specified period to an individual cell." },
+    { "term": "STG Slang: 13", "definition": "sure or no" },
+    { "term": "STG Slang: 187", "definition": "to kill someone; California penal code for murder" },
+    { "term": "STG Slang: 911", "definition": "police" },
+    { "term": "STG Slang: B.K.", "definition": "blood killer" },
+    { "term": "STG Slang: B.O.S.", "definition": "Brothers of the Struggle" },
+    { "term": "STG Slang: bang/gang bangin'", "definition": "being involved in gang activity" },
+    { "term": "STG Slang: banger", "definition": "gang member" },
+    { "term": "STG Slang: beef", "definition": "complaint, dispute" },
+    { "term": "STG Slang: behind the wall", "definition": "in prison" },
+    { "term": "STG Slang: blade", "definition": "knife" },
+    { "term": "STG Slang: bogart", "definition": "to con or trick" },
+    { "term": "STG Slang: bolt", "definition": "run" },
+    { "term": "STG Slang: book", "definition": "run, get away, leave" },
+    { "term": "STG Slang: bounce", "definition": "to leave an area" },
+    { "term": "STG Slang: buck (beverage)", "definition": "prison-made alcoholic beverage" },
+    { "term": "STG Slang: buck (comply)", "definition": "to not comply" },
+    { "term": "STG Slang: buck, buck", "definition": "the sound of a handgun" },
+    { "term": "STG Slang: C.K.", "definition": "Crip Killer" },
+    { "term": "STG Slang: call the shots", "definition": "give orders" },
+    { "term": "STG Slang: catch a V", "definition": "punishment for breaking a gang rule or code" },
+    { "term": "STG Slang: cellie", "definition": "person who shares a cell with another inmate" },
+    { "term": "STG Slang: check yourself", "definition": "watch what you say or what you do" },
+    { "term": "STG Slang: check-in", "definition": "an inmate that requests protection from staff or other inmates" },
+    { "term": "STG Slang: chief", "definition": "gang leader" },
+    { "term": "STG Slang: chill out", "definition": "stop what you are doing" },
+    { "term": "STG Slang: claim", "definition": "announce your gang affiliation, represent" },
+    { "term": "STG Slang: colors", "definition": "specific color scheme used by the gang" },
+    { "term": "STG Slang: crab", "definition": "derogatory name for Crip members used by Bloods" },
+    { "term": "STG Slang: creepin'", "definition": "a married or committed person going out to have an affair" },
+    { "term": "STG Slang: dissin'", "definition": "disrespecting someone" },
+    { "term": "STG Slang: down", "definition": "loyalty or allegiance to someone or something" },
+    { "term": "STG Slang: drop a dime", "definition": "to snitch or tell on someone" },
+    { "term": "STG Slang: dropping the flag", "definition": "leaving the gang" },
+    { "term": "STG Slang: false flaggin'", "definition": "representing a gang that you don't belong to" },
+    { "term": "STG Slang: fishing", "definition": "sending small notes using fishing line by slinging under the door" },
+    { "term": "STG Slang: flag", "definition": "gang handkerchief" },
+    { "term": "STG Slang: kite", "definition": "letter" },
+    { "term": "STG Slang: latching/jumped", "definition": "placing a heavy object in a sock to use as a weapon" },
+    { "term": "STG Slang: rag", "definition": "gang handkerchief" },
+    { "term": "STG Slang: set", "definition": "group or gang that one is affiliated with" },
+    { "term": "STG Slang: shiv/shank", "definition": "prison-made weapon, usually a knife" },
+    { "term": "STG Slang: shot caller", "definition": "person in charge" },
+    { "term": "STG Slang: slob", "definition": "derogatory name for Bloods used by Crips" },
+    { "term": "STG Slang: violation", "definition": "the punishment given to a gang member who breaks a rule" }
+        ],
+        "matching": [
+    { "term": "Special populations", "definition": "Groups of inmates who have unique mental, physical, or social characteristics that distinguish them from the general population." },
+    { "term": "Inmate societies", "definition": "Groups that tend to form around race, religion, medical needs, geographical identity, ethnicity, cultural background, and socioeconomic status." },
+    { "term": "s. 874.03, F.S.", "definition": "Defines a criminal gang as a formal or informal ongoing organization, association, or group of three or more people with a common name or identifying signs, colors, or symbols, whose primary activities are to commit criminal or delinquent acts." },
+    { "term": "Security Threat Group (STG)", "definition": "A criminal enterprise, or an organization of a continuing nature, that engages repeatedly in acts of crime individually, or collectively, and poses a safety or security threat within, as well as outside of, a correctional facility." },
+    { "term": "Traditional STGs", "definition": "STGs that have a documented history, a written set of laws or codes, and an organizational structure (e.g., Latin Kings, Bloods, Crips)." },
+    { "term": "Non-traditional STGs", "definition": "STGs that do not fall under the criteria of a traditional STG but may have an organizational structure (e.g., Haitian STGs, Jamaican Posse)." },
+    { "term": "Hybrid STGs", "definition": "STGs that form within schools, neighborhoods, or regions, composed of members from other STGs (e.g., MOB Boyz, Zoe Mafia)." },
+    { "term": "Transitional STGs", "definition": "STG members who come to prison and realign themselves with other STGs." },
+    { "term": "Female STGs", "definition": "Can be part of male STGs or all-female groups; their crime rate is low but often violent when it occurs." },
+    { "term": "Prison-Based STGs", "definition": "STGs that originate within the prison system and predominantly base their operations from within (e.g., Mexican Mafia, Neta)." },
+    { "term": "Extremists", "definition": "Individuals or groups who may act solo or as a group, follow an extreme ideology, and are usually very tight-knit and unpredictable." },
+    { "term": "STG Code", "definition": "A form of cryptic communication using written symbols and letters, broken by matching the letter with the symbol." },
+    { "term": "Fishing (STG communication)", "definition": "A method of passing paper messages between cells using a string." },
+    { "term": "Pyramid structure (STG)", "definition": "An STG structure with one strong leader and at least two or more sublevels of command; the strongest and most organized structure." },
+    { "term": "Linear structure (STG)", "definition": "An STG structure with a single leader for each clique, where leaders do not answer to a higher command." },
+    { "term": "Flux or circular structure (STG)", "definition": "An STG structure with continually changing leadership, common in school-based or hybrid gangs." },
+    { "term": "Committee Rule (STG)", "definition": "An STG structure with no single leader, where members make decisions by consensus." },
+    { "term": "Tagging", "definition": "A marking on a wall, a fence, or the ground that identifies STG territory." },
+    { "term": "Substance misuse (substance abuse)", "definition": "A pattern of substance use that leads to significant impairment or distress." },
+    { "term": "Drug addiction", "definition": "The consistent and excessive use of a substance despite its negative consequences." },
+    { "term": "Detoxification", "definition": "The process of ridding the body of a drug." },
+    { "term": "Withdrawal", "definition": "The physical and emotional symptoms experienced when a person is ridding their body of a drug." },
+    { "term": "Disability (ADA)", "definition": "A physical or mental impairment that substantially limits one or more of a person's major life activities." },
+    { "term": "Major life activities", "definition": "Includes caring for oneself, performing manual tasks, walking, seeing, hearing, speaking, breathing, learning, and working." },
+    { "term": "Physical impairment", "definition": "Any physical disorder or condition, disfigurement, or anatomical loss affecting one or more body systems." },
+    { "term": "Mental impairment", "definition": "Any mental or psychological disorder, such as intellectual disability, neurocognitive disorder, emotional or mental illness, or specific learning disabilities." },
+    { "term": "Reasonable accommodation", "definition": "Any modification or adjustment that will allow a qualified inmate with a disability to participate in the programs, services, or activities of an institution or facility." },
+    { "term": "Mental illness (s. 394.455, F.S.)", "definition": "An impairment of the mental or emotional processes that exercise the conscious control of one's actions, which can interfere with a person's ability to perceive or understand reality." },
+    { "term": "s. 394.459, F.S.", "definition": "States that inmates with mental illness have the right to individual dignity and treatment." },
+    { "term": "Hallucination", "definition": "A sensory experience in which someone can smell, taste, or feel something that is not there." },
+    { "term": "Delusion", "definition": "A false belief firmly held despite obvious proof or evidence to the contrary." },
+    { "term": "Schizophrenia", "definition": "A brain disorder caused by a chemical imbalance that distorts the way a person thinks, acts, expresses emotion, and perceives reality." },
+    { "term": "Major depressive disorder (MDD)", "definition": "A clinically diagnosed mental illness for a person having multiple, major depressive episodes." },
+    { "term": "Bipolar disorder (BD)", "definition": "A clinically diagnosed mental illness with alternating episodes of depression and mania." },
+    { "term": "Anxiety disorder", "definition": "A disorder characterized by excessive nervousness, tension, apprehension, 'fight or flight' behavior, excessive fear, or anticipation of looming danger, flashbacks, or ritualistic behavior." },
+    { "term": "Panic disorder", "definition": "An anxiety disorder characterized by extreme panic attacks with a racing heartbeat, sweating, and tension." },
+    { "term": "Obsessive compulsive disorder (OCD)", "definition": "An anxiety disorder characterized by intrusive thoughts and impulses resulting in ritualistic behavior." },
+    { "term": "Post-traumatic stress disorder (PTSD)", "definition": "An anxiety disorder caused by a traumatic event, characterized by lasting thoughts and memories of terror causing emotional numbness." },
+    { "term": "Phobia", "definition": "An intense fear of a specific object or situation." },
+    { "term": "Personality disorder", "definition": "A deeply ingrained, non-psychotic, inflexible pattern of relating, perceiving, and behaving." },
+    { "term": "The Baker Act", "definition": "Also known as the Florida Mental Health Act, it provides for emergency services, temporary detention for evaluation, and voluntary or involuntary short-term community inpatient treatment, if necessary." },
+    { "term": "s. 394.463, F.S.", "definition": "Allows a law enforcement officer to take an inmate to a receiving facility for involuntary examination if there is reason to believe the inmate has a mental illness and is unable to care for themselves or may harm themselves or others." },
+    { "term": "Intellectual disability", "definition": "A type of developmental disability, and it is a lifelong condition characterized by slow intellectual development." },
+    { "term": "Personal care attendant", "definition": "An inmate assigned to assist a significantly disabled inmate with tasks such as pushing a wheelchair, feeding, and hygiene assistance." },
+    { "term": "Chronic disease", "definition": "A long-lasting medical condition in which medicine can control the symptoms but not cure the disease." },
+    { "term": "Communicable disease", "definition": "A disease that spreads through direct contact with an infected person or indirectly through means like a biting insect or drinking glasses." },
+    { "term": "Terminally ill", "definition": "Inmates known to have a fatal disease and have less than six months to live." },
+    { "term": "Juvenile adjudication", "definition": "Occurs when the court charges, sentences, adjudicates as delinquent, and commits a juvenile younger than 18 to the Department of Juvenile Justice." },
+    { "term": "Juvenile inmate", "definition": "An inmate who is not legally an adult, or adjudicated as an adult, that the court assigns to the Department of Juvenile Justice." },
+    { "term": "Youthful offender", "definition": "Any offender younger than 24, who the court sentences as an adult or who the Department of Corrections assigns youthful offender status." },
+    { "term": "ss. 958.03 and 958.04, F.S.", "definition": "Florida Statutes according to which the Department of Corrections assigns youthful offender status." },
+    { "term": "Juvenile Justice and Delinquency Prevention Act", "definition": "A federal act that sets the standards for state and local juvenile justice systems for incarcerating youth." },
+    { "term": "s. 985.265, F.S.", "definition": "Requires that juveniles are housed separately from adult inmates to prohibit sight and sound contact." },
+    { "term": "Elderly inmates", "definition": "Inmates who are 50 years of age and over." },
+    { "term": "Dementia", "definition": "A progressive mental disorder characterized by loss of memory, impairment of judgment and abstract thinking, and changes in personality." },
+    { "term": "Sundown syndrome", "definition": "A condition that may affect inmates with dementia, causing them to wander, have mood swings, or become disoriented after dinner or at sundown." },
+    { "term": "Surrogate families", "definition": "A characteristic of female inmates who form small groups with hierarchies (mother, father, child figures) to take the place of their families on the outside." },
+    { "term": "Transgender (PREA)", "definition": "A person whose gender identity is different from the sex they were assigned at birth." },
+    { "term": "Prison Rape Elimination Act (PREA)", "definition": "A federal act that provides regulations to protect all inmates from sexual abuse." },
+    { "term": "Sexual orientation", "definition": "Describes the group of people with which a person is most likely to find satisfying and fulfilling romantic relationships." },
+    { "term": "Institutional homosexuality", "definition": "Same-sex relationships that begin when inmates are confined for long periods without access to the opposite sex." },
+    { "term": "Sexual abuse (PREA)", "definition": "Sexual abuse of an inmate by another inmate, staff member, contractor, or volunteer, where the victim does not consent, is coerced, or is unable to consent." },
+    { "term": "Voyeurism (PREA)", "definition": "An invasion of privacy of an inmate by staff for reasons unrelated to official duties." },
+    { "term": "Sexual harassment (PREA)", "definition": "Includes repeated and unwelcome sexual advances, requests for sexual favors, or derogatory comments of a sexual nature." },
+    { "term": "Hypervigilance", "definition": "A behavior associated with trauma where a person is constantly on guard to a degree that makes it difficult to disengage from stressful situations." },
+    { "term": "Administrative confinement", "definition": "The temporary removal of an inmate from the general population to provide for safety and security until a more permanent inmate management process is in place." },
+    { "term": "Protective management", "definition": "A special management status for the protection of an inmate from other inmates; it is not disciplinary." },
+    { "term": "Disciplinary confinement", "definition": "A form of punishment in which an inmate, found guilty of committing violations, is in confinement for a specified period to an individual cell." },
+    { "term": "STG Slang: 13", "definition": "sure or no" },
+    { "term": "STG Slang: 187", "definition": "to kill someone; California penal code for murder" },
+    { "term": "STG Slang: 911", "definition": "police" },
+    { "term": "STG Slang: B.K.", "definition": "blood killer" },
+    { "term": "STG Slang: B.O.S.", "definition": "Brothers of the Struggle" },
+    { "term": "STG Slang: bang/gang bangin'", "definition": "being involved in gang activity" },
+    { "term": "STG Slang: banger", "definition": "gang member" },
+    { "term": "STG Slang: beef", "definition": "complaint, dispute" },
+    { "term": "STG Slang: behind the wall", "definition": "in prison" },
+    { "term": "STG Slang: blade", "definition": "knife" },
+    { "term": "STG Slang: bogart", "definition": "to con or trick" },
+    { "term": "STG Slang: bolt", "definition": "run" },
+    { "term": "STG Slang: book", "definition": "run, get away, leave" },
+    { "term": "STG Slang: bounce", "definition": "to leave an area" },
+    { "term": "STG Slang: buck (beverage)", "definition": "prison-made alcoholic beverage" },
+    { "term": "STG Slang: buck (comply)", "definition": "to not comply" },
+    { "term": "STG Slang: buck, buck", "definition": "the sound of a handgun" },
+    { "term": "STG Slang: C.K.", "definition": "Crip Killer" },
+    { "term": "STG Slang: call the shots", "definition": "give orders" },
+    { "term": "STG Slang: catch a V", "definition": "punishment for breaking a gang rule or code" },
+    { "term": "STG Slang: cellie", "definition": "person who shares a cell with another inmate" },
+    { "term": "STG Slang: check yourself", "definition": "watch what you say or what you do" },
+    { "term": "STG Slang: check-in", "definition": "an inmate that requests protection from staff or other inmates" },
+    { "term": "STG Slang: chief", "definition": "gang leader" },
+    { "term": "STG Slang: chill out", "definition": "stop what you are doing" },
+    { "term": "STG Slang: claim", "definition": "announce your gang affiliation, represent" },
+    { "term": "STG Slang: colors", "definition": "specific color scheme used by the gang" },
+    { "term": "STG Slang: crab", "definition": "derogatory name for Crip members used by Bloods" },
+    { "term": "STG Slang: creepin'", "definition": "a married or committed person going out to have an affair" },
+    { "term": "STG Slang: dissin'", "definition": "disrespecting someone" },
+    { "term": "STG Slang: down", "definition": "loyalty or allegiance to someone or something" },
+    { "term": "STG Slang: drop a dime", "definition": "to snitch or tell on someone" },
+    { "term": "STG Slang: dropping the flag", "definition": "leaving the gang" },
+    { "term": "STG Slang: false flaggin'", "definition": "representing a gang that you don't belong to" },
+    { "term": "STG Slang: fishing", "definition": "sending small notes using fishing line by slinging under the door" },
+    { "term": "STG Slang: flag", "definition": "gang handkerchief" },
+    { "term": "STG Slang: kite", "definition": "letter" },
+    { "term": "STG Slang: latching/jumped", "definition": "placing a heavy object in a sock to use as a weapon" },
+    { "term": "STG Slang: rag", "definition": "gang handkerchief" },
+    { "term": "STG Slang: set", "definition": "group or gang that one is affiliated with" },
+    { "term": "STG Slang: shiv/shank", "definition": "prison-made weapon, usually a knife" },
+    { "term": "STG Slang: shot caller", "definition": "person in charge" },
+    { "term": "STG Slang: slob", "definition": "derogatory name for Bloods used by Crips" },
+    { "term": "STG Slang: violation", "definition": "the punishment given to a gang member who breaks a rule" }
+        ],
+        "listGame": [
+{"question": "What are some of the groups of inmates that are considered special populations?", "correctAnswers": ["members of gangs", "people with substance use disorder", "people with mental illness or an intellectual disability", "people with long-term medical conditions or physical disabilities", "women", "the elderly", "juveniles", "people who are LGBTQ+", "people in special confinement or on death row"], "incorrectAnswers": ["inmates with violent offenses", "inmates with lengthy sentences", "inmates who are foreign nationals", "inmates with high-profile cases", "inmates who are parents"]},
+{"question": "What are the five basic types of inmate societies that may form within a correctional facility?", "correctAnswers": ["Racial societies", "Groups focused on religious practice", "Inmates with similar medical issues", "Geographical societies", "Socioeconomic societies"], "incorrectAnswers": ["Political societies", "Educational societies", "Recreational societies", "Age-based societies", "Work-assignment societies"]},
+{"question": "What are some of the common Security Threat Groups (STGs) represented in a correctional setting?", "correctAnswers": ["5%er", "Aryan Brotherhood", "Aryan Nations", "Black Gangster Disciples", "Black Guerrilla Family", "Bloods", "Crips", "Folk Nation", "Gangster Disciples", "Insane Gangster Disciples", "MS-13", "Neta", "Sur-XIII or Sur-13", "White Supremacists", "Zoe Mafia"], "incorrectAnswers": ["The Untouchables", "The Regulators", "The Westies", "The Winter Hill Gang", "The Dead Rabbits"]},
+{"question": "What are some of the identifiers, such as symbols, colors, and signs, that may be used by STGs?", "correctAnswers": ["forming hand signs with the left or right hand", "wearing hats cocked or tilted to the left or right", "rolling up one pant leg", "untying one shoe", "resting the hand in a specific pocket", "wearing jewelry turned at an angle", "wearing specific color combinations", "wearing identifiers or icons that appear in combination", "using a common phrase, such as 'All is one' or 'All is well'", "using hand signals or graffiti in a certain direction as a sign of disrespect", "using hand signals or graffiti properly as a sign of respect", "using non-verbal communication, such as tugging on a shirt"], "incorrectAnswers": ["shaving one's head or eyebrows", "wearing a specific brand of footwear", "using a specific type of pen for writing letters", "whistling a particular tune", "tapping out codes on walls or pipes"]},
+{"question": "What are the common physical and health-related signs of substance misuse?", "correctAnswers": ["bloodshot eyes or pupils that are smaller or larger than normal", "frequent nosebleeds", "changes in appetite or sleep patterns", "sudden weight loss or weight gain", "seizures without a history of epilepsy", "a decline in personal grooming or appearance", "unusual smells on breath, body, or clothing", "shakes, tremors, incoherent or slurred speech, impaired or unstable coordination"], "incorrectAnswers": ["constant complaints of boredom", "excessive requests for commissary items", "a sudden interest in religious services", "hoarding food from the dining hall", "frequent requests for new clothing or bedding"]},
+{"question": "What are the behavioral signs an inmate may display that are related to substance misuse?", "correctAnswers": ["silent, withdrawn, engaging in secretive or suspicious behaviors", "sudden change in relationships", "frequently getting into arguments, fights, and accidents"], "incorrectAnswers": ["refusing to participate in recreational activities", "volunteering for extra work details", "requesting to be moved to a different cell", "avoiding contact with family during visitation"]},
+{"question": "What are the psychological signs of substance misuse that an inmate may exhibit?", "correctAnswers": ["unexplained changes in personality or attitude", "sudden mood changes, irritability, angry outbursts, or laughing at nothing", "periods of unusual hyperactivity or agitation", "a lack of motivation; an inability to focus, appearing lethargic or 'spaced out'", "appearing fearful, withdrawn, anxious, or paranoid with no apparent reason"], "incorrectAnswers": ["expressing remorse for past crimes", "showing signs of depression after receiving bad news", "being unusually quiet and reserved", "having difficulty following complex instructions", "claiming to hear messages through the television"]},
+{"question": "What are some specific physical or mental impairments that may be covered by the Americans with Disabilities Act (ADA)?", "correctAnswers": ["contagious and non-contagious diseases and conditions", "orthopedic, visual, speech, and hearing impairments", "cerebral palsy", "epilepsy", "muscular dystrophy", "multiple sclerosis", "cancer", "heart disease", "diabetes", "intellectual disability", "emotional illness", "specific learning disabilities", "HIV disease (with or without symptoms)", "tuberculosis", "drug addiction or substance use disorder"], "incorrectAnswers": ["common colds or the flu", "temporary injuries like a sprained ankle", "poor eyesight that is correctable with glasses", "behavioral issues like a bad temper", "lifestyle choices such as smoking"]},
+{"question": "What health-care appliances might be required for inmates with specialized needs?", "correctAnswers": ["wheelchairs", "manually powered mobility aids, such as walkers, crutches, canes, orthopedic prostheses or braces", "hearing aids", "prescription eyeglasses"], "incorrectAnswers": ["dentures", "orthopedic shoes", "back braces", "compression socks", "sleep apnea machines"]},
+{"question": "What are some of the auxiliary aids that may be provided for blind or deaf inmates?", "correctAnswers": ["qualified interpreters on site", "note takers, written materials, exchange of written notes", "telephone handset amplifiers, telephones compatible with hearing aids", "closed caption decoders, closed captioning", "voice and text telecommunications products and systems", "qualified readers, taped texts, audio recordings, Braille materials, large print materials"], "incorrectAnswers": ["specially trained service animals", "large-print playing cards", "vibrating alarm clocks", "tactile warning strips on floors"]},
+{"question": "What are some of the programs available to both male and female inmates?", "correctAnswers": ["career and technical education", "character awareness and motivation", "special education", "boot camp", "faith-based residential", "services and child visitation as indicated in a Department of Children and Families case plan"], "incorrectAnswers": ["parenting classes", "anger management programs", "financial literacy courses", "re-entry planning workshops"]},
+{"question": "What are some of the career and technical education programs available to female inmates?", "correctAnswers": ["web development", "automotive technology", "career services", "technology support services", "cosmetology", "drafting", "equine care technology", "commercial foods and culinary arts", "fashion design services", "air conditioning", "refrigeration and heating technology"], "incorrectAnswers": ["welding and fabrication", "plumbing and pipefitting", "electrical trades", "small engine repair", "child care certification"]},
+{"question": "What are the three main types of sexual orientation an inmate can have upon entering a correctional facility?", "correctAnswers": ["heterosexual", "gay/lesbian", "bisexual"], "incorrectAnswers": ["pansexual", "asexual", "demisexual", "queer"]},
+{"question": "What are some of the possible physical signs that an inmate has experienced sexual abuse?", "correctAnswers": ["sexually transmitted infections", "unexplained pregnancies", "stomach or abdominal pain", "anal, penile, or vaginal discharge, bleeding, or pain", "difficulty walking or sitting", "unexplained injury"], "incorrectAnswers": ["sudden weight loss or gain", "a decline in personal grooming", "hoarding food", "developing a nervous tic"]},
+{"question": "What are some of the possible behaviors that a sexually abused inmate may display?", "correctAnswers": ["acting out", "anger, anxiety, depression", "difficulty with daily routines and concentrating", "fear, numbness, denial", "suicidal thoughts"], "incorrectAnswers": ["becoming more talkative than usual", "requesting a new work assignment", "avoiding specific officers", "accumulating debt with other inmates", "demanding protective custody"]},
+{"question": "What are some of the reasons a sexual abuse victim might not report the abuse?", "correctAnswers": ["feeling embarrassed or ashamed", "lack of knowledge about how to report", "fear of being written up for misconduct", "fear of retaliation by inmates or staff", "fear of not being believed"], "incorrectAnswers": ["a belief that the officer will not care", "not wanting to get the abuser in trouble", "a feeling that they deserved the abuse", "waiting for a more opportune time to report"]},
+{"question": "What are some of the behaviors associated with trauma that victims of sexual abuse can display?", "correctAnswers": ["hypervigilance", "acting without thinking", "inability to calm down", "intense or prolonged anxiety", "irritability, aggressiveness, impulsiveness"], "incorrectAnswers": ["lethargy and lack of motivation", "unexplained periods of laughing or giddiness", "becoming overly compliant with rules", "developing a stutter or other speech issue"]},
+{"question": "What are some of the long-term effects of the trauma of sexual abuse?", "correctAnswers": ["flashbacks and nightmares", "mood swings", "social withdrawal", "sudden and unexplained changes in behavior or personality", "PTSD"], "incorrectAnswers": ["memory loss", "difficulty forming relationships", "chronic physical pain", "substance abuse issues", "an inability to trust authority figures"]},
+{"question": "What are the reasons an inmate can be placed in administrative confinement?", "correctAnswers": ["There are pending disciplinary charges for the inmate.", "There are pending outside charges for the inmate.", "The inmate is waiting on approval for protective management.", "The inmate presents a signed written statement alleging that they are in fear of staff and provide specific information to support this claim.", "An investigation, evaluation for change of status, or transfer is pending.", "The inmate is received from another institution, and classification staff is not available to review their file."], "incorrectAnswers": ["The inmate is a known member of a Security Threat Group.", "The inmate has a contagious medical condition.", "The inmate is a high-profile case requiring separation from general population.", "The inmate has made a threat against a high-ranking public official."]},
+{"question": "What items might an elderly inmate have in their locker that are different from the general population?", "correctAnswers": ["hearing aid batteries", "varicose vein socks", "adult diapers, catheters", "prosthesis (artificial arm or leg)"], "incorrectAnswers": ["special dietary supplements", "orthopedic footwear", "medically-approved pillows or cushions", "magnifying glasses for reading", "medication organizers"]},
+{"question": "The use of chemical restraint agents may aggravate which medical conditions?", "correctAnswers": ["asthma", "chronic obstructive pulmonary disease (lung disease)", "emphysema (shortness of breath)", "chronic bronchitis", "tuberculosis", "congestive heart failure", "dysrhythmia (irregular heartbeat)", "angina pectoris (severe chest pain)", "cardiac myopathy (heart muscle disease)", "pacemaker", "pregnancy", "unstable hypertension (high blood pressure)", "multiple sclerosis, muscular dystrophy", "epilepsy"], "incorrectAnswers": ["diabetes", "cancer", "arthritis", "high blood pressure (stable)", "HIV/AIDS"]},
+{"question": "The use of an Electronic Immobilization Device (EID) may aggravate which medical conditions?", "correctAnswers": ["seizure disorder", "multiple sclerosis", "muscular dystrophy", "pacemaker", "pregnancy"], "incorrectAnswers": ["heart disease", "asthma", "hypertension", "angina pectoris", "chronic bronchitis"]},
+{"question": "What programs and services are juvenile inmates or youthful offenders required to participate in?", "correctAnswers": ["an extended day program providing work assignments, educational programs, substance misuse programs, counseling, behavior modification, military-style drills, and systematic discipline", "vocational and job training", "life and socialization skills training (including anger/aggression control)", "pre-release orientation and planning", "suitable transition services"], "incorrectAnswers": ["individual psychotherapy", "family counseling sessions", "mentorship programs with adult inmates", "a victim impact awareness program"]}
+        ],
+        "orderedListGame": [
+        {"question": "Place the steps for moving an inmate who has committed a major rule violation into isolation in the correct order.", "items": ["Contact a supervisor or control room.", "Request backup if necessary.", "Secure the inmate and separate them from other inmates.", "Secure the scene (if there is a suspected crime scene).", "Move the inmate to a holding cell.", "Have medical perform a pre-confinement physical.", "Move the inmate to confinement.", "Document the incident."]}
+        ],
+        "statuteGame": [
+    {"prompt": "Inmates with unique mental, physical, or social characteristics that distinguish them from the general population.", "answer": "Special populations", "displayAnswer": "Special populations"},
+    {"prompt": "A formal or informal ongoing organization of three or more people with a common name or identifying signs, whose primary activities are to commit criminal acts.", "answer": "Criminal gang", "displayAnswer": "Criminal gang"},
+    {"prompt": "The Florida Statute that defines a 'criminal gang'.", "answer": "874.03", "displayAnswer": "Section 874.03, F.S."},
+    {"prompt": "A criminal enterprise that engages repeatedly in acts of crime and poses a safety or security threat within a correctional facility.", "answer": "STG", "displayAnswer": "Security Threat Group (STG)"},
+    {"prompt": "STGs that have a documented history, a written set of laws or codes, and an organizational structure.", "answer": "Traditional STGs", "displayAnswer": "Traditional STGs"},
+    {"prompt": "STGs that form within schools, neighborhoods, or regions, and are composed of members from other STGs.", "answer": "Hybrid STGs", "displayAnswer": "Hybrid STGs"},
+    {"prompt": "STGs that originate within the prison system and predominantly base their operations from within the prison system.", "answer": "Prison-based STGs", "displayAnswer": "Prison-based STGs"},
+    {"prompt": "A marking on a wall, a fence, or the ground that identifies STG territory.", "answer": "Tagging", "displayAnswer": "Tagging"},
+    {"prompt": "An STG structure that contains one strong leader with at least two or more sublevels of command.", "answer": "Pyramid structure", "displayAnswer": "Pyramid structure"},
+    {"prompt": "An STG structure that has continually changing leadership.", "answer": "Flux or circular structure", "displayAnswer": "Flux or circular structure"},
+    {"prompt": "A pattern of substance use that leads to significant impairment or distress.", "answer": "Substance misuse", "displayAnswer": "Substance misuse"},
+    {"prompt": "The consistent and excessive use of a substance despite its negative consequences.", "answer": "Drug addiction", "displayAnswer": "Drug addiction"},
+    {"prompt": "The process of ridding the body of a drug.", "answer": "Detoxification", "displayAnswer": "Detoxification"},
+    {"prompt": "The physical and emotional symptoms experienced when a person is ridding their body of a drug.", "answer": "Withdrawal", "displayAnswer": "Withdrawal"},
+    {"prompt": "Violent tremors that can be an acute symptom of substance withdrawal.", "answer": "Delirium tremens", "displayAnswer": "Delirium tremens (DTs)"},
+    {"prompt": "This act defines a disability as a physical or mental impairment that substantially limits one or more of a person's major life activities.", "answer": "ADA", "displayAnswer": "Americans with Disabilities Act (ADA)"},
+    {"prompt": "Any physical disorder or condition, disfigurement, or anatomical loss affecting one or more body systems.", "answer": "Physical impairment", "displayAnswer": "Physical impairment"},
+    {"prompt": "Any mental or psychological disorder, such as intellectual disability, emotional or mental illness, or specific learning disabilities.", "answer": "Mental impairment", "displayAnswer": "Mental impairment"},
+    {"prompt": "Any modification or adjustment that will allow a qualified inmate with a disability to participate in programs, services, or activities.", "answer": "Reasonable accommodation", "displayAnswer": "Reasonable accommodation"},
+    {"prompt": "An impairment of the mental or emotional processes that exercise the conscious control of one's actions.", "answer": "Mental illness", "displayAnswer": "Mental illness"},
+    {"prompt": "The Florida Statute that defines 'mental illness'.", "answer": "394.455", "displayAnswer": "Section 394.455, F.S."},
+    {"prompt": "The Florida Statute that states that inmates with mental illness have the right to individual dignity and treatment.", "answer": "394.459", "displayAnswer": "Section 394.459, F.S."},
+    {"prompt": "A sensory experience in which someone can see, smell, taste, or feel something that is not there.", "answer": "Hallucination", "displayAnswer": "Hallucination"},
+    {"prompt": "A false belief firmly held despite obvious proof or evidence to the contrary.", "answer": "Delusion", "displayAnswer": "Delusion"},
+    {"prompt": "A brain disorder caused by a chemical imbalance that distorts the way a person thinks, acts, expresses emotion, and perceives reality.", "answer": "Schizophrenia", "displayAnswer": "Schizophrenia"},
+    {"prompt": "A clinically diagnosed mental illness for a person having multiple, major depressive episodes.", "answer": "MDD", "displayAnswer": "Major depressive disorder (MDD)"},
+    {"prompt": "A clinically diagnosed mental illness with alternating episodes of depression and mania.", "answer": "BD", "displayAnswer": "Bipolar disorder (BD)"},
+    {"prompt": "A disorder characterized by excessive nervousness, tension, apprehension, and 'fight or flight' behavior.", "answer": "Anxiety disorder", "displayAnswer": "Anxiety disorder"},
+    {"prompt": "A disorder characterized by intrusive thoughts and impulses resulting in ritualistic behavior.", "answer": "OCD", "displayAnswer": "Obsessive compulsive disorder (OCD)"},
+    {"prompt": "A deeply ingrained, non-psychotic, inflexible pattern of relating, perceiving, and behaving.", "answer": "Personality disorder", "displayAnswer": "Personality disorder"},
+    {"prompt": "Also known as the Florida Mental Health Act, this provides for emergency services and temporary detention for evaluation.", "answer": "The Baker Act", "displayAnswer": "The Baker Act"},
+    {"prompt": "The Florida Statute that allows a law enforcement officer to take an inmate to a receiving facility for involuntary examination.", "answer": "394.463", "displayAnswer": "Section 394.463, F.S."},
+    {"prompt": "A lifelong condition characterized by slow intellectual development.", "answer": "Intellectual disability", "displayAnswer": "Intellectual disability"},
+    {"prompt": "A long-lasting medical condition in which medicine can control the symptoms but not cure the disease.", "answer": "Chronic disease", "displayAnswer": "Chronic disease"},
+    {"prompt": "A disease that spreads through direct or indirect contact with an infected person.", "answer": "Communicable disease", "displayAnswer": "Communicable disease"},
+    {"prompt": "Inmates known to have a fatal disease and have less than six months to live.", "answer": "Terminally ill", "displayAnswer": "Terminally ill"},
+    {"prompt": "Occurs when the court charges, sentences, and commits a juvenile younger than 18 to the Department of Juvenile Justice.", "answer": "Juvenile adjudication", "displayAnswer": "Juvenile adjudication"},
+    {"prompt": "An inmate who is not legally an adult and is assigned by the court to the Department of Juvenile Justice.", "answer": "Juvenile inmate", "displayAnswer": "Juvenile inmate"},
+    {"prompt": "Any offender younger than 24 who the court sentences as an adult or who the Department of Corrections assigns youthful offender status.", "answer": "Youthful offender", "displayAnswer": "Youthful offender"},
+    {"prompt": "The federal act that sets the standards for state and local juvenile justice systems for incarcerating youth.", "answer": "JJDP Act", "displayAnswer": "Juvenile Justice and Delinquency Prevention Act"},
+    {"prompt": "The Florida Statutes according to which the Department of Corrections assigns youthful offender status.", "answer": "958.03 & 958.04", "displayAnswer": "Section 958.03 & 958.04, F.S."},
+    {"prompt": "The Florida Statute that requires juveniles to be housed separately from adult inmates to prohibit sight and sound contact.", "answer": "985.265", "displayAnswer": "Section 985.265, F.S."},
+    {"prompt": "Inmates who are 50 years of age and over.", "answer": "Elderly inmates", "displayAnswer": "Elderly inmates"},
+    {"prompt": "A condition that may affect inmates with dementia, causing them to wander or have mood swings at sundown.", "answer": "Sundown syndrome", "displayAnswer": "Sundown syndrome"},
+    {"prompt": "Surrogate families created by female inmates often contain these roles.", "answer": "Hierarchies", "displayAnswer": "Hierarchies (mother, father, child, etc.)"},
+    {"prompt": "A person whose gender identity is different from the sex they were assigned at birth.", "answer": "Transgender", "displayAnswer": "Transgender"},
+    {"prompt": "This act provides regulations to protect transgender inmates and all inmates from sexual abuse.", "answer": "PREA", "displayAnswer": "Prison Rape Elimination Act (PREA)"},
+    {"prompt": "Describes the group of people with which a person is most likely to find satisfying and fulfilling romantic relationships.", "answer": "Sexual orientation", "displayAnswer": "Sexual orientation"},
+    {"prompt": "Sexual behavior in a correctional setting that occurs due to long periods of confinement without access to the opposite sex.", "answer": "Institutional homosexuality", "displayAnswer": "Institutional homosexuality"},
+    {"prompt": "Sexual abuse of an inmate by another inmate, staff member, contractor, or volunteer.", "answer": "Sexual abuse", "displayAnswer": "Sexual abuse"},
+    {"prompt": "An invasion of privacy of an inmate by staff for reasons unrelated to official duties.", "answer": "Voyeurism", "displayAnswer": "Voyeurism"},
+    {"prompt": "Includes repeated and unwelcome sexual advances, requests for sexual favors, or verbal comments of a derogatory or offensive sexual nature.", "answer": "Sexual harassment", "displayAnswer": "Sexual harassment"},
+    {"prompt": "The temporary removal of an inmate from the general population to provide for safety and security.", "answer": "Administrative confinement", "displayAnswer": "Administrative confinement"},
+    {"prompt": "A special management status for the protection of an inmate from other inmates.", "answer": "Protective management", "displayAnswer": "Protective management"},
+    {"prompt": "A form of punishment in which an inmate, found guilty of committing violations, is in confinement for a specified period.", "answer": "Disciplinary confinement", "displayAnswer": "Disciplinary confinement"}
+        ]
+    }
+    </script>
+
+    <!-- Header -->
+    <header class="header-bar p-2 shadow-md z-10">
+        <div class="container mx-auto flex justify-between items-center">
+             <svg viewBox="0 0 270 170" class="h-16">
+                <path fill="#2563eb" d="M120.8,11.3l-81.2,49.2c-6.1,3.7-9.8,10.2-9.8,17.2v83.5c0,4.8,3.9,8.7,8.7,8.7h162.3c4.8,0,8.7-3.9,8.7-8.7V77.7c0-7-3.7-13.5-9.8-17.2L119.2,11.3z"/>
+                <path fill="#60a5fa" d="M135,10.5l81.2,49.2c6.1,3.7,9.8,10.2,9.8,17.2v83.5c0,4.8-3.9,8.7-8.7,8.7H135V10.5z"/>
+                <text x="10" y="145" font-family="Arial, sans-serif" font-size="38" fill="#FFFFFF" font-weight="bold">BKRDI-FY</text>
+                <text x="10" y="165" font-family="Arial, sans-serif" font-size="14" fill="#FFFFFF" font-weight="bold">TEST & STUDY</text>
+            </svg>
+            <div id="gameTitle" class="text-lg font-semibold">Home Screen</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="mainContentArea" class="flex-grow container mx-auto p-4 sm:p-6 lg:p-8 overflow-y-auto">
+
+        <!-- Main Menu Page -->
+        <div id="menuPage">
+            <div class="game-card text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold text-slate-800 mb-2">Supervising Special Populations</h2>
+                <p class="text-lg text-slate-600 mb-8">Interactive Study Guide</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <button onclick="startApp('flashcards')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Flash Cards</span>
+                        <p class="font-normal text-blue-100 mt-1">Review key terms.</p>
+                    </button>
+                    <button onclick="startApp('matching')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                         <span class="text-2xl">Matching Game</span>
+                         <p class="font-normal text-green-100 mt-1">Match terms to definitions.</p>
+                    </button>
+                    <button onclick="startApp('listGameMenu')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                         <span class="text-2xl">List Game</span>
+                         <p class="font-normal text-purple-100 mt-1">Identify items from a list.</p>
+                    </button>
+                     <button onclick="startApp('statuteGame')" class="bg-red-600 hover:bg-red-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Fill In Game</span>
+                        <p class="font-normal text-red-100 mt-1">Fill in the blanks.</p>
+                    </button>
+                    <button onclick="window.open('https://tehcrayz.github.io/soce/SupervisingSpecialPopulations.html', '_blank')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Tests & Study</span>
+                        <p class="font-normal text-yellow-100 mt-1">BKRDIFY EXAMS.</p>
+                    </button>
+                    <button onclick="window.open('https://tinyurl.com/fghy5tjnfgjfg', '_blank')" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Chapter Notes</span>
+                        <p class="font-normal text-cyan-100 mt-1">The full deal.</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Game Pages -->
+        <div id="flashcardsPage" class="hidden"></div>
+        <div id="matchingPage" class="hidden"></div>
+        <div id="listGamePage" class="hidden"></div>
+        <div id="orderedListPage" class="hidden"></div>
+        <div id="statuteGamePage" class="hidden"></div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer-bar p-3 shadow-md z-10">
+        <div class="container mx-auto text-center text-sm text-gray-700">
+            BKRDI-Fy Version 1.9.3
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- DATA & DOM ---
+            let data = {};
+            try {
+                data = JSON.parse(document.getElementById('questionBank').textContent);
+            } catch (e) {
+                console.error("Error parsing JSON data:", e);
+                document.body.innerHTML = `<div class="p-4 text-red-700 bg-red-100">Error loading study data. Please check the JSON format.</div>`;
+                return;
+            }
+            
+            const pages = {
+                menuPage: document.getElementById('menuPage'),
+                flashcardsPage: document.getElementById('flashcardsPage'),
+                matchingPage: document.getElementById('matchingPage'),
+                listGamePage: document.getElementById('listGamePage'),
+                orderedListPage: document.getElementById('orderedListPage'),
+                statuteGamePage: document.getElementById('statuteGamePage')
+            };
+            const gameTitle = document.getElementById('gameTitle');
+
+            // --- STATE ---
+            let flashcardGameState = {};
+            let listGameState = {};
+            let statuteGameState = {};
+            let orderedListGameState = {};
+
+            // --- UTILITY ---
+            function shuffle(array) {
+                const newArray = [...array];
+                for (let i = newArray.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+                }
+                return newArray;
+            }
+
+            // --- NAVIGATION ---
+            function showPage(pageId) {
+                Object.values(pages).forEach(page => page && page.classList.add('hidden'));
+                if (pages[pageId]) {
+                    pages[pageId].classList.remove('hidden');
+                }
+            }
+
+            window.goHome = function() {
+                Object.keys(pages).forEach(key => {
+                    if (key !== 'menuPage' && pages[key]) {
+                        pages[key].innerHTML = '';
+                    }
+                });
+                showPage('menuPage');
+                gameTitle.textContent = "Home Screen";
+            }
+
+            window.startApp = function(appType) {
+                const pageMap = {
+                    flashcards: { title: "Flash Cards", renderFunc: renderFlashcardSetup, page: 'flashcardsPage' },
+                    matching: { title: "Matching Game", renderFunc: renderMatchingGame, page: 'matchingPage' },
+                    listGameMenu: { title: "List Game", renderFunc: renderListGameMenu, page: 'listGamePage'},
+                    listGame: { title: "General Lists", renderFunc: renderListGame, page: 'listGamePage' },
+                    orderedListGame: { title: "Ordered Lists", renderFunc: renderOrderedListGame, page: 'orderedListPage'},
+                    statuteGame: { title: "Fill In Game", renderFunc: renderStatuteGame, page: 'statuteGamePage' }
+                };
+                if (pageMap[appType]) {
+                    gameTitle.textContent = pageMap[appType].title;
+                    pageMap[appType].renderFunc();
+                    showPage(pageMap[appType].page);
+                }
+            }
+            
+            // --- FLASHCARD LOGIC ---
+            function renderFlashcardSetup() {
+                pages.flashcardsPage.innerHTML = `<div class="game-card flashcard-container w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Flash Card Setup</h2><div class="mb-6"><label for="cards-per-round" class="block text-lg mb-2">How many cards per round?</label><select id="cards-per-round" class="p-2 border rounded-md"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="${data.flashcards.length}">All (${data.flashcards.length})</option></select></div><button onclick="setupFlashcardGame()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Start Studying</button></div>`;
+            }
+            
+            window.setupFlashcardGame = function() {
+                const cardsPerRound = parseInt(document.getElementById('cards-per-round').value, 10);
+                flashcardGameState = {
+                    mainDeck: shuffle([...data.flashcards]),
+                    currentRoundDeck: [],
+                    roundSize: cardsPerRound,
+                    currentIndex: 0,
+                    carryOver: []
+                };
+                startNewFlashcardRound();
+            }
+
+            window.startNewFlashcardRound = function() {
+                const needed = flashcardGameState.roundSize - flashcardGameState.carryOver.length;
+                let newCards = [];
+                if(needed > 0) {
+                    newCards = flashcardGameState.mainDeck.splice(0, needed);
+                }
+                
+                flashcardGameState.currentRoundDeck = shuffle([...flashcardGameState.carryOver, ...newCards]);
+                flashcardGameState.carryOver = [];
+                flashcardGameState.currentIndex = 0;
+                
+                if (flashcardGameState.currentRoundDeck.length === 0) {
+                     pages.flashcardsPage.innerHTML = `<div class="game-card w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Congratulations!</h2><p class="mb-6">You have mastered all the flashcards!</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                     return;
+                }
+                
+                renderFlashcard();
+            }
+
+            function renderFlashcard() {
+                if (flashcardGameState.currentIndex >= flashcardGameState.currentRoundDeck.length) {
+                    renderEndOfRoundScreen();
+                    return;
+                }
+                const card = flashcardGameState.currentRoundDeck[flashcardGameState.currentIndex];
+                pages.flashcardsPage.innerHTML = `<div class="game-card flashcard-container w-full max-w-2xl mx-auto"><div class="flex justify-between items-center mb-4"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><div class="text-slate-500 font-medium">Card ${flashcardGameState.currentIndex + 1} of ${flashcardGameState.currentRoundDeck.length} (Deck: ${flashcardGameState.mainDeck.length})</div></div><div class="perspective-1000"><div id="flashcard" class="flip-card relative w-full h-80 cursor-pointer rounded-xl" onclick="this.classList.toggle('flipped')"><div class="flip-card-inner relative w-full h-full"><div class="flip-card-front absolute w-full h-full bg-slate-200 rounded-xl flex items-center justify-center p-6 text-center"><p class="text-xl">${card.definition}</p></div><div class="flip-card-back absolute w-full h-full bg-blue-600 text-white rounded-xl flex items-center justify-center p-6 text-center"><h2 class="text-3xl font-bold">${card.term}</h2></div></div></div></div><div class="mt-6 flex justify-center space-x-4"><button onclick="markCardAsKnown()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">I Know This</button><button onclick="markCardAsUnsure()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Not Sure</button></div></div>`;
+            }
+            
+            function renderEndOfRoundScreen() {
+                 pages.flashcardsPage.innerHTML = `<div class="game-card w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Round Complete!</h2><p class="mb-2">${flashcardGameState.carryOver.length} cards from this round will be carried over.</p><p class="mb-6">You have ${flashcardGameState.mainDeck.length} new cards left to learn.</p><button onclick="startNewFlashcardRound()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Start Next Round</button></div>`;
+            }
+
+            window.markCardAsKnown = function() {
+                flashcardGameState.currentIndex++;
+                renderFlashcard();
+            }
+
+            window.markCardAsUnsure = function() {
+                const card = flashcardGameState.currentRoundDeck[flashcardGameState.currentIndex];
+                flashcardGameState.carryOver.push(card);
+                flashcardGameState.currentIndex++;
+                renderFlashcard();
+            }
+
+            // --- STATUTE GAME LOGIC ---
+            window.renderStatuteGame = function() {
+                statuteGameState = {
+                    questions: shuffle([...data.statuteGame]),
+                    currentIndex: 0,
+                    totalScore: 0,
+                    results: []
+                };
+                displayStatuteQuestion();
+            }
+            
+            window.displayStatuteQuestion = function() {
+                if (statuteGameState.currentIndex >= statuteGameState.questions.length) {
+                    displayStatuteResults();
+                    return;
+                }
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                statuteGameState.currentQuestionPoints = 100;
+                statuteGameState.revealedIndices = new Set();
+
+                const answerMask = q.answer.split('').map(char => (char === ' ' ? ' ' : '_')).join('');
+                
+                pages.statuteGamePage.innerHTML = `
+                    <div class="game-card max-w-3xl mx-auto">
+                        <div class="flex justify-between items-center mb-4">
+                            <button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button>
+                             <span class="font-bold">${statuteGameState.currentIndex + 1} out of ${statuteGameState.questions.length} items</span>
+                        </div>
+                        <h2 class="text-center text-xl font-bold my-4">FILL IN THE BLANK</h2>
+                        <div id="statute-score" class="text-center font-bold text-lg mb-4">Question Points: ${statuteGameState.currentQuestionPoints}</div>
+                        <div class="bg-gray-100 p-8 rounded-lg text-center text-lg mb-4">${q.prompt}</div>
+                        <div id="statute-feedback" class="text-center font-bold text-lg h-8 mb-2"></div>
+                        <div class="bg-blue-800 text-white p-4 rounded-lg text-center mb-4">
+                            <p id="statute-answer-display" class="tracking-widest text-2xl font-mono">${answerMask}</p>
+                        </div>
+                        <div class="flex">
+                            <input id="statute-input" type="text" class="fill-blank-input flex-grow p-4 text-xl rounded-l-lg" placeholder="Type your answer here...">
+                            <button id="statute-submit-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold p-4 rounded-r-lg">Submit</button>
+                        </div>
+                        <div class="flex justify-between mt-6 text-sm">
+                            <button onclick="handleHint()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg">Hint (-10 pts)</button>
+                            <button onclick="showStatuteAnswer()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg">Show Answer</button>
+                            <button id="statute-next-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg hidden">Next Term</button>
+                        </div>
+                    </div>`;
+
+                const input = document.getElementById('statute-input');
+                const submitBtn = document.getElementById('statute-submit-btn');
+                input.focus();
+                submitBtn.onclick = checkStatuteAnswer;
+                input.onkeyup = (e) => { if (e.key === 'Enter') checkStatuteAnswer(); };
+            }
+
+            function updateAnswerMask() {
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const display = q.answer.split('').map((char, index) => {
+                    if (char === ' ' || statuteGameState.revealedIndices.has(index)) {
+                        return `<span>${char}</span>`;
+                    }
+                    return '<span>_</span>';
+                }).join('');
+                document.getElementById('statute-answer-display').innerHTML = display;
+            }
+
+            window.handleHint = function() {
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const unrevealed = q.answer.split('').map((c, i) => i).filter(i => !statuteGameState.revealedIndices.has(i) && q.answer[i] !== ' ');
+                
+                if (unrevealed.length > 0) {
+                    statuteGameState.currentQuestionPoints = Math.max(0, statuteGameState.currentQuestionPoints - 10);
+                    document.getElementById('statute-score').textContent = `Question Points: ${statuteGameState.currentQuestionPoints}`;
+                    
+                    for(let i=0; i < 2 && unrevealed.length > 0; i++) {
+                         const randomIndex = Math.floor(Math.random() * unrevealed.length);
+                         const revealIndex = unrevealed.splice(randomIndex, 1)[0];
+                         statuteGameState.revealedIndices.add(revealIndex);
+                    }
+                    updateAnswerMask();
+                }
+            }
+
+            function checkStatuteAnswer() {
+                const input = document.getElementById('statute-input');
+                const feedbackEl = document.getElementById('statute-feedback');
+                const userAnswer = input.value.trim().toLowerCase();
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const isMatch = q.answer.toLowerCase() === userAnswer;
+
+                if (isMatch) {
+                    feedbackEl.textContent = "CORRECT!";
+                    feedbackEl.className = "text-center font-bold text-lg h-8 mb-2 feedback-correct";
+                    statuteGameState.totalScore += statuteGameState.currentQuestionPoints;
+                    statuteGameState.results.push({ question: q, correct: true, score: statuteGameState.currentQuestionPoints });
+                    document.getElementById('statute-answer-display').textContent = q.displayAnswer;
+                    endStatuteQuestion();
+                } else {
+                    feedbackEl.textContent = "INCORRECT - Try again.";
+                    feedbackEl.className = "text-center font-bold text-lg h-8 mb-2 feedback-incorrect";
+                    statuteGameState.currentQuestionPoints = Math.max(0, statuteGameState.currentQuestionPoints - 20);
+                    document.getElementById('statute-score').textContent = `Question Points: ${statuteGameState.currentQuestionPoints}`;
+                    
+                    const correctLetters = userAnswer.split('');
+                    q.answer.split('').forEach((char, index) => {
+                        if (char.toLowerCase() === correctLetters[index]?.toLowerCase()) {
+                            statuteGameState.revealedIndices.add(index);
+                        }
+                    });
+                    updateAnswerMask();
+                }
+            }
+            
+            function endStatuteQuestion() {
+                 const input = document.getElementById('statute-input');
+                 const submitBtn = document.getElementById('statute-submit-btn');
+                 const nextBtn = document.getElementById('statute-next-btn');
+                 if(input) input.disabled = true;
+                 if(submitBtn) submitBtn.disabled = true;
+                 if(nextBtn) {
+                     nextBtn.classList.remove('hidden');
+                     nextBtn.onclick = () => {
+                        statuteGameState.currentIndex++;
+                        displayStatuteQuestion();
+                    };
+                    nextBtn.focus();
+                 }
+            }
+
+            window.showStatuteAnswer = function() {
+                 const q = statuteGameState.questions[statuteGameState.currentIndex];
+                 document.getElementById('statute-answer-display').textContent = q.displayAnswer;
+                 statuteGameState.currentQuestionPoints = 0;
+                 statuteGameState.results.push({ question: q, correct: false, score: 0 });
+                 endStatuteQuestion();
+            }
+            
+            function displayStatuteResults() {
+                let resultsHtml = `<div class="game-card w-full max-w-3xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Game Results</h2><div class="text-lg mb-6">Final Score: ${statuteGameState.totalScore}</div><div class="space-y-4 text-left">`;
+                statuteGameState.results.forEach(res => {
+                    const bgColor = res.correct ? 'bg-green-100' : 'bg-red-100';
+                    const icon = res.correct ? `<span class="text-green-600 font-bold">&#10003;</span>` : `<span class="text-red-600 font-bold">X</span>`;
+                    resultsHtml += `<div class="${bgColor} p-4 rounded-lg"><p class="font-semibold">${res.question.prompt}</p><p>Correct Answer: <span class="font-bold">${res.question.displayAnswer}</span></p><p>Your score: ${res.score} ${icon}</p></div>`;
+                });
+                resultsHtml += `</div><button onclick="renderStatuteGame()" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Play Again</button> <button onclick="goHome()" class="mt-6 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg">Main Menu</button></div>`;
+                pages.statuteGamePage.innerHTML = resultsHtml;
+            }
+
+            // --- MATCHING GAME LOGIC ---
+            let selectedTerm = null;
+            let selectedDef = null;
+            let matchedPairs = 0;
+            let totalPairs = 0;
+            window.renderMatchingGame = function() {
+                const gamePool = shuffle([...data.matching]);
+                const gameSize = Math.min(6, gamePool.length);
+                const gameSet = gamePool.slice(0, gameSize);
+                totalPairs = gameSize;
+                matchedPairs = 0;
+                selectedTerm = null;
+                selectedDef = null;
+                const terms = shuffle(gameSet.map((item, index) => ({ text: item.term, id: index })));
+                const definitions = shuffle(gameSet.map((item, index) => ({ text: item.definition, id: index })));
+                pages.matchingPage.innerHTML = `<div class="game-card w-full max-w-4xl mx-auto"><div class="flex justify-between items-center mb-6"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><h2 class="text-2xl font-bold">Matching Game</h2><button onclick="renderMatchingGame()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New Game</button></div><p id="match-instructions" class="text-center text-slate-600 mb-6">Select a term from the left and its matching definition from the right.</p><div id="win-message" class="hidden text-center p-4 mb-4 bg-green-100 text-green-800 rounded-lg"><p class="font-bold text-lg">Congratulations! You've matched all the pairs!</p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4 md:gap-6"><div id="terms-col" class="flex flex-col gap-3">${terms.map(t => `<div class="match-item p-4 border-2 border-slate-300 rounded-lg cursor-pointer hover:bg-slate-200 transition" data-type="term" data-id="${t.id}" onclick="handleMatchSelection(this)">${t.text}</div>`).join('')}</div><div id="definitions-col" class="flex flex-col gap-3">${definitions.map(d => `<div class="match-item p-4 border-2 border-slate-300 rounded-lg cursor-pointer hover:bg-slate-200 transition" data-type="definition" data-id="${d.id}" onclick="handleMatchSelection(this)">${d.text}</div>`).join('')}</div></div></div>`;
+            }
+            window.handleMatchSelection = function(target) {
+                if (target.classList.contains('matched')) return;
+                const type = target.dataset.type;
+                const id = target.dataset.id;
+                if (target.classList.contains('selected')) {
+                    target.classList.remove('selected');
+                    if (type === 'term') selectedTerm = null;
+                    if (type === 'definition') selectedDef = null;
+                    return;
+                }
+                document.querySelectorAll(`.match-item[data-type="${type}"].selected`).forEach(el => el.classList.remove('selected'));
+                target.classList.add('selected');
+                if (type === 'term') { selectedTerm = { el: target, id: id }; } else { selectedDef = { el: target, id: id }; }
+                if (selectedTerm && selectedDef) checkForMatch();
+            }
+            function checkForMatch() {
+                if (selectedTerm && selectedDef && selectedTerm.id === selectedDef.id) {
+                    selectedTerm.el.classList.add('matched');
+                    selectedDef.el.classList.add('matched');
+                    selectedTerm.el.classList.remove('selected');
+                    selectedDef.el.classList.remove('selected');
+                    matchedPairs++;
+                    if (matchedPairs === totalPairs) {
+                        document.getElementById('win-message').classList.remove('hidden');
+                        document.getElementById('match-instructions').classList.add('hidden');
+                    }
+                } else if (selectedTerm && selectedDef) {
+                    const termEl = selectedTerm.el;
+                    const defEl = selectedDef.el;
+                    termEl.classList.add('incorrect-match');
+                    defEl.classList.add('incorrect-match');
+                    setTimeout(() => {
+                        termEl.classList.remove('incorrect-match', 'selected');
+                        defEl.classList.remove('incorrect-match', 'selected');
+                    }, 500);
+                }
+                selectedTerm = null;
+                selectedDef = null;
+            }
+
+            // --- LIST GAME LOGIC ---
+            function renderListGameMenu() {
+                pages.listGamePage.innerHTML = `<div class="game-card text-center"><h2 class="text-3xl font-bold mb-6">List Games</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><button onclick="startApp('listGame')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105"><span class="text-2xl">General Lists</span><p class="font-normal text-purple-100 mt-1">Identify items from a list.</p></button><button onclick="startApp('orderedListGame')" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105"><span class="text-2xl">Ordered Lists</span><p class="font-normal text-teal-100 mt-1">Put items in the correct order.</p></button></div><button onclick="goHome()" class="mt-8 text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Main Menu</button></div>`;
+                showPage('listGamePage');
+            }
+            
+            window.renderListGame = function(questionIndex = -1) {
+                if (!listGameState.deck || listGameState.deck.length === 0 || questionIndex === -1) {
+                     listGameState.deck = shuffle([...data.listGame]);
+                }
+                
+                if (listGameState.deck.length === 0) {
+                     pages.listGamePage.innerHTML = `<div class="game-card text-center"><h2 class="text-2xl font-bold">All lists completed!</h2><p class="my-4">You've successfully completed all the lists for this session.</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                     return;
+                }
+                
+                const question = listGameState.deck[0];
+                
+                listGameState.currentQuestion = question;
+                listGameState.foundCorrectCount = 0;
+                listGameState.score = 100;
+                listGameState.unseenCorrect = shuffle([...question.correctAnswers]);
+                listGameState.unseenIncorrect = shuffle([...question.incorrectAnswers]);
+                listGameState.nextCorrectSlot = 0;
+                
+                let answerPool = [];
+                const displayCount = 8;
+                for (let i = 0; i < displayCount; i++) {
+                    const newAnswer = getNewAnswer();
+                    if (newAnswer) answerPool.push(newAnswer);
+                }
+
+                const correctPlaceholders = question.correctAnswers.map((_, index) => 
+                    `<div id="correct-slot-${index}" class="correct-placeholder rounded-lg p-2 text-center text-gray-500">[...]</div>`
+                ).join('');
+
+                pages.listGamePage.innerHTML = `<div class="game-card w-full max-w-3xl mx-auto"><div class="flex justify-between items-center mb-4"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><h2 class="text-xl font-bold text-center">General Lists</h2><button onclick="renderListGame()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New List</button></div><div class="text-center p-4 mb-4 bg-blue-50 border-l-4 border-blue-500 text-blue-800 rounded-r-lg"><p class="font-bold text-lg">${question.question}</p><p class="text-sm">Use ✓ to select correct items and X to eliminate incorrect ones.</p></div><div class="mb-6"><h3 class="font-bold text-center mb-2">Correct Answers Found</h3><div id="correct-answers-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">${correctPlaceholders}</div></div><div id="list-game-status" class="flex justify-between items-center font-bold text-lg mb-4 p-2 rounded-lg bg-gray-100"><span>Score: <span id="list-game-score">100</span></span></div><div id="list-game-win-message" class="hidden text-center p-4 mb-4 bg-green-100 text-green-800 rounded-lg"><p class="font-bold text-lg">Great job! You found all correct items for this list!</p></div><div id="next-list-container" class="hidden text-center mt-4"><button onclick="handleNextList()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105">Next List &rarr;</button></div><div id="list-game-answers" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div></div>`;
+                const answersContainer = document.getElementById('list-game-answers');
+                answerPool.forEach(answer => answersContainer.appendChild(createAnswerElement(answer)));
+            }
+
+            window.handleNextList = function() {
+                listGameState.deck.shift();
+                renderListGame();
+            }
+            
+            function getNewAnswer() {
+                if (listGameState.unseenCorrect.length > 0 && Math.random() < 0.4) {
+                    return listGameState.unseenCorrect.pop();
+                }
+                if (listGameState.unseenIncorrect.length > 0) {
+                    return listGameState.unseenIncorrect.pop();
+                }
+                if(listGameState.unseenCorrect.length > 0) {
+                     return listGameState.unseenCorrect.pop();
+                }
+                return null;
+            }
+
+            function createAnswerElement(answerText) {
+                const item = document.createElement('div');
+                item.className = 'list-item flex items-center justify-between p-3 rounded-lg';
+                
+                const textSpan = document.createElement('span');
+                textSpan.className = 'flex-grow mr-4';
+                textSpan.textContent = answerText;
+
+                const btnContainer = document.createElement('div');
+                btnContainer.className = 'list-item-btn-container flex space-x-2';
+
+                const checkBtn = document.createElement('button');
+                checkBtn.className = 'list-item-btn check-btn flex items-center justify-center';
+                checkBtn.innerHTML = '&#10003;'; // Checkmark
+                
+                const xBtn = document.createElement('button');
+                xBtn.className = 'list-item-btn x-btn flex items-center justify-center';
+                xBtn.innerHTML = 'X';
+
+                checkBtn.onclick = () => handleListSelection(item, 'select', answerText);
+                xBtn.onclick = () => handleListSelection(item, 'eliminate', answerText);
+
+                btnContainer.appendChild(checkBtn);
+                btnContainer.appendChild(xBtn);
+                item.appendChild(textSpan);
+                item.appendChild(btnContainer);
+                return item;
+            }
+
+            function replaceAndShuffle(oldElement) {
+                const parent = oldElement.parentNode;
+                const newAnswer = getNewAnswer();
+                if (newAnswer) {
+                    const newItem = createAnswerElement(newAnswer);
+                    parent.replaceChild(newItem, oldElement);
+                } else {
+                    oldElement.remove();
+                }
+                shuffleAnswerBoard();
+            }
+            
+            function shuffleAnswerBoard() {
+                const answersContainer = document.getElementById('list-game-answers');
+                if (!answersContainer) return;
+                const currentItems = Array.from(answersContainer.children);
+                const shuffledItems = shuffle(currentItems);
+                shuffledItems.forEach(item => answersContainer.appendChild(item));
+            }
+
+            window.handleListSelection = function(itemElement, action, answerText) {
+                if (itemElement.dataset.processed) return;
+                itemElement.dataset.processed = true;
+
+                const isCorrect = listGameState.currentQuestion.correctAnswers.includes(answerText);
+                const btnContainer = itemElement.querySelector('.list-item-btn-container');
+
+                if (action === 'select') { 
+                    if (isCorrect) {
+                        itemElement.classList.add('strobing-green');
+                        const correctSlot = document.getElementById(`correct-slot-${listGameState.nextCorrectSlot}`);
+                        if(correctSlot) {
+                           correctSlot.textContent = answerText;
+                           correctSlot.classList.add('filled');
+                        }
+                        listGameState.nextCorrectSlot++;
+                        listGameState.foundCorrectCount++;
+                        setTimeout(() => replaceAndShuffle(itemElement), 1000);
+                    } else {
+                        itemElement.classList.add('strobing-red'); 
+                        listGameState.score = Math.max(0, listGameState.score - 10);
+                        document.getElementById('list-game-score').textContent = listGameState.score;
+                        btnContainer.innerHTML = `<span class="text-2xl text-red-600 font-bold">X</span>`;
+                        setTimeout(() => replaceAndShuffle(itemElement), 2500);
+                    }
+                } else if (action === 'eliminate') { 
+                    if (!isCorrect) {
+                        itemElement.classList.add('fading-out');
+                        setTimeout(() => replaceAndShuffle(itemElement), 500);
+                    } else {
+                        itemElement.classList.add('strobing-purple');
+                        const correctSlot = document.getElementById(`correct-slot-${listGameState.nextCorrectSlot}`);
+                        if(correctSlot) {
+                           correctSlot.textContent = answerText;
+                           correctSlot.classList.add('filled', 'purple');
+                        }
+                        listGameState.nextCorrectSlot++;
+                        listGameState.foundCorrectCount++;
+                        listGameState.score = Math.max(0, listGameState.score - 15);
+                        document.getElementById('list-game-score').textContent = listGameState.score;
+                        setTimeout(() => replaceAndShuffle(itemElement), 1000);
+                    }
+                }
+
+                if (listGameState.foundCorrectCount === listGameState.currentQuestion.correctAnswers.length) {
+                    document.getElementById('list-game-win-message').classList.remove('hidden');
+                    document.getElementById('next-list-container').classList.remove('hidden');
+                }
+            }
+            
+            // --- ORDERED LIST GAME ---
+            window.renderOrderedListGame = function() {
+                orderedListGameState = {
+                    questions: shuffle([...data.orderedListGame]),
+                    currentIndex: 0
+                }
+                setupOrderedListGame();
+            }
+
+            function setupOrderedListGame() {
+                if (orderedListGameState.currentIndex >= orderedListGameState.questions.length) {
+                    pages.orderedListPage.innerHTML = `<div class="game-card text-center"><h2 class="text-2xl font-bold">All lists completed!</h2><p class="my-4">You've successfully completed all the ordered lists.</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                    return;
+                }
+                
+                const question = orderedListGameState.questions[orderedListGameState.currentIndex];
+                orderedListGameState.currentQuestion = question;
+                orderedListGameState.score = 100;
+                
+                const shuffledItems = shuffle([...question.items]);
+
+                let draggableHtml = `<p class="text-lg font-semibold text-center">Steps (Drag These)</p>`;
+                shuffledItems.forEach((itemText) => {
+                    draggableHtml += `<div class="draggable-item p-3 bg-gray-200 rounded-lg shadow cursor-grab" draggable="true">${itemText}</div>`;
+                });
+
+                let dropZoneHtml = `<p class="text-lg font-semibold text-center">Correct Order (Drop Here)</p>`;
+                question.items.forEach((_, index) => {
+                    dropZoneHtml += `<div class="drop-zone p-3 rounded-lg flex items-center min-h-[3.5rem]"><span class="mr-3 font-bold text-lg">${index + 1}.</span></div>`;
+                });
+                
+                pages.orderedListPage.innerHTML = `
+                    <div class="game-card w-full max-w-4xl mx-auto">
+                         <div class="flex justify-between items-center mb-6">
+                            <button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button>
+                            <h2 class="text-2xl font-bold">Ordered List Game</h2>
+                            <button onclick="nextOrderedList()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New List</button>
+                        </div>
+                        <p class="text-center font-bold text-lg mb-4">${question.question}</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div id="draggable-items-container" class="space-y-3 min-h-[10rem] bg-gray-50 p-2 rounded-lg">${draggableHtml}</div>
+                            <div id="drop-zones-container" class="space-y-3">${dropZoneHtml}</div>
+                        </div>
+                         <div id="ordered-list-feedback" class="text-center mt-8">
+                            <button id="check-order-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Check Order</button>
+                            <button id="next-ordered-list-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hidden">Next List</button>
+                        </div>
+                    </div>`;
+
+                addDragAndDropListeners();
+            }
+            
+            window.nextOrderedList = function() {
+                orderedListGameState.currentIndex++;
+                setupOrderedListGame();
+            }
+
+            function addDragAndDropListeners() {
+                const draggables = document.querySelectorAll('.draggable-item');
+                const dropZones = document.querySelectorAll('.drop-zone');
+                const sourceContainer = document.getElementById('draggable-items-container');
+
+                draggables.forEach(draggable => {
+                    draggable.addEventListener('dragstart', e => {
+                        e.dataTransfer.setData('text/plain', e.target.textContent);
+                        setTimeout(() => e.target.classList.add('dragging'), 0);
+                    });
+                    draggable.addEventListener('dragend', e => e.target.classList.remove('dragging'));
+                });
+
+                function handleDragOver(e) {
+                    e.preventDefault();
+                    // 'this' refers to the element the event listener is attached to
+                    if (this.classList.contains('drop-zone') || this.id === 'draggable-items-container') {
+                        this.classList.add('drag-over');
+                    }
+                }
+
+                function handleDragLeave(e) {
+                    // 'this' refers to the element the event listener is attached to
+                     if (this.classList.contains('drop-zone') || this.id === 'draggable-items-container') {
+                        this.classList.remove('drag-over');
+                    }
+                }
+
+                function handleDrop(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                    const draggedText = e.dataTransfer.getData('text/plain');
+                    const draggedEl = document.querySelector(`.draggable-item.dragging`);
+                    
+                    if (this.classList.contains('drop-zone')) { // Dropping on a drop zone
+                        if (this.children.length > 1) { 
+                           const existingItem = this.children[1];
+                           sourceContainer.appendChild(existingItem);
+                        }
+                         if(draggedEl) this.appendChild(draggedEl);
+                    } else if (this.id === 'draggable-items-container') { // Dropping back on source
+                        if(draggedEl) this.appendChild(draggedEl);
+                    }
+                }
+
+                dropZones.forEach(zone => {
+                    zone.addEventListener('dragover', handleDragOver);
+                    zone.addEventListener('dragleave', handleDragLeave);
+                    zone.addEventListener('drop', handleDrop);
+                });
+
+                sourceContainer.addEventListener('dragover', handleDragOver);
+                sourceContainer.addEventListener('dragleave', handleDragLeave);
+                sourceContainer.addEventListener('drop', handleDrop);
+                
+                document.getElementById('check-order-btn').onclick = checkOrder;
+            }
+            
+            function checkOrder() {
+                const dropZones = document.querySelectorAll('#drop-zones-container .drop-zone');
+                const correctOrder = orderedListGameState.currentQuestion.items;
+                const sourceContainer = document.getElementById('draggable-items-container');
+                let allCorrect = true;
+
+                dropZones.forEach((zone, index) => {
+                    const droppedItem = zone.querySelector('.draggable-item');
+                    if (droppedItem && droppedItem.textContent === correctOrder[index]) {
+                        zone.classList.add('correct');
+                        zone.classList.remove('incorrect');
+                        droppedItem.setAttribute('draggable', 'false'); // Lock correct items
+                        droppedItem.style.cursor = 'default';
+                    } else if (droppedItem) {
+                        allCorrect = false;
+                        zone.classList.add('incorrect');
+                        zone.classList.remove('correct');
+                        setTimeout(() => {
+                           zone.classList.remove('incorrect');
+                           sourceContainer.appendChild(droppedItem); // Return incorrect item
+                        }, 1000);
+                    } else {
+                        allCorrect = false; // A slot is empty
+                    }
+                });
+
+                if (allCorrect) {
+                    document.getElementById('check-order-btn').classList.add('hidden');
+                    document.getElementById('next-ordered-list-btn').classList.remove('hidden');
+                    document.getElementById('next-ordered-list-btn').onclick = nextOrderedList;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

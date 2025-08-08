@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Guide: Defensive Tactics </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Arial&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background: #f4f8fb;
+            color: #1f2937;
+        }
+        .header-bar {
+            background-color: #1f2937;
+            color: white;
+        }
+        .footer-bar {
+            background: #dbeafe;
+        }
+        /* Card styles for menu and games */
+        .game-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+
+        /* Flip animation for flashcards */
+        .perspective-1000 { perspective: 1000px; }
+        .flip-card-inner { transition: transform 0.6s; transform-style: preserve-3d; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+        .flip-card-back { transform: rotateY(180deg); }
+        .flashcard-container.large .flip-card { height: 28rem; }
+        .flashcard-container.large .game-card { max-width: 48rem; }
+
+
+        /* Styles for matching game */
+        .match-item.selected { background-color: #3b82f6; color: white; border-color: #2563eb; }
+        .match-item.matched { background-color: #16a34a; color: white; border-color: #15803d; opacity: 0.7; pointer-events: none; }
+        .match-item.incorrect-match { background-color: #dc2626; color: white; animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Styles for list game */
+        .list-item { transition: all 0.3s ease; border: 1px solid #d1d5db; }
+        .list-item-btn-container { flex-shrink: 0; }
+        .list-item-btn {
+            cursor: pointer;
+            border-radius: 9999px;
+            width: 2rem;
+            height: 2rem;
+            font-weight: bold;
+            transition: all 0.2s ease-in-out;
+            border: 2px solid transparent;
+        }
+        .check-btn { background-color: #dcfce7; color: #15803d; }
+        .check-btn:hover { background-color: #22c55e; color: white; border-color: #15803d; }
+        .x-btn { background-color: #fee2e2; color: #b91c1c; }
+        .x-btn:hover { background-color: #ef4444; color: white; border-color: #991b1b; }
+        
+        .correct-placeholder {
+             background-color: #e5e7eb;
+             border: 2px dashed #9ca3af;
+             transition: all 0.5s ease;
+             min-height: 2.5rem;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             padding: 0.5rem;
+             word-break: break-word;
+        }
+        .correct-placeholder.filled {
+            background-color: #dcfce7;
+            border-color: #16a34a;
+            color: #14532d;
+            font-weight: 600;
+            border-style: solid;
+        }
+        .correct-placeholder.purple {
+            background-color: #f3e8ff;
+            border-color: #8b5cf6;
+            color: #5b21b6;
+        }
+
+        .list-item.strobing-green { animation: strobe-green 1s forwards; }
+        .list-item.strobing-red { animation: incorrect-answer-animation 2.5s forwards; }
+        .list-item.strobing-purple { animation: strobe-purple 1s forwards; }
+        .list-item.fading-out { animation: fade-out 0.5s forwards; }
+        
+        @keyframes fade-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.9); } }
+        
+        @keyframes strobe-green {
+            0%, 100% { background-color: white; }
+            50% { background-color: #22c55e; color: white; }
+        }
+
+        @keyframes strobe-purple {
+            0%, 100% { background-color: white; }
+            50% { background-color: #a855f7; color: white; }
+        }
+
+        @keyframes incorrect-answer-animation {
+            0% { transform: translateX(0); background-color: #fee2e2; }
+            10%, 30%, 50%, 70% { background-color: #b91c1c; color: white; }
+            20%, 40%, 60%, 80% { background-color: #fee2e2; color: #1f2937; }
+            0%, 20%, 40%, 60% { transform: translateX(5px); }
+            10%, 30%, 50%, 70% { transform: translateX(-5px); }
+            85% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.9); }
+        }
+        
+        /* Fill in the blank game styles */
+        .fill-blank-input {
+            border: 2px solid #ccc;
+            transition: border-color 0.3s;
+        }
+        .fill-blank-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .feedback-correct {
+            color: #16a34a;
+        }
+        .feedback-incorrect {
+            color: #dc2626;
+        }
+        #statute-answer-display span {
+            display: inline-block;
+            width: 1.2ch; /* Character unit */
+            text-align: center;
+        }
+
+        /* Ordered List Game Styles */
+        .draggable-item { cursor: grab; }
+        .drop-zone { border: 2px dashed #9ca3af; transition: background-color 0.2s; }
+        .drop-zone.drag-over { background-color: #e0f2fe; }
+        .drop-zone.correct { background-color: #dcfce7; border-color: #16a34a; }
+        .drop-zone.incorrect { background-color: #fee2e2; border-color: #b91c1c; animation: shake 0.5s; }
+        .dragging { opacity: 0.5; }
+
+
+        /* Hide scrollbar for the main content area */
+        #mainContentArea::-webkit-scrollbar { display: none; }
+        #mainContentArea { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- JSON Question Bank -->
+    <script id="questionBank" type="application/json">
+    {
+        "flashcards": [
+    { "term": "Defensive Tactics", "definition": "A system of controlled defensive and offensive body movements that criminal justice officers use to respond to a subject's aggression or resistance." },
+    { "term": "Cardiovascular Training", "definition": "Any exercise that elevates the heart rate to a range of 60% to 85% of the maximum rate." },
+    { "term": "Chapter 776, F.S.", "definition": "Governs all use of force by criminal justice officers." },
+    { "term": "Chapter 944, F.S.", "definition": "Addresses the use of force specifically by state correctional and correctional probation officers." },
+    { "term": "Objective Reasonableness", "definition": "The standard used by courts to decide whether an officer's use of force is an appropriate response, judged from the perspective of a reasonable officer on the scene." },
+    { "term": "Compliance", "definition": "The verbal or physical yielding to an officer's authority without apparent threat of resistance or violence." },
+    { "term": "Escalation", "definition": "Increasing the use of force or resistance." },
+    { "term": "De-escalation", "definition": "Decreasing the use of force or resistance." },
+    { "term": "Disengagement", "definition": "Discontinuing a command or physical use of force, for example, by breaking away from a subject." },
+    { "term": "Passive Resistance", "definition": "A subject's verbal or physical refusal to comply with an officer's lawful direction, causing the officer to use physical techniques to establish control." },
+    { "term": "Active Resistance", "definition": "A subject's use of physically evasive movements directed toward the officer, such as bracing, tensing, pushing, or pulling." },
+    { "term": "Aggressive Resistance", "definition": "Hostile, attacking movements that may cause injury but are not likely to cause death or great bodily harm." },
+    { "term": "Deadly Force Resistance", "definition": "Hostile, attacking movements with or without a weapon that create a reasonable perception that the subject intends to cause death or great bodily harm." },
+    { "term": "Officer Presence", "definition": "Your ability to convey to subjects and onlookers that you are able and ready to take control." },
+    { "term": "Command Presence", "definition": "Your demeanor and the way you exhibit confidence through erect posture, alertness, and attention to surroundings." },
+    { "term": "Physical Control", "definition": "Achieving compliance or custody through the use of empty-hand or leverage-enhanced techniques." },
+    { "term": "Less Lethal Weapon", "definition": "A weapon that is not fundamentally designed to cause death or great bodily harm, such as an ECD, baton, or chemical agent." },
+    { "term": "Ability (Deadly Force Criteria)", "definition": "Refers to the subject having the means to carry out their intent to cause death or great bodily harm." },
+    { "term": "Opportunity (Deadly Force Criteria)", "definition": "Means the subject is capable of acting on a plan to cause death or great bodily harm to the officer or others." },
+    { "term": "Intent (Deadly Force Criteria)", "definition": "A subject's intention to voluntarily make the bodily movement that becomes the act to commit a criminal offense." },
+    { "term": "Totality of Circumstances", "definition": "A term the court uses to refer to all facts and circumstances known to the officer at the time as the basis for a use of force decision." },
+    { "term": "Survival Stress", "definition": "The body and mind's response to a perceived threat; also called fear-induced stress or combat stress." },
+    { "term": "Four Instinctual Reactions to Stress", "definition": "Fight, flight, posture, or submit." },
+    { "term": "Submit", "definition": "To completely relinquish control to another." },
+    { "term": "Fine Motor Skills", "definition": "The muscle control required to make small, precise movements, such as unlocking handcuffs with a key." },
+    { "term": "Gross Motor Skills", "definition": "Movements of the large or major muscles of the body to do things like run, punch, or kick." },
+    { "term": "Complex Motor Skills", "definition": "Tasks that require a combination of fine and gross motor skills using hand-eye coordination timed to a single event." },
+    { "term": "Exhilaration Speech", "definition": "Statements brought on by a euphoric feeling of accomplishment after prevailing in a critical incident." },
+    { "term": "Threat Awareness Spectrum", "definition": "An illustration of how survival stress may affect your reaction, with levels from Condition White (unaware) to Condition Black (panicked)." },
+    { "term": "Condition Yellow", "definition": "The desired state of awareness on routine duty; a state of relaxed awareness, scanning for potential threats." },
+    { "term": "Balance Displacement", "definition": "A controlling technique used to break the subject's balance through the use of leverage principles." },
+    { "term": "Leverage", "definition": "Using a great force against a weaker resistance to gain control." },
+    { "term": "Pain Compliance", "definition": "A subject's response to a combination of pain and verbal commands to stop resisting." },
+    { "term": "Mechanical Compliance", "definition": "Gaining control by applying pressure or leverage on a joint by locking it up so that no movement is possible." },
+    { "term": "Joint Manipulation", "definition": "Gaining control by bending or twisting a joint in a direction that will cause pain or discomfort." },
+    { "term": "Motor Dysfunction", "definition": "Gaining control by using an incapacitation technique that causes temporary impairment of muscular control." },
+    { "term": "Penetrating Strike", "definition": "A strike to a muscle where the striking object penetrates the muscle and nerves, increasing the power of the strike." },
+    { "term": "Clinch", "definition": "A technique that involves holding a person tightly in a close position." },
+    { "term": "Dialogue", "definition": "A controlled, unemotional communication between an officer and a subject aimed at problem-solving and communication." },
+    { "term": "Verbal Direction", "definition": "The use of proper, clear, and concise commands to let a person know what you need or expect them to do." },
+    { "term": "Touch", "definition": "A non-threatening, non-custodial physical contact that can be used to support or emphasize a verbal command." },
+    { "term": "Target Glance", "definition": "A non-verbal cue where a subject glances at a target area, indicating potential aggression." },
+    { "term": "Interview Stance", "definition": "A low-profile stance with your strong side away from the subject and hands above waist level." },
+    { "term": "Offensive Ready Stance", "definition": "A high-profile stance with your strong side away from the subject and hands just below eye level." },
+    { "term": "Relative Positioning", "definition": "Describes where you stand or position yourself in relation to the subject." },
+    { "term": "Reactionary Gap", "definition": "The distance you must keep between you and the subject to react effectively against a sudden threat (generally 6-9 feet)." },
+    { "term": "Danger Zone", "definition": "The area within the reactionary gap." },
+    { "term": "Visual Control (of the hands)", "definition": "The ability to see both of the subject's hands and to know that they are not holding any weapons." },
+    { "term": "Reaction Time Principle", "definition": "The amount of time it takes for the brain to process a physical threat and the body to respond." },
+    { "term": "Evasion", "definition": "Simply shifting your body or sidestepping to avoid an attack." },
+    { "term": "Redirection", "definition": "Using empty-hand techniques to move the subject away." },
+    { "term": "Pressure Points", "definition": "Techniques used to control resistant behavior by using pain compliance on a nerve, joint, or sensitive area." },
+    { "term": "Touch Pressure", "definition": "Applying continual, uninterrupted pressure with the tip of the finger(s) or thumb to a pressure point." },
+    { "term": "Stabilization", "definition": "Immobilizing the subject's head so the subject cannot move or escape during a pressure point technique." },
+    { "term": "Escort Position", "definition": "A technique used to move a subject from one point to another without using pain compliance, providing minimal control through leverage." },
+    { "term": "Transporters (Come-Along Holds)", "definition": "Techniques used to move a subject from one point to another with pain compliance or mechanical compliance." },
+    { "term": "Restraint Devices", "definition": "Tools, such as handcuffs, designed to temporarily restrain a subject's movements." },
+    { "term": "Three-Point Pin", "definition": "A technique used to control a subject on the ground for handcuffing by using the subject's shoulder and wrist." },
+    { "term": "Pat Down", "definition": "A physical frisk of a subject conducted in a predetermined pattern to locate weapons, based on reasonable suspicion." },
+    { "term": "Plain Touch/Feel Doctrine", "definition": "Allows an officer to seize any object 'whose contour or mass' is identified as apparent contraband during a pat down." },
+    { "term": "Custodial Search Technique", "definition": "A complete search of a subject taken into custody in an unsecured environment, typically using the quadrant search approach." },
+    { "term": "Quadrant Search Approach", "definition": "A systematic search technique that divides the body into four sections horizontally and vertically." },
+    { "term": "Blocks", "definition": "Reaction techniques using the arms, legs, or body to deflect or redirect an impending strike." },
+    { "term": "Empty-Hand Striking Technique", "definition": "Any impact technique using hands, arms, elbows, feet, legs, knees, or head to strike a subject." },
+    { "term": "Temporary Motor Dysfunction", "definition": "A type of incapacitation that causes temporary impairment of muscle control, such as a cramp." },
+    { "term": "Snap-Back Strike", "definition": "A strike that is delivered and then retracted very quickly, enabling multiple strikes." },
+    { "term": "Diversion", "definition": "A technique that interrupts the subject's concentration so that energy is redirected from the current focus." },
+    { "term": "Takedowns", "definition": "Techniques used to bring a resisting subject from a standing position to the ground." },
+    { "term": "Grappling", "definition": "The use of body mechanics to leverage or control another person." },
+    { "term": "Vascular Neck Restraint", "definition": "Compresses certain veins and arteries in the neck to cause a subject to lose consciousness briefly. Should only be used when deadly force is authorized." },
+    { "term": "Chokehold (s. 943.1735 F.S.)", "definition": "The intentional and prolonged application of force to the throat, windpipe, or airway of another person that prevents the intake of air." },
+    { "term": "Stalling", "definition": "A tactical method of safely controlling a suspect on the ground until you can physically recover, reassess, or backup arrives." },
+    { "term": "Ground Defense Position", "definition": "A position used if you are knocked to the ground and cannot immediately recover, allowing you to defend or access a weapon." },
+    { "term": "Guard (Ground Position)", "definition": "A ground fighting position where one person is on their back with the other person positioned between their legs." },
+    { "term": "Side Control", "definition": "A basic stalling position using leverage and chest-to-chest contact to hold a subject down." },
+    { "term": "Full Mount", "definition": "Considered the most dominant position in ground fighting, where one person sits on top of another's chest or waist." },
+    { "term": "Bridge and Roll", "definition": "An escape technique from the full mount position to reverse the position and end up on top in the subject's guard." },
+    { "term": "Elbow Escape", "definition": "A technique to escape from the full mount position by creating space and sliding a leg under the subject." },
+    { "term": "Intermediate Weapons", "definition": "Tools used when empty-handed control is ineffective, but the subject's level of resistance does not merit deadly force." },
+    { "term": "Impact Weapon", "definition": "Any object used for striking, which may disable or cause temporary motor dysfunction." },
+    { "term": "Weapons of Opportunity", "definition": "Unconventional impact weapons, such as a broomstick, flashlight, or clipboard." },
+    { "term": "Electronic Control Devices (ECD)", "definition": "Use a high voltage, low-power electrical charge to induce involuntary muscle contractions that temporarily disable a subject." },
+    { "term": "OC (Oleoresin Capsicum)", "definition": "Commonly called pepper spray, an inflammatory agent that causes tearing, involuntary closing of the eyes, and a sensation of respiratory distress." },
+    { "term": "CS (Orthochlorobenzal-malononitrile)", "definition": "An irritant agent that causes burning and tearing eyes, nasal discharge, and skin and upper respiratory irritation." },
+    { "term": "Capsaicin", "definition": "The active ingredient in OC spray which produces the heat felt when it makes contact with human tissue." },
+    { "term": "Scoville Heat Units (SHU)", "definition": "A scale used to measure the heat value (burning sensation) of capsicum." },
+    { "term": "Strobing", "definition": "Forcefully blinking the eyes using all the muscles in the face to help clear the eyes after OC exposure." },
+    { "term": "Telegraphing", "definition": "Revealing your intentions through small eye, hand, or foot movements in the direction that you plan to move." },
+    { "term": "Action is Faster than Reaction", "definition": "A principle stating that when you enter the danger zone to deal with a subject, you are the initiator and the subject must react to your threat." },
+    { "term": "Deadly Weapon", "definition": "Any item used to cause death or great bodily harm." }
+        ],
+        "matching": [
+    { "term": "Defensive Tactics", "definition": "A system of controlled defensive and offensive body movements that criminal justice officers use to respond to a subject's aggression or resistance." },
+    { "term": "Cardiovascular Training", "definition": "Any exercise that elevates the heart rate to a range of 60% to 85% of the maximum rate." },
+    { "term": "Chapter 776, F.S.", "definition": "Governs all use of force by criminal justice officers." },
+    { "term": "Chapter 944, F.S.", "definition": "Addresses the use of force specifically by state correctional and correctional probation officers." },
+    { "term": "Objective Reasonableness", "definition": "The standard used by courts to decide whether an officer's use of force is an appropriate response, judged from the perspective of a reasonable officer on the scene." },
+    { "term": "Compliance", "definition": "The verbal or physical yielding to an officer's authority without apparent threat of resistance or violence." },
+    { "term": "Escalation", "definition": "Increasing the use of force or resistance." },
+    { "term": "De-escalation", "definition": "Decreasing the use of force or resistance." },
+    { "term": "Disengagement", "definition": "Discontinuing a command or physical use of force, for example, by breaking away from a subject." },
+    { "term": "Passive Resistance", "definition": "A subject's verbal or physical refusal to comply with an officer's lawful direction, causing the officer to use physical techniques to establish control." },
+    { "term": "Active Resistance", "definition": "A subject's use of physically evasive movements directed toward the officer, such as bracing, tensing, pushing, or pulling." },
+    { "term": "Aggressive Resistance", "definition": "Hostile, attacking movements that may cause injury but are not likely to cause death or great bodily harm." },
+    { "term": "Deadly Force Resistance", "definition": "Hostile, attacking movements with or without a weapon that create a reasonable perception that the subject intends to cause death or great bodily harm." },
+    { "term": "Officer Presence", "definition": "Your ability to convey to subjects and onlookers that you are able and ready to take control." },
+    { "term": "Command Presence", "definition": "Your demeanor and the way you exhibit confidence through erect posture, alertness, and attention to surroundings." },
+    { "term": "Physical Control", "definition": "Achieving compliance or custody through the use of empty-hand or leverage-enhanced techniques." },
+    { "term": "Less Lethal Weapon", "definition": "A weapon that is not fundamentally designed to cause death or great bodily harm, such as an ECD, baton, or chemical agent." },
+    { "term": "Ability (Deadly Force Criteria)", "definition": "Refers to the subject having the means to carry out their intent to cause death or great bodily harm." },
+    { "term": "Opportunity (Deadly Force Criteria)", "definition": "Means the subject is capable of acting on a plan to cause death or great bodily harm to the officer or others." },
+    { "term": "Intent (Deadly Force Criteria)", "definition": "A subject's intention to voluntarily make the bodily movement that becomes the act to commit a criminal offense." },
+    { "term": "Totality of Circumstances", "definition": "A term the court uses to refer to all facts and circumstances known to the officer at the time as the basis for a use of force decision." },
+    { "term": "Survival Stress", "definition": "The body and mind's response to a perceived threat; also called fear-induced stress or combat stress." },
+    { "term": "Four Instinctual Reactions to Stress", "definition": "Fight, flight, posture, or submit." },
+    { "term": "Submit", "definition": "To completely relinquish control to another." },
+    { "term": "Fine Motor Skills", "definition": "The muscle control required to make small, precise movements, such as unlocking handcuffs with a key." },
+    { "term": "Gross Motor Skills", "definition": "Movements of the large or major muscles of the body to do things like run, punch, or kick." },
+    { "term": "Complex Motor Skills", "definition": "Tasks that require a combination of fine and gross motor skills using hand-eye coordination timed to a single event." },
+    { "term": "Exhilaration Speech", "definition": "Statements brought on by a euphoric feeling of accomplishment after prevailing in a critical incident." },
+    { "term": "Threat Awareness Spectrum", "definition": "An illustration of how survival stress may affect your reaction, with levels from Condition White (unaware) to Condition Black (panicked)." },
+    { "term": "Condition Yellow", "definition": "The desired state of awareness on routine duty; a state of relaxed awareness, scanning for potential threats." },
+    { "term": "Balance Displacement", "definition": "A controlling technique used to break the subject's balance through the use of leverage principles." },
+    { "term": "Leverage", "definition": "Using a great force against a weaker resistance to gain control." },
+    { "term": "Pain Compliance", "definition": "A subject's response to a combination of pain and verbal commands to stop resisting." },
+    { "term": "Mechanical Compliance", "definition": "Gaining control by applying pressure or leverage on a joint by locking it up so that no movement is possible." },
+    { "term": "Joint Manipulation", "definition": "Gaining control by bending or twisting a joint in a direction that will cause pain or discomfort." },
+    { "term": "Motor Dysfunction", "definition": "Gaining control by using an incapacitation technique that causes temporary impairment of muscular control." },
+    { "term": "Penetrating Strike", "definition": "A strike to a muscle where the striking object penetrates the muscle and nerves, increasing the power of the strike." },
+    { "term": "Clinch", "definition": "A technique that involves holding a person tightly in a close position." },
+    { "term": "Dialogue", "definition": "A controlled, unemotional communication between an officer and a subject aimed at problem-solving and communication." },
+    { "term": "Verbal Direction", "definition": "The use of proper, clear, and concise commands to let a person know what you need or expect them to do." },
+    { "term": "Touch", "definition": "A non-threatening, non-custodial physical contact that can be used to support or emphasize a verbal command." },
+    { "term": "Target Glance", "definition": "A non-verbal cue where a subject glances at a target area, indicating potential aggression." },
+    { "term": "Interview Stance", "definition": "A low-profile stance with your strong side away from the subject and hands above waist level." },
+    { "term": "Offensive Ready Stance", "definition": "A high-profile stance with your strong side away from the subject and hands just below eye level." },
+    { "term": "Relative Positioning", "definition": "Describes where you stand or position yourself in relation to the subject." },
+    { "term": "Reactionary Gap", "definition": "The distance you must keep between you and the subject to react effectively against a sudden threat (generally 6-9 feet)." },
+    { "term": "Danger Zone", "definition": "The area within the reactionary gap." },
+    { "term": "Visual Control (of the hands)", "definition": "The ability to see both of the subject's hands and to know that they are not holding any weapons." },
+    { "term": "Reaction Time Principle", "definition": "The amount of time it takes for the brain to process a physical threat and the body to respond." },
+    { "term": "Evasion", "definition": "Simply shifting your body or sidestepping to avoid an attack." },
+    { "term": "Redirection", "definition": "Using empty-hand techniques to move the subject away." },
+    { "term": "Pressure Points", "definition": "Techniques used to control resistant behavior by using pain compliance on a nerve, joint, or sensitive area." },
+    { "term": "Touch Pressure", "definition": "Applying continual, uninterrupted pressure with the tip of the finger(s) or thumb to a pressure point." },
+    { "term": "Stabilization", "definition": "Immobilizing the subject's head so the subject cannot move or escape during a pressure point technique." },
+    { "term": "Escort Position", "definition": "A technique used to move a subject from one point to another without using pain compliance, providing minimal control through leverage." },
+    { "term": "Transporters (Come-Along Holds)", "definition": "Techniques used to move a subject from one point to another with pain compliance or mechanical compliance." },
+    { "term": "Restraint Devices", "definition": "Tools, such as handcuffs, designed to temporarily restrain a subject's movements." },
+    { "term": "Three-Point Pin", "definition": "A technique used to control a subject on the ground for handcuffing by using the subject's shoulder and wrist." },
+    { "term": "Pat Down", "definition": "A physical frisk of a subject conducted in a predetermined pattern to locate weapons, based on reasonable suspicion." },
+    { "term": "Plain Touch/Feel Doctrine", "definition": "Allows an officer to seize any object 'whose contour or mass' is identified as apparent contraband during a pat down." },
+    { "term": "Custodial Search Technique", "definition": "A complete search of a subject taken into custody in an unsecured environment, typically using the quadrant search approach." },
+    { "term": "Quadrant Search Approach", "definition": "A systematic search technique that divides the body into four sections horizontally and vertically." },
+    { "term": "Blocks", "definition": "Reaction techniques using the arms, legs, or body to deflect or redirect an impending strike." },
+    { "term": "Empty-Hand Striking Technique", "definition": "Any impact technique using hands, arms, elbows, feet, legs, knees, or head to strike a subject." },
+    { "term": "Temporary Motor Dysfunction", "definition": "A type of incapacitation that causes temporary impairment of muscle control, such as a cramp." },
+    { "term": "Snap-Back Strike", "definition": "A strike that is delivered and then retracted very quickly, enabling multiple strikes." },
+    { "term": "Diversion", "definition": "A technique that interrupts the subject's concentration so that energy is redirected from the current focus." },
+    { "term": "Takedowns", "definition": "Techniques used to bring a resisting subject from a standing position to the ground." },
+    { "term": "Grappling", "definition": "The use of body mechanics to leverage or control another person." },
+    { "term": "Vascular Neck Restraint", "definition": "Compresses certain veins and arteries in the neck to cause a subject to lose consciousness briefly. Should only be used when deadly force is authorized." },
+    { "term": "Chokehold (s. 943.1735 F.S.)", "definition": "The intentional and prolonged application of force to the throat, windpipe, or airway of another person that prevents the intake of air." },
+    { "term": "Stalling", "definition": "A tactical method of safely controlling a suspect on the ground until you can physically recover, reassess, or backup arrives." },
+    { "term": "Ground Defense Position", "definition": "A position used if you are knocked to the ground and cannot immediately recover, allowing you to defend or access a weapon." },
+    { "term": "Guard (Ground Position)", "definition": "A ground fighting position where one person is on their back with the other person positioned between their legs." },
+    { "term": "Side Control", "definition": "A basic stalling position using leverage and chest-to-chest contact to hold a subject down." },
+    { "term": "Full Mount", "definition": "Considered the most dominant position in ground fighting, where one person sits on top of another's chest or waist." },
+    { "term": "Bridge and Roll", "definition": "An escape technique from the full mount position to reverse the position and end up on top in the subject's guard." },
+    { "term": "Elbow Escape", "definition": "A technique to escape from the full mount position by creating space and sliding a leg under the subject." },
+    { "term": "Intermediate Weapons", "definition": "Tools used when empty-handed control is ineffective, but the subject's level of resistance does not merit deadly force." },
+    { "term": "Impact Weapon", "definition": "Any object used for striking, which may disable or cause temporary motor dysfunction." },
+    { "term": "Weapons of Opportunity", "definition": "Unconventional impact weapons, such as a broomstick, flashlight, or clipboard." },
+    { "term": "Electronic Control Devices (ECD)", "definition": "Use a high voltage, low-power electrical charge to induce involuntary muscle contractions that temporarily disable a subject." },
+    { "term": "OC (Oleoresin Capsicum)", "definition": "Commonly called pepper spray, an inflammatory agent that causes tearing, involuntary closing of the eyes, and a sensation of respiratory distress." },
+    { "term": "CS (Orthochlorobenzal-malononitrile)", "definition": "An irritant agent that causes burning and tearing eyes, nasal discharge, and skin and upper respiratory irritation." },
+    { "term": "Capsaicin", "definition": "The active ingredient in OC spray which produces the heat felt when it makes contact with human tissue." },
+    { "term": "Scoville Heat Units (SHU)", "definition": "A scale used to measure the heat value (burning sensation) of capsicum." },
+    { "term": "Strobing", "definition": "Forcefully blinking the eyes using all the muscles in the face to help clear the eyes after OC exposure." },
+    { "term": "Telegraphing", "definition": "Revealing your intentions through small eye, hand, or foot movements in the direction that you plan to move." },
+    { "term": "Action is Faster than Reaction", "definition": "A principle stating that when you enter the danger zone to deal with a subject, you are the initiator and the subject must react to your threat." },
+    { "term": "Deadly Weapon", "definition": "Any item used to cause death or great bodily harm." }
+        ],
+        "listGame": [
+{"question": "What are the fundamental principles used in defensive tactics?", "correctAnswers": ["Balance", "Balance displacement", "Leverage", "Pain compliance", "Mechanical compliance", "Joint manipulation", "Motor dysfunction", "Penetrating strike", "Clinch"], "incorrectAnswers": ["Reaction time principle", "Officer presence", "Verbal direction", "Evasion", "Redirection", "Stalling"]},
+{"question": "What are some of the non-verbal cues that may indicate a subject's aggression or posturing?", "correctAnswers": ["increased breathing", "stopping of all movement", "clenched fists and quivering hands", "refusal to show palms of hands", "reddened or flushed face", "prominent expanding veins on face and forearms", "shifting of shoulders or change of stance", "glancing at a target area (target glance)", "ignoring the officer", "rapid, angry movements"], "incorrectAnswers": ["abnormal stuttering", "serious and explicit swearing", "specific verbal threats", "maintaining direct eye contact", "a calm and steady voice"]},
+{"question": "What are the three search techniques typically used in the defensive tactics context?", "correctAnswers": ["pat down", "custodial", "inmate"], "incorrectAnswers": ["strip search", "body cavity search", "vehicle search", "area search"]},
+{"question": "When conducting a pat down, what are the general procedures to follow?", "correctAnswers": ["Use loud, clear verbal commands throughout the process.", "Be aware of verbal and non-verbal cues that indicate the probability of aggressive behavior.", "Visually scan the subject while assuming the interview stance.", "Have the subject lift their arms to tighten clothing so you can visually search potential concealment areas.", "Have the subject move their hands away from their body.", "Have the subject place their hands in a way so they can be controlled.", "Physically control the subject's hands.", "Keep the subject off balance.", "Conduct the pat down in a predetermined pattern.", "Follow up with the appropriate action(s)."], "incorrectAnswers": ["Handcuff the subject first.", "Use the quadrant search approach.", "Remove the contents of their pockets.", "Have the inmate take off their shoes and hat."]},
+{"question": "What are the three types of inmate searches?", "correctAnswers": ["clothed", "strip/unclothed", "body cavity"], "incorrectAnswers": ["pat down", "custodial search", "quadrant search", "visual search"]},
+{"question": "What are some of the empty-hand striking techniques covered in the text?", "correctAnswers": ["palm heel strike", "punches", "hammer fist strike", "backfist strike", "elbow strike", "knee strike", "front kick", "angle kick"], "incorrectAnswers": ["pressure points", "takedowns", "escapes", "blocks", "joint manipulation"]},
+{"question": "What are the different types of takedown techniques?", "correctAnswers": ["straight arm takedown", "hammer lock takedown", "shoulder lock takedown", "rear takedown", "front takedown", "hip roll"], "incorrectAnswers": ["three-point pin", "sprawl", "bridge and roll", "guard break", "elbow escape"]},
+{"question": "What are the different types of upright grappling body holds discussed for escape techniques?", "correctAnswers": ["escape from front chokehold", "escape from rear chokehold", "escape from front body hold over/under arms", "escape from rear body hold over/under arms", "escape from headlock", "escape from front football tackle"], "incorrectAnswers": ["escape from side control", "escape from full mount", "escape from rear mount", "escape from guard"]},
+{"question": "What are the diversion techniques used in upright grappling?", "correctAnswers": ["headbutt", "foot stomp", "shin scrape"], "incorrectAnswers": ["palm heel strike", "knee strike", "elbow strike", "eye gouge"]},
+{"question": "What are some of the stalling techniques for ground control?", "correctAnswers": ["guard stall", "side control", "full mount", "full mount stall"], "incorrectAnswers": ["ground defense position", "bridge and roll", "elbow escape", "hip escapes (shrimping)"]},
+{"question": "What are some of the ground escape techniques covered in this lesson?", "correctAnswers": ["ground defense position", "guard break", "defend and escape from side control", "bridge and roll", "elbow escape", "defend and escape from a rear mount"], "incorrectAnswers": ["sprawl", "hip roll", "front takedown", "straight arm takedown"]},
+{"question": "What are the most common types of intermediate weapons?", "correctAnswers": ["impact weapons, such as batons or weapons of opportunity", "specialty impact weapons such as bean bag rounds or baton rounds", "electronic control devices, such as a CEW", "chemical agents"], "incorrectAnswers": ["handguns", "edged weapons", "unconventional weapons like flashlights or radios", "empty-hand techniques"]},
+{"question": "What are the different types of chemical agents primarily used by criminal justice officers?", "correctAnswers": ["OC (oleoresin capsicum)", "CS (orthochlorobenzal-malononitrile)"], "incorrectAnswers": ["CN (chloroacetophenone)", "Tear Gas", "Pepper Gel", "Foam Agents"]},
+{"question": "What are the weapon retention techniques covered in this lesson?", "correctAnswers": ["holstered intermediate weapon retention", "drawn baton retention", "holstered handgun retention", "drawn handgun retention"], "incorrectAnswers": ["weapon disarming techniques", "handgun defense from the front", "defense against an overhead stab", "maintaining the reactionary gap"]},
+{"question": "What are the principles that make handgun defense techniques effective?", "correctAnswers": ["surprise", "action is faster than reaction", "verbal distraction", "physical proximity"], "incorrectAnswers": ["maintaining a safe distance", "using cover and concealment", "telegraphing your intentions", "waiting for backup"]},
+{"question": "What are the different knife attack patterns a subject is likely to use?", "correctAnswers": ["straight thrust", "overhead attack with one or two hands", "forehand slash"], "incorrectAnswers": ["backhand slash", "underhand stab", "ice-pick grip attack", "slashing at the legs"]},
+{"question": "What are the defensive movements that may be used against a spontaneous, close-quarter, edged-weapon attack?", "correctAnswers": ["evade", "secure", "redirect"], "incorrectAnswers": ["block", "strike", "disarm", "takedown"]}
+
+        ],
+        "orderedListGame": [
+ {"question": "Arrange the steps for performing a front fall in the correct order.", "items": ["Extend your bent arms slightly in front of your chest.", "Fall forward to a prone position, contacting the ground with the palms, forearms, and feet.", "Turn your head to the side and exhale on impact."]},
+    {"question": "Place the steps for performing a rear fall in the correct order.", "items": ["Tuck your chin to your chest.", "Squat and roll backward.", "As your back makes contact with the ground, strike the ground with the palms of both hands while exhaling."]},
+    {"question": "Arrange the steps for performing a side fall in the correct order.", "items": ["Tuck your chin to your chest.", "Squat and roll to the rear quarter and to one side.", "As your body makes contact with the ground, swing the same side arm and strike the ground with the palm."]},
+    {"question": "Place the steps for assuming the foundation position from lying on your back.", "items": ["Using an extended arm, prop the upper body off the ground (posting).", "Bend the knees with feet on the ground.", "Keep your free hand up in a defensive position to protect vital areas."]},
+    {"question": "Arrange the steps for performing a pummeling drill with a partner.", "items": ["Start with each person having one overhook and one underhook.", "Both partners move their overhook arm to an underhook position at the same time.", "Continue this process, switching from overhook to underhook, alternating sides each time.", "Gradually increase resistance while both attempt to gain the double underhook position."]},
+    {"question": "Place the steps for performing an arm drag drill in the correct order.", "items": ["While facing the subject, block and grab the subject's right arm with your left arm.", "Bring the subject's arm across your centerline.", "Use your right hand to reach across and grasp the back of their right arm just above the elbow."]},
+    {"question": "Arrange the steps for applying the 'under the jaw' pressure point technique.", "items": ["Stabilize the subject's head.", "Locate the pressure point(s) under the jawbone.", "Apply pressure until the subject is compliant."]},
+    {"question": "Place the steps for applying the 'hollow behind the ear' pressure point technique.", "items": ["Stabilize the subject's head.", "Locate the pressure point in the hollow behind the ear.", "Apply pressure inward and toward the nose until the subject complies."]},
+    {"question": "Arrange the steps for applying the 'hollow behind the collarbone' pressure point technique.", "items": ["Stabilize the subject.", "Locate the pressure point behind the collarbone.", "Apply pressure toward the feet until the subject is compliant."]},
+    {"question": "Place the steps for applying the 'elbow under the shoulder blade' pressure point technique on a prone subject.", "items": ["Stabilize the subject while they are face down.", "Bend your elbow and place it on the subject's back along the spine at the shoulder blade.", "Apply downward pressure with the elbow until the subject is compliant."]},
+    {"question": "Arrange the steps for applying the escort position.", "items": ["Maintain an appropriate stance.", "Make contact with the subject's arm by grasping simultaneously the wrist and the upper arm just above the elbow.", "Turn the subject's palm so that it is facing you."]},
+    {"question": "Place the steps for applying a hammer lock transporter from an escort position.", "items": ["Mirror the controlled hand and rotate the subject's controlled hand.", "Sweep the subject's hand behind their back.", "Maintain control by bending the wrist."]},
+    {"question": "Arrange the steps for applying a shoulder lock transporter from an escort position.", "items": ["Raise the subject's elbow upward, then roll the subject's shoulder forward.", "Push the controlled arm behind the subject's back, over your forearm.", "Place your hand on the subject's triceps.", "Reach across the subject's back and control the subject's head."]},
+    {"question": "Place the basic steps for applying handcuffs in the correct order.", "items": ["Visually inspect and direct the subject into a position that prepares for handcuffing.", "Draw the handcuffs from the holster.", "Place one handcuff on one wrist.", "Place the other handcuff on the other wrist.", "Check for proper fit.", "Double lock the handcuffs.", "Search the subject."]},
+    {"question": "Arrange the steps for removing handcuffs in the correct order.", "items": ["Direct the subject into a position that prepares for removing handcuffs.", "Draw the handcuff key.", "Remove the handcuff from one wrist and close the cuff.", "Control the subject's uncuffed hand.", "Remove the other handcuff and close it."]},
+    {"question": "Place the steps for applying waist chains in the correct order.", "items": ["Position the subject facing you with their hands in front and palms facing each other.", "Place the handcuffs on their wrists, check for proper fit, and then double lock.", "Attach the black box to the handcuffs from the bottom up.", "Direct the subject to turn around, wrapping the chain around their waist.", "Use a padlock to go through both lengths of the chain and secure it on the subject's side."]},
+    {"question": "Arrange the steps for applying leg restraints in the correct order.", "items": ["Hold the leg restraints with the double bar facing the subject's legs.", "Have the subject lean against a wall or kneel on a chair.", "Apply the leg restraints to each ankle, check for proper fit, and then double lock them."]},
+    {"question": "Place the steps for conducting a pat down search in the correct order.", "items": ["Have the subject lift their arms to tighten clothing for a visual search.", "Have the subject place their hands in a way so they can be controlled.", "Physically control the subject's hands.", "Keep the subject off balance.", "Conduct the pat down in a predetermined pattern."]},
+    {"question": "Arrange the steps for conducting a strip or unclothed search in the correct order.", "items": ["Have the inmate remove all clothing.", "Search the inmate's hair, ears, and mouth.", "Visually check the entire body including armpits, hands, and pubic region.", "Search every article of clothing and personal property."]},
+    {"question": "Place the steps for performing a straight arm takedown from an escort position.", "items": ["Slightly pull the subject off balance, straightening their arm.", "Pull their wrist downward with their palm toward you to your hip.", "Apply downward pressure to the elbow while maintaining control of the wrist.", "Move your leg rearward to rotate your hips.", "Drop to your knee (optional) and place the subject in a prone position."]},
+    {"question": "Arrange the steps for performing a rear takedown from an upright grappling position.", "items": ["Take an extended step behind the subject and lower your center of gravity.", "Place a hand on each side of the subject near the waistline/hip.", "Extend one leg and plant your foot directly behind the subject's heel.", "Sit down, twisting the subject back with you.", "Continue the twist/spinning motion, following the subject to the ground."]},
+    {"question": "Place the steps for performing a hip roll from an upright grappling position.", "items": ["Place your hip into the subject's lower abdomen.", "Lower your center of gravity.", "Pull the subject over the hip and direct them to the ground."]},
+    {"question": "Arrange the steps to defend and escape from a front chokehold.", "items": ["Tuck your chin and shrug your shoulders.", "Step straight back with one leg.", "Raise the opposite arm and swing it up and over the subject's arm to break the hold (windmill)."]},
+    {"question": "Place the steps to defend and escape from a rear chokehold.", "items": ["Tuck your chin and shrug your shoulders and lower your center of gravity.", "Raise your arm on the side they are choking you with and protect your airway with the other hand.", "Create space between your hips and the subject's.", "Windmill your raised arm in a downward motion between their hip and yours as you turn into the subject."]},
+    {"question": "Arrange the steps to escape from a side headlock.", "items": ["Establish an airway and a wide stance.", "Perform striking techniques or apply pressure points if needed.", "If the subject tries to strike, secure their striking arm.", "Perform a rear takedown."]},
+    {"question": "Place the steps for applying a standard vascular neck restraint in the correct order.", "items": ["Encircle the subject's neck with your arm, positioning your elbow in front of the subject's throat.", "With your right hand palm down and your left hand palm up, grab hands.", "Bring your wrist to your shoulder to apply equal pressure to the sides of the neck.", "Stabilize the subject's head with your head.", "Compress the neck until you get compliance or unconsciousness."]},
+    {"question": "Arrange the steps for performing a bridge and roll escape from the full mount.", "items": ["Thrust your hips up to form a bridge, forcing the subject to post.", "Control the subject's leg by placing your foot to the outside of their leg.", "Control the subject's arm on the same side by pulling it tight to your body.", "Push up with your foot and drive your hips up, thrusting the subject upward while you roll them onto their back."]},
+    {"question": "Place the steps for performing an elbow escape from the full mount.", "items": ["Bridge your hips and turn your body about 45 degrees to one side.", "Place your leg on that side flat on the ground.", "Use your elbow on that side to push the subject's knee away from you.", "Slide your leg under the subject's knee as space is cleared.", "Hook your other leg behind the subject's calf area.", "Turn toward the subject and create space using the shrimping technique."]},
+    {"question": "Arrange the steps to defend and escape from a rear mount.", "items": ["Keep your hands around your head for protection.", "Create space between you and the subject.", "Turn onto your back as quickly as possible.", "Follow up with an escape from full mount (bridge and roll/elbow escape)."]},
+    {"question": "Place the steps for retaining a holstered handgun when a subject grabs for it.", "items": ["Adjust your stance to maintain balance.", "Secure the weapon by forcefully applying downward pressure on the firearm or the subject's hand.", "Deliver strikes to appropriate target areas as you rotate your body to break the subject's grip."]},
+    {"question": "Arrange the steps for the cradle handgun retention technique when a subject grabs the barrel.", "items": ["Widen your stance and lower your center of gravity.", "Step forward and bring the handgun closer to your chest.", "Wrap your non-weapon arm under the handgun and the subject's hand, clamping them to your chest.", "Lever the gun barrel upward to release it from the subject's grasp.", "Create distance by stepping back while pulling your cradled handgun downward."]},
+    {"question": "Place the steps for defending against an overhead stab or forehand slash with an edged weapon.", "items": ["Palm strike the subject's upper weapon arm near the shoulder with both hands.", "Capture and secure the subject's weapon arm by encircling it with your arm.", "Deliver multiple disabling strikes."]}
+        ],
+        "statuteGame": [
+    {"prompt": "A network of trained professionals linked to provide advanced, out-of-hospital care for victims of sudden traumatic injury or illness.", "answer": "EMS System", "displayAnswer": "Emergency Medical Services (EMS) System"},
+    {"prompt": "A legal and contractual obligation to provide care to a patient.", "answer": "Duty to Act", "displayAnswer": "Duty to Act"},
+    {"prompt": "The degree of care that a reasonable person should exercise; the care expected of a provider with the same level of training under the same conditions.", "answer": "Standard of Care", "displayAnswer": "Standard of Care"},
+    {"prompt": "Protects a first-aid provider from liability for emergency care performed in good faith.", "answer": "Good Samaritan Act", "displayAnswer": "Good Samaritan Act"},
+    {"prompt": "Stopping care without ensuring the patient receives the same or better care.", "answer": "Abandonment", "displayAnswer": "Abandonment"},
+    {"prompt": "The failure to exercise the standard of care that a reasonably prudent person would have in a similar situation.", "answer": "Negligence", "displayAnswer": "Negligence"},
+    {"prompt": "Permission for an action that is clearly and unmistakably stated or written by the patient.", "answer": "Expressed Consent", "displayAnswer": "Expressed Consent"},
+    {"prompt": "The assumption that a person has given permission for an action because of their actions, rather than explicitly expressed.", "answer": "Implied Consent", "displayAnswer": "Implied Consent"},
+    {"prompt": "A person's agreement to allow something to happen, made with full knowledge of the facts, benefits, risks, and alternatives.", "answer": "Informed Consent", "displayAnswer": "Informed Consent"},
+    {"prompt": "A written and signed directive from a terminally ill patient to refuse CPR.", "answer": "DNRO", "displayAnswer": "Do Not Resuscitate Order (DNR/DNRO)"},
+    {"prompt": "Protects the rights of patients and the release of their confidential medical information.", "answer": "HIPAA", "displayAnswer": "Health Insurance Portability and Accountability Act (HIPAA)"},
+    {"prompt": "The body system that delivers oxygen to and removes carbon dioxide from the blood.", "answer": "Respiratory System", "displayAnswer": "Respiratory System"},
+    {"prompt": "The body system that pumps blood throughout the body, delivering oxygen and nutrients.", "answer": "Circulatory System", "displayAnswer": "Circulatory System"},
+    {"prompt": "The major artery in the neck used to feel for a patient's pulse.", "answer": "Carotid", "displayAnswer": "Carotid artery"},
+    {"prompt": "The major artery in the upper arm used to feel for an infant's pulse.", "answer": "Brachial", "displayAnswer": "Brachial artery"},
+    {"prompt": "The major artery in the wrist used to feel for a conscious patient's pulse.", "answer": "Radial", "displayAnswer": "Radial artery"},
+    {"prompt": "The supporting framework for the body, giving it shape and protecting vital organs.", "answer": "Skeletal System", "displayAnswer": "Skeletal System"},
+    {"prompt": "The body system that controls voluntary and involuntary body activity.", "answer": "Nervous System", "displayAnswer": "Nervous System"},
+    {"prompt": "Microorganisms, such as bacteria and viruses, that cause disease.", "answer": "Pathogens", "displayAnswer": "Pathogens"},
+    {"prompt": "A set of procedures designed to prevent transmission of bloodborne pathogens by assuming all patients are potentially infectious.", "answer": "Universal Precautions", "displayAnswer": "Universal Precautions"},
+    {"prompt": "The practice of isolating yourself from all body substances of patients undergoing medical treatment.", "answer": "BSI", "displayAnswer": "Body Substance Isolation (BSI)"},
+    {"prompt": "The four components of this process are: scene safety, mechanism of injury or nature of illness, number of victims, and need for more rescuers.", "answer": "Scene Size-Up", "displayAnswer": "Scene Size-Up"},
+    {"prompt": "A scale used to quickly check a patient's level of consciousness, standing for Alert, Verbal, Pain, and Unresponsive.", "answer": "AVPU", "displayAnswer": "AVPU Scale"},
+    {"prompt": "The mnemonic for the priority of care in a primary assessment: Massive hemorrhage, Airway, Respirations, Circulation, Hypothermia/Head injury.", "answer": "MARCH", "displayAnswer": "MARCH"},
+    {"prompt": "The mnemonic for examining extremities for Pulse, Motor, and Sensory functions.", "answer": "PMS", "displayAnswer": "PMS"},
+    {"prompt": "The mnemonic for physically assessing a patient for Deformities, Open injuries, Tenderness, and Swelling.", "answer": "DOTS", "displayAnswer": "DOTS"},
+    {"prompt": "A technique to open the airway of an unresponsive patient with a suspected neck or spinal injury.", "answer": "Jaw Thrust Maneuver", "displayAnswer": "Jaw Thrust Maneuver"},
+    {"prompt": "This occurs when someone's body is in a position that interferes or prevents them from breathing adequately.", "answer": "Positional Asphyxia", "displayAnswer": "Positional Asphyxia"},
+    {"prompt": "The process of sorting and categorizing patients to determine the order in which they receive medical attention in an MCI.", "answer": "Triage", "displayAnswer": "Triage"},
+    {"prompt": "A method of sorting patients in a mass casualty incident, standing for Simple Triage And Rapid Treatment.", "answer": "START", "displayAnswer": "Simple Triage and Rapid Treatment (START)"},
+    {"prompt": "The mnemonic used in the START triage method to assess Respiration, Perfusion, and Mental Status.", "answer": "RPM", "displayAnswer": "RPM"},
+    {"prompt": "A care environment that includes an active threat or any imminent danger.", "answer": "Direct Threat Care", "displayAnswer": "Direct Threat Care (Hot Zone)"},
+    {"prompt": "A care environment where an officer is out of imminent danger but not yet in a completely safe zone.", "answer": "Indirect Threat Care", "displayAnswer": "Indirect Threat Care (Warm Zone)"},
+    {"prompt": "A care environment where you are moving an injured officer towards a medical treatment facility.", "answer": "Evacuation Care", "displayAnswer": "Evacuation Care (Cold Zone)"},
+    {"prompt": "The failure of the heart and blood vessels to maintain enough oxygen-rich blood flowing to the vital organs.", "answer": "Shock", "displayAnswer": "Shock"},
+    {"prompt": "Bright red blood spurting from a wound, indicating a severed or damaged artery.", "answer": "Arterial bleeding", "displayAnswer": "Arterial bleeding"},
+    {"prompt": "Dark red blood flowing steadily from a wound, indicating a severed or damaged vein.", "answer": "Venous bleeding", "displayAnswer": "Venous bleeding"},
+    {"prompt": "A device that restricts the flow of blood to an extremity to control life-threatening bleeding.", "answer": "Tourniquet", "displayAnswer": "Tourniquet"},
+    {"prompt": "A wound dressing containing an agent that promotes blood clotting.", "answer": "Hemostatic gauze", "displayAnswer": "Hemostatic gauze or dressing"},
+    {"prompt": "An object that punctures the soft tissue and stays in place.", "answer": "Impaled object", "displayAnswer": "Impaled object"},
+    {"prompt": "The space left by tissue that is destroyed or displaced by the passage of a bullet.", "answer": "Cavity", "displayAnswer": "Cavity"},
+    {"prompt": "A brain injury that occurs when sudden trauma causes damage to the brain.", "answer": "TBI", "displayAnswer": "Traumatic Brain Injury (TBI)"},
+    {"prompt": "A type of head trauma in infants caused by violent shaking or blunt impact, which is a sign of child abuse.", "answer": "SBS", "displayAnswer": "Shaken Baby Syndrome (SBS)"},
+    {"prompt": "A type of airtight dressing applied to a penetrating trauma to the chest cavity.", "answer": "Chest Seal", "displayAnswer": "Chest Seal"},
+    {"prompt": "An open wound where the organs protrude from the abdominal cavity.", "answer": "Evisceration", "displayAnswer": "Abdominal Evisceration"},
+    {"prompt": "The medical term for a broken bone.", "answer": "Fracture", "displayAnswer": "Fracture"},
+    {"prompt": "Damage to the first, or outermost, layer of skin, which becomes red and feels very painful.", "answer": "Superficial burn", "displayAnswer": "Superficial burn (first-degree)"},
+    {"prompt": "Damage to the first two skin layers, which causes swelling and blisters.", "answer": "Partial-thickness burn", "displayAnswer": "Partial-thickness burn (second-degree)"},
+    {"prompt": "Damage to all skin layers, often affecting the muscles and nerves underneath.", "answer": "Full-thickness burn", "displayAnswer": "Full-thickness burn (third-degree)"},
+    {"prompt": "When a person takes too much of a substance or more than the recommended amount.", "answer": "Overdose", "displayAnswer": "Overdose"},
+    {"prompt": "A medication that rapidly reverses an opioid overdose.", "answer": "Naloxone", "displayAnswer": "Naloxone"},
+    {"prompt": "A chronic illness that influences how the body turns food into energy by affecting insulin.", "answer": "Diabetes", "displayAnswer": "Diabetes"},
+    {"prompt": "A burst of uncontrolled electrical activity between cells in the brain.", "answer": "Seizure", "displayAnswer": "Seizure"},
+    {"prompt": "The mnemonic to help recognize the signs of a stroke: Balance, Eyes, Face, Arm, Speech, Time.", "answer": "BEFAST", "displayAnswer": "BEFAST"},
+    {"prompt": "A life-threatening, severe allergic reaction to an insect bite, sting, medication, or other substance.", "answer": "Anaphylactic Shock", "displayAnswer": "Anaphylactic Shock"},
+    {"prompt": "A life-threatening emergency where the umbilical cord comes out of the vagina before the newborn.", "answer": "Umbilical Cord Prolapse", "displayAnswer": "Umbilical Cord Prolapse"},
+    {"prompt": "When the feet or buttocks present first during childbirth instead of the head.", "answer": "Breech Delivery", "displayAnswer": "Breech Delivery"},
+    {"prompt": "A system of controlled defensive and offensive body movements used to respond to a subject's aggression or resistance.", "answer": "Defensive tactics", "displayAnswer": "Defensive tactics"},
+    {"prompt": "Supporting the balance of the body using a limb.", "answer": "Posting", "displayAnswer": "Posting"},
+    {"prompt": "The movement in a hip escape, used to move from side to side to avoid or defend against an attack.", "answer": "Shrimping", "displayAnswer": "Shrimping"},
+    {"prompt": "The legal standard the courts use to decide whether an officer's use of force was appropriate, based on Graham v. Connor.", "answer": "Objective reasonableness", "displayAnswer": "Objective reasonableness"},
+    {"prompt": "The verbal or physical yielding to an officer's authority without apparent threat of resistance or violence.", "answer": "Compliance", "displayAnswer": "Compliance"},
+    {"prompt": "Increasing the use of force or resistance in response to a subject's actions.", "answer": "Escalation", "displayAnswer": "Escalation"},
+    {"prompt": "Decreasing the use of force or resistance once a subject is under control.", "answer": "De-escalation", "displayAnswer": "De-escalation"},
+    {"prompt": "A subject's verbal or physical refusal to comply with an officer's lawful direction.", "answer": "Passive resistance", "displayAnswer": "Passive resistance"},
+    {"prompt": "A subject's use of physically evasive movements like bracing or pulling to prevent an officer from establishing control.", "answer": "Active resistance", "displayAnswer": "Active resistance"},
+    {"prompt": "Hostile, attacking movements that may cause injury but are not likely to cause death or great bodily harm.", "answer": "Aggressive resistance", "displayAnswer": "Aggressive resistance"},
+    {"prompt": "Hostile, attacking movements that create a reasonable perception of imminent death or great bodily harm.", "answer": "Deadly force resistance", "displayAnswer": "Deadly force resistance"},
+    {"prompt": "Force that is likely to cause death or great bodily harm, as defined in s. 776.06, F.S.", "answer": "Deadly force", "displayAnswer": "Deadly force"},
+    {"prompt": "The three criteria for making deadly force decisions.", "answer": "Ability, opportunity, and intent", "displayAnswer": "Ability, opportunity, and intent"},
+    {"prompt": "A term the court uses to refer to all facts and circumstances known to the officer at the time of a use of force decision.", "answer": "Totality of circumstances", "displayAnswer": "Totality of circumstances"},
+    {"prompt": "The body and mind's response to a perceived threat, also called fear-induced stress.", "answer": "Survival stress", "displayAnswer": "Survival stress"},
+    {"prompt": "The desired state of awareness for an officer on routine duty, characterized by general awareness of possible threats.", "answer": "Condition Yellow", "displayAnswer": "Condition Yellow"},
+    {"prompt": "A controlling technique used to break a subject's balance through leverage principles.", "answer": "Balance displacement", "displayAnswer": "Balance displacement"},
+    {"prompt": "A subject's response to a combination of pain and verbal commands to stop resisting.", "answer": "Pain compliance", "displayAnswer": "Pain compliance"},
+    {"prompt": "Gaining control over a subject by applying pressure or leverage on a joint to lock it up.", "answer": "Mechanical compliance", "displayAnswer": "Mechanical compliance"},
+    {"prompt": "Gaining control over a subject by using an incapacitation technique that causes temporary impairment of muscular control.", "answer": "Motor dysfunction", "displayAnswer": "Motor dysfunction"},
+    {"prompt": "The distance an officer must keep between themselves and a subject to react effectively against a sudden threat (generally 6-9 feet).", "answer": "Reactionary gap", "displayAnswer": "Reactionary gap"},
+    {"prompt": "The area within the reactionary gap.", "answer": "Danger zone", "displayAnswer": "Danger zone"},
+    {"prompt": "The amount of time it takes for the brain to process a physical threat and the body to respond.", "answer": "Reaction time principle", "displayAnswer": "Reaction time principle"},
+    {"prompt": "Techniques used to control resistant behavior by using pain compliance on a nerve, joint, or sensitive area.", "answer": "Pressure points", "displayAnswer": "Pressure points"},
+    {"prompt": "A technique used to move a subject from one point to another without using pain compliance.", "answer": "Escort position", "displayAnswer": "Escort position"},
+    {"prompt": "Techniques, also called come-along holds, used to move a subject with pain or mechanical compliance.", "answer": "Transporters", "displayAnswer": "Transporters"},
+    {"prompt": "A technique used to control a subject for handcuffing by using the subject's shoulder and wrist.", "answer": "Three-point pin", "displayAnswer": "Three-point pin"},
+    {"prompt": "A physical frisk of a subject conducted in a predetermined pattern to locate weapons.", "answer": "Pat down", "displayAnswer": "Pat down"},
+    {"prompt": "The legal doctrine that allows an officer to seize an object whose contour or mass is identified as apparent contraband during a lawful pat down.", "answer": "Plain touch/feel doctrine", "displayAnswer": "Plain touch/feel doctrine"},
+    {"prompt": "A complete search of a subject taken into custody in an unsecured environment.", "answer": "Custodial search", "displayAnswer": "Custodial search"},
+    {"prompt": "A type of incapacitation that causes temporary impairment of muscle control, such as a cramp.", "answer": "Temporary motor dysfunction", "displayAnswer": "Temporary motor dysfunction"},
+    {"prompt": "A strike that is delivered and then retracted very quickly to enable multiple strikes.", "answer": "Snap-back strike", "displayAnswer": "Snap-back strike"},
+    {"prompt": "A technique that interrupts a subject's concentration so that energy is redirected from the current focus.", "answer": "Diversion", "displayAnswer": "Diversion"},
+    {"prompt": "Techniques used to bring a resisting subject from a standing position to the ground.", "answer": "Takedowns", "displayAnswer": "Takedowns"},
+    {"prompt": "The use of body mechanics to leverage or control another person.", "answer": "Grappling", "displayAnswer": "Grappling"},
+    {"prompt": "This compresses certain veins and arteries in the neck to cause a subject to lose consciousness briefly.", "answer": "Vascular neck restraint", "displayAnswer": "Vascular neck restraint"},
+    {"prompt": "The intentional and prolonged application of force to the throat or airway that prevents the intake of air, as defined in s. 943.1735 F.S.", "answer": "Chokehold", "displayAnswer": "Chokehold"},
+    {"prompt": "A tactical method of safely controlling a suspect until you physically recover or backup arrives.", "answer": "Stalling", "displayAnswer": "Stalling"},
+    {"prompt": "Tools used when empty-handed control is ineffective but deadly force is not merited.", "answer": "Intermediate weapons", "displayAnswer": "Intermediate weapons"},
+    {"prompt": "Unconventional impact weapons an officer has at hand, such as a flashlight or clipboard.", "answer": "Weapons of opportunity", "displayAnswer": "Weapons of opportunity"},
+    {"prompt": "An inflammatory agent, commonly called pepper spray, that causes tearing and involuntary closing of the eyes.", "answer": "OC", "displayAnswer": "Oleoresin Capsicum (OC)"},
+    {"prompt": "An irritant agent that causes burning and tearing eyes, nasal discharge, and skin irritation.", "answer": "CS", "displayAnswer": "Orthochlorobenzal-malononitrile (CS)"},
+    {"prompt": "The active ingredient in OC.", "answer": "Capsaicin", "displayAnswer": "Capsaicin"},
+    {"prompt": "The scale used to measure the heat value of capsicum.", "answer": "SHU", "displayAnswer": "Scoville Heat Units (SHU)"},
+    {"prompt": "Forcefully blinking the eyes using all the muscles in the face to help clear them of contaminants.", "answer": "Strobing", "displayAnswer": "Strobing"},
+    {"prompt": "Revealing your intentions through small eye, hand, or foot movements.", "answer": "Telegraphing", "displayAnswer": "Telegraphing"},
+    {"prompt": "Simply shifting your body or sidestepping to avoid an attack.", "answer": "Evasion", "displayAnswer": "Evasion"},
+    {"prompt": "Using empty-hand techniques to move a subject away.", "answer": "Redirection", "displayAnswer": "Redirection"}
+        ]
+    }
+    </script>
+
+    <!-- Header -->
+    <header class="header-bar p-2 shadow-md z-10">
+        <div class="container mx-auto flex justify-between items-center">
+             <svg viewBox="0 0 270 170" class="h-16">
+                <path fill="#2563eb" d="M120.8,11.3l-81.2,49.2c-6.1,3.7-9.8,10.2-9.8,17.2v83.5c0,4.8,3.9,8.7,8.7,8.7h162.3c4.8,0,8.7-3.9,8.7-8.7V77.7c0-7-3.7-13.5-9.8-17.2L119.2,11.3z"/>
+                <path fill="#60a5fa" d="M135,10.5l81.2,49.2c6.1,3.7,9.8,10.2,9.8,17.2v83.5c0,4.8-3.9,8.7-8.7,8.7H135V10.5z"/>
+                <text x="10" y="145" font-family="Arial, sans-serif" font-size="38" fill="#FFFFFF" font-weight="bold">BKRDI-FY</text>
+                <text x="10" y="165" font-family="Arial, sans-serif" font-size="14" fill="#FFFFFF" font-weight="bold">TEST & STUDY</text>
+            </svg>
+            <div id="gameTitle" class="text-lg font-semibold">Home Screen</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="mainContentArea" class="flex-grow container mx-auto p-4 sm:p-6 lg:p-8 overflow-y-auto">
+
+        <!-- Main Menu Page -->
+        <div id="menuPage">
+            <div class="game-card text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold text-slate-800 mb-2">Defensive Tactics</h2>
+                <p class="text-lg text-slate-600 mb-8">Interactive Study Guide</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <button onclick="startApp('flashcards')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Flash Cards</span>
+                        <p class="font-normal text-blue-100 mt-1">Review key terms.</p>
+                    </button>
+                    <button onclick="startApp('matching')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                         <span class="text-2xl">Matching Game</span>
+                         <p class="font-normal text-green-100 mt-1">Match terms to definitions.</p>
+                    </button>
+                    <button onclick="startApp('listGameMenu')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                         <span class="text-2xl">List Game</span>
+                         <p class="font-normal text-purple-100 mt-1">Identify items from a list.</p>
+                    </button>
+                     <button onclick="startApp('statuteGame')" class="bg-red-600 hover:bg-red-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Fill In Game</span>
+                        <p class="font-normal text-red-100 mt-1">Fill in the blanks.</p>
+                    </button>
+                    <button onclick="window.open('https://tehcrayz.github.io/soce/FirstAidforCriminalJusticeOfficers.html', '_blank')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Tests & Study</span>
+                        <p class="font-normal text-yellow-100 mt-1">BKRDIFY EXAMS.</p>
+                    </button>
+                    <button onclick="window.open('https://tinyurl.com/fgjdtyjnd', '_blank')" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Chapter Notes</span>
+                        <p class="font-normal text-cyan-100 mt-1">The full deal.</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Game Pages -->
+        <div id="flashcardsPage" class="hidden"></div>
+        <div id="matchingPage" class="hidden"></div>
+        <div id="listGamePage" class="hidden"></div>
+        <div id="orderedListPage" class="hidden"></div>
+        <div id="statuteGamePage" class="hidden"></div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer-bar p-3 shadow-md z-10">
+        <div class="container mx-auto text-center text-sm text-gray-700">
+            BKRDI-Fy Version 1.9.3
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- DATA & DOM ---
+            let data = {};
+            try {
+                data = JSON.parse(document.getElementById('questionBank').textContent);
+            } catch (e) {
+                console.error("Error parsing JSON data:", e);
+                document.body.innerHTML = `<div class="p-4 text-red-700 bg-red-100">Error loading study data. Please check the JSON format.</div>`;
+                return;
+            }
+            
+            const pages = {
+                menuPage: document.getElementById('menuPage'),
+                flashcardsPage: document.getElementById('flashcardsPage'),
+                matchingPage: document.getElementById('matchingPage'),
+                listGamePage: document.getElementById('listGamePage'),
+                orderedListPage: document.getElementById('orderedListPage'),
+                statuteGamePage: document.getElementById('statuteGamePage')
+            };
+            const gameTitle = document.getElementById('gameTitle');
+
+            // --- STATE ---
+            let flashcardGameState = {};
+            let listGameState = {};
+            let statuteGameState = {};
+            let orderedListGameState = {};
+
+            // --- UTILITY ---
+            function shuffle(array) {
+                const newArray = [...array];
+                for (let i = newArray.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+                }
+                return newArray;
+            }
+
+            // --- NAVIGATION ---
+            function showPage(pageId) {
+                Object.values(pages).forEach(page => page && page.classList.add('hidden'));
+                if (pages[pageId]) {
+                    pages[pageId].classList.remove('hidden');
+                }
+            }
+
+            window.goHome = function() {
+                Object.keys(pages).forEach(key => {
+                    if (key !== 'menuPage' && pages[key]) {
+                        pages[key].innerHTML = '';
+                    }
+                });
+                showPage('menuPage');
+                gameTitle.textContent = "Home Screen";
+            }
+
+            window.startApp = function(appType) {
+                const pageMap = {
+                    flashcards: { title: "Flash Cards", renderFunc: renderFlashcardSetup, page: 'flashcardsPage' },
+                    matching: { title: "Matching Game", renderFunc: renderMatchingGame, page: 'matchingPage' },
+                    listGameMenu: { title: "List Game", renderFunc: renderListGameMenu, page: 'listGamePage'},
+                    listGame: { title: "General Lists", renderFunc: renderListGame, page: 'listGamePage' },
+                    orderedListGame: { title: "Ordered Lists", renderFunc: renderOrderedListGame, page: 'orderedListPage'},
+                    statuteGame: { title: "Fill In Game", renderFunc: renderStatuteGame, page: 'statuteGamePage' }
+                };
+                if (pageMap[appType]) {
+                    gameTitle.textContent = pageMap[appType].title;
+                    pageMap[appType].renderFunc();
+                    showPage(pageMap[appType].page);
+                }
+            }
+            
+            // --- FLASHCARD LOGIC ---
+            function renderFlashcardSetup() {
+                pages.flashcardsPage.innerHTML = `<div class="game-card flashcard-container w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Flash Card Setup</h2><div class="mb-6"><label for="cards-per-round" class="block text-lg mb-2">How many cards per round?</label><select id="cards-per-round" class="p-2 border rounded-md"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="${data.flashcards.length}">All (${data.flashcards.length})</option></select></div><button onclick="setupFlashcardGame()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Start Studying</button></div>`;
+            }
+            
+            window.setupFlashcardGame = function() {
+                const cardsPerRound = parseInt(document.getElementById('cards-per-round').value, 10);
+                flashcardGameState = {
+                    mainDeck: shuffle([...data.flashcards]),
+                    currentRoundDeck: [],
+                    roundSize: cardsPerRound,
+                    currentIndex: 0,
+                    carryOver: []
+                };
+                startNewFlashcardRound();
+            }
+
+            window.startNewFlashcardRound = function() {
+                const needed = flashcardGameState.roundSize - flashcardGameState.carryOver.length;
+                let newCards = [];
+                if(needed > 0) {
+                    newCards = flashcardGameState.mainDeck.splice(0, needed);
+                }
+                
+                flashcardGameState.currentRoundDeck = shuffle([...flashcardGameState.carryOver, ...newCards]);
+                flashcardGameState.carryOver = [];
+                flashcardGameState.currentIndex = 0;
+                
+                if (flashcardGameState.currentRoundDeck.length === 0) {
+                     pages.flashcardsPage.innerHTML = `<div class="game-card w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Congratulations!</h2><p class="mb-6">You have mastered all the flashcards!</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                     return;
+                }
+                
+                renderFlashcard();
+            }
+
+            function renderFlashcard() {
+                if (flashcardGameState.currentIndex >= flashcardGameState.currentRoundDeck.length) {
+                    renderEndOfRoundScreen();
+                    return;
+                }
+                const card = flashcardGameState.currentRoundDeck[flashcardGameState.currentIndex];
+                pages.flashcardsPage.innerHTML = `<div class="game-card flashcard-container w-full max-w-2xl mx-auto"><div class="flex justify-between items-center mb-4"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><div class="text-slate-500 font-medium">Card ${flashcardGameState.currentIndex + 1} of ${flashcardGameState.currentRoundDeck.length} (Deck: ${flashcardGameState.mainDeck.length})</div></div><div class="perspective-1000"><div id="flashcard" class="flip-card relative w-full h-80 cursor-pointer rounded-xl" onclick="this.classList.toggle('flipped')"><div class="flip-card-inner relative w-full h-full"><div class="flip-card-front absolute w-full h-full bg-slate-200 rounded-xl flex items-center justify-center p-6 text-center"><p class="text-xl">${card.definition}</p></div><div class="flip-card-back absolute w-full h-full bg-blue-600 text-white rounded-xl flex items-center justify-center p-6 text-center"><h2 class="text-3xl font-bold">${card.term}</h2></div></div></div></div><div class="mt-6 flex justify-center space-x-4"><button onclick="markCardAsKnown()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">I Know This</button><button onclick="markCardAsUnsure()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Not Sure</button></div></div>`;
+            }
+            
+            function renderEndOfRoundScreen() {
+                 pages.flashcardsPage.innerHTML = `<div class="game-card w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Round Complete!</h2><p class="mb-2">${flashcardGameState.carryOver.length} cards from this round will be carried over.</p><p class="mb-6">You have ${flashcardGameState.mainDeck.length} new cards left to learn.</p><button onclick="startNewFlashcardRound()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Start Next Round</button></div>`;
+            }
+
+            window.markCardAsKnown = function() {
+                flashcardGameState.currentIndex++;
+                renderFlashcard();
+            }
+
+            window.markCardAsUnsure = function() {
+                const card = flashcardGameState.currentRoundDeck[flashcardGameState.currentIndex];
+                flashcardGameState.carryOver.push(card);
+                flashcardGameState.currentIndex++;
+                renderFlashcard();
+            }
+
+            // --- STATUTE GAME LOGIC ---
+            window.renderStatuteGame = function() {
+                statuteGameState = {
+                    questions: shuffle([...data.statuteGame]),
+                    currentIndex: 0,
+                    totalScore: 0,
+                    results: []
+                };
+                displayStatuteQuestion();
+            }
+            
+            window.displayStatuteQuestion = function() {
+                if (statuteGameState.currentIndex >= statuteGameState.questions.length) {
+                    displayStatuteResults();
+                    return;
+                }
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                statuteGameState.currentQuestionPoints = 100;
+                statuteGameState.revealedIndices = new Set();
+
+                const answerMask = q.answer.split('').map(char => (char === ' ' ? ' ' : '_')).join('');
+                
+                pages.statuteGamePage.innerHTML = `
+                    <div class="game-card max-w-3xl mx-auto">
+                        <div class="flex justify-between items-center mb-4">
+                            <button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button>
+                             <span class="font-bold">${statuteGameState.currentIndex + 1} out of ${statuteGameState.questions.length} items</span>
+                        </div>
+                        <h2 class="text-center text-xl font-bold my-4">FILL IN THE BLANK</h2>
+                        <div id="statute-score" class="text-center font-bold text-lg mb-4">Question Points: ${statuteGameState.currentQuestionPoints}</div>
+                        <div class="bg-gray-100 p-8 rounded-lg text-center text-lg mb-4">${q.prompt}</div>
+                        <div id="statute-feedback" class="text-center font-bold text-lg h-8 mb-2"></div>
+                        <div class="bg-blue-800 text-white p-4 rounded-lg text-center mb-4">
+                            <p id="statute-answer-display" class="tracking-widest text-2xl font-mono">${answerMask}</p>
+                        </div>
+                        <div class="flex">
+                            <input id="statute-input" type="text" class="fill-blank-input flex-grow p-4 text-xl rounded-l-lg" placeholder="Type your answer here...">
+                            <button id="statute-submit-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold p-4 rounded-r-lg">Submit</button>
+                        </div>
+                        <div class="flex justify-between mt-6 text-sm">
+                            <button onclick="handleHint()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg">Hint (-10 pts)</button>
+                            <button onclick="showStatuteAnswer()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg">Show Answer</button>
+                            <button id="statute-next-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg hidden">Next Term</button>
+                        </div>
+                    </div>`;
+
+                const input = document.getElementById('statute-input');
+                const submitBtn = document.getElementById('statute-submit-btn');
+                input.focus();
+                submitBtn.onclick = checkStatuteAnswer;
+                input.onkeyup = (e) => { if (e.key === 'Enter') checkStatuteAnswer(); };
+            }
+
+            function updateAnswerMask() {
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const display = q.answer.split('').map((char, index) => {
+                    if (char === ' ' || statuteGameState.revealedIndices.has(index)) {
+                        return `<span>${char}</span>`;
+                    }
+                    return '<span>_</span>';
+                }).join('');
+                document.getElementById('statute-answer-display').innerHTML = display;
+            }
+
+            window.handleHint = function() {
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const unrevealed = q.answer.split('').map((c, i) => i).filter(i => !statuteGameState.revealedIndices.has(i) && q.answer[i] !== ' ');
+                
+                if (unrevealed.length > 0) {
+                    statuteGameState.currentQuestionPoints = Math.max(0, statuteGameState.currentQuestionPoints - 10);
+                    document.getElementById('statute-score').textContent = `Question Points: ${statuteGameState.currentQuestionPoints}`;
+                    
+                    for(let i=0; i < 2 && unrevealed.length > 0; i++) {
+                         const randomIndex = Math.floor(Math.random() * unrevealed.length);
+                         const revealIndex = unrevealed.splice(randomIndex, 1)[0];
+                         statuteGameState.revealedIndices.add(revealIndex);
+                    }
+                    updateAnswerMask();
+                }
+            }
+
+            function checkStatuteAnswer() {
+                const input = document.getElementById('statute-input');
+                const feedbackEl = document.getElementById('statute-feedback');
+                const userAnswer = input.value.trim().toLowerCase();
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const isMatch = q.answer.toLowerCase() === userAnswer;
+
+                if (isMatch) {
+                    feedbackEl.textContent = "CORRECT!";
+                    feedbackEl.className = "text-center font-bold text-lg h-8 mb-2 feedback-correct";
+                    statuteGameState.totalScore += statuteGameState.currentQuestionPoints;
+                    statuteGameState.results.push({ question: q, correct: true, score: statuteGameState.currentQuestionPoints });
+                    document.getElementById('statute-answer-display').textContent = q.displayAnswer;
+                    endStatuteQuestion();
+                } else {
+                    feedbackEl.textContent = "INCORRECT - Try again.";
+                    feedbackEl.className = "text-center font-bold text-lg h-8 mb-2 feedback-incorrect";
+                    statuteGameState.currentQuestionPoints = Math.max(0, statuteGameState.currentQuestionPoints - 20);
+                    document.getElementById('statute-score').textContent = `Question Points: ${statuteGameState.currentQuestionPoints}`;
+                    
+                    const correctLetters = userAnswer.split('');
+                    q.answer.split('').forEach((char, index) => {
+                        if (char.toLowerCase() === correctLetters[index]?.toLowerCase()) {
+                            statuteGameState.revealedIndices.add(index);
+                        }
+                    });
+                    updateAnswerMask();
+                }
+            }
+            
+            function endStatuteQuestion() {
+                 const input = document.getElementById('statute-input');
+                 const submitBtn = document.getElementById('statute-submit-btn');
+                 const nextBtn = document.getElementById('statute-next-btn');
+                 if(input) input.disabled = true;
+                 if(submitBtn) submitBtn.disabled = true;
+                 if(nextBtn) {
+                     nextBtn.classList.remove('hidden');
+                     nextBtn.onclick = () => {
+                        statuteGameState.currentIndex++;
+                        displayStatuteQuestion();
+                    };
+                    nextBtn.focus();
+                 }
+            }
+
+            window.showStatuteAnswer = function() {
+                 const q = statuteGameState.questions[statuteGameState.currentIndex];
+                 document.getElementById('statute-answer-display').textContent = q.displayAnswer;
+                 statuteGameState.currentQuestionPoints = 0;
+                 statuteGameState.results.push({ question: q, correct: false, score: 0 });
+                 endStatuteQuestion();
+            }
+            
+            function displayStatuteResults() {
+                let resultsHtml = `<div class="game-card w-full max-w-3xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Game Results</h2><div class="text-lg mb-6">Final Score: ${statuteGameState.totalScore}</div><div class="space-y-4 text-left">`;
+                statuteGameState.results.forEach(res => {
+                    const bgColor = res.correct ? 'bg-green-100' : 'bg-red-100';
+                    const icon = res.correct ? `<span class="text-green-600 font-bold">&#10003;</span>` : `<span class="text-red-600 font-bold">X</span>`;
+                    resultsHtml += `<div class="${bgColor} p-4 rounded-lg"><p class="font-semibold">${res.question.prompt}</p><p>Correct Answer: <span class="font-bold">${res.question.displayAnswer}</span></p><p>Your score: ${res.score} ${icon}</p></div>`;
+                });
+                resultsHtml += `</div><button onclick="renderStatuteGame()" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Play Again</button> <button onclick="goHome()" class="mt-6 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg">Main Menu</button></div>`;
+                pages.statuteGamePage.innerHTML = resultsHtml;
+            }
+
+            // --- MATCHING GAME LOGIC ---
+            let selectedTerm = null;
+            let selectedDef = null;
+            let matchedPairs = 0;
+            let totalPairs = 0;
+            window.renderMatchingGame = function() {
+                const gamePool = shuffle([...data.matching]);
+                const gameSize = Math.min(6, gamePool.length);
+                const gameSet = gamePool.slice(0, gameSize);
+                totalPairs = gameSize;
+                matchedPairs = 0;
+                selectedTerm = null;
+                selectedDef = null;
+                const terms = shuffle(gameSet.map((item, index) => ({ text: item.term, id: index })));
+                const definitions = shuffle(gameSet.map((item, index) => ({ text: item.definition, id: index })));
+                pages.matchingPage.innerHTML = `<div class="game-card w-full max-w-4xl mx-auto"><div class="flex justify-between items-center mb-6"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><h2 class="text-2xl font-bold">Matching Game</h2><button onclick="renderMatchingGame()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New Game</button></div><p id="match-instructions" class="text-center text-slate-600 mb-6">Select a term from the left and its matching definition from the right.</p><div id="win-message" class="hidden text-center p-4 mb-4 bg-green-100 text-green-800 rounded-lg"><p class="font-bold text-lg">Congratulations! You've matched all the pairs!</p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4 md:gap-6"><div id="terms-col" class="flex flex-col gap-3">${terms.map(t => `<div class="match-item p-4 border-2 border-slate-300 rounded-lg cursor-pointer hover:bg-slate-200 transition" data-type="term" data-id="${t.id}" onclick="handleMatchSelection(this)">${t.text}</div>`).join('')}</div><div id="definitions-col" class="flex flex-col gap-3">${definitions.map(d => `<div class="match-item p-4 border-2 border-slate-300 rounded-lg cursor-pointer hover:bg-slate-200 transition" data-type="definition" data-id="${d.id}" onclick="handleMatchSelection(this)">${d.text}</div>`).join('')}</div></div></div>`;
+            }
+            window.handleMatchSelection = function(target) {
+                if (target.classList.contains('matched')) return;
+                const type = target.dataset.type;
+                const id = target.dataset.id;
+                if (target.classList.contains('selected')) {
+                    target.classList.remove('selected');
+                    if (type === 'term') selectedTerm = null;
+                    if (type === 'definition') selectedDef = null;
+                    return;
+                }
+                document.querySelectorAll(`.match-item[data-type="${type}"].selected`).forEach(el => el.classList.remove('selected'));
+                target.classList.add('selected');
+                if (type === 'term') { selectedTerm = { el: target, id: id }; } else { selectedDef = { el: target, id: id }; }
+                if (selectedTerm && selectedDef) checkForMatch();
+            }
+            function checkForMatch() {
+                if (selectedTerm && selectedDef && selectedTerm.id === selectedDef.id) {
+                    selectedTerm.el.classList.add('matched');
+                    selectedDef.el.classList.add('matched');
+                    selectedTerm.el.classList.remove('selected');
+                    selectedDef.el.classList.remove('selected');
+                    matchedPairs++;
+                    if (matchedPairs === totalPairs) {
+                        document.getElementById('win-message').classList.remove('hidden');
+                        document.getElementById('match-instructions').classList.add('hidden');
+                    }
+                } else if (selectedTerm && selectedDef) {
+                    const termEl = selectedTerm.el;
+                    const defEl = selectedDef.el;
+                    termEl.classList.add('incorrect-match');
+                    defEl.classList.add('incorrect-match');
+                    setTimeout(() => {
+                        termEl.classList.remove('incorrect-match', 'selected');
+                        defEl.classList.remove('incorrect-match', 'selected');
+                    }, 500);
+                }
+                selectedTerm = null;
+                selectedDef = null;
+            }
+
+            // --- LIST GAME LOGIC ---
+            function renderListGameMenu() {
+                pages.listGamePage.innerHTML = `<div class="game-card text-center"><h2 class="text-3xl font-bold mb-6">List Games</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><button onclick="startApp('listGame')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105"><span class="text-2xl">General Lists</span><p class="font-normal text-purple-100 mt-1">Identify items from a list.</p></button><button onclick="startApp('orderedListGame')" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105"><span class="text-2xl">Ordered Lists</span><p class="font-normal text-teal-100 mt-1">Put items in the correct order.</p></button></div><button onclick="goHome()" class="mt-8 text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Main Menu</button></div>`;
+                showPage('listGamePage');
+            }
+            
+            window.renderListGame = function(questionIndex = -1) {
+                if (!listGameState.deck || listGameState.deck.length === 0 || questionIndex === -1) {
+                     listGameState.deck = shuffle([...data.listGame]);
+                }
+                
+                if (listGameState.deck.length === 0) {
+                     pages.listGamePage.innerHTML = `<div class="game-card text-center"><h2 class="text-2xl font-bold">All lists completed!</h2><p class="my-4">You've successfully completed all the lists for this session.</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                     return;
+                }
+                
+                const question = listGameState.deck[0];
+                
+                listGameState.currentQuestion = question;
+                listGameState.foundCorrectCount = 0;
+                listGameState.score = 100;
+                listGameState.unseenCorrect = shuffle([...question.correctAnswers]);
+                listGameState.unseenIncorrect = shuffle([...question.incorrectAnswers]);
+                listGameState.nextCorrectSlot = 0;
+                
+                let answerPool = [];
+                const displayCount = 8;
+                for (let i = 0; i < displayCount; i++) {
+                    const newAnswer = getNewAnswer();
+                    if (newAnswer) answerPool.push(newAnswer);
+                }
+
+                const correctPlaceholders = question.correctAnswers.map((_, index) => 
+                    `<div id="correct-slot-${index}" class="correct-placeholder rounded-lg p-2 text-center text-gray-500">[...]</div>`
+                ).join('');
+
+                pages.listGamePage.innerHTML = `<div class="game-card w-full max-w-3xl mx-auto"><div class="flex justify-between items-center mb-4"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><h2 class="text-xl font-bold text-center">General Lists</h2><button onclick="renderListGame()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New List</button></div><div class="text-center p-4 mb-4 bg-blue-50 border-l-4 border-blue-500 text-blue-800 rounded-r-lg"><p class="font-bold text-lg">${question.question}</p><p class="text-sm">Use ✓ to select correct items and X to eliminate incorrect ones.</p></div><div class="mb-6"><h3 class="font-bold text-center mb-2">Correct Answers Found</h3><div id="correct-answers-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">${correctPlaceholders}</div></div><div id="list-game-status" class="flex justify-between items-center font-bold text-lg mb-4 p-2 rounded-lg bg-gray-100"><span>Score: <span id="list-game-score">100</span></span></div><div id="list-game-win-message" class="hidden text-center p-4 mb-4 bg-green-100 text-green-800 rounded-lg"><p class="font-bold text-lg">Great job! You found all correct items for this list!</p></div><div id="next-list-container" class="hidden text-center mt-4"><button onclick="handleNextList()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105">Next List &rarr;</button></div><div id="list-game-answers" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div></div>`;
+                const answersContainer = document.getElementById('list-game-answers');
+                answerPool.forEach(answer => answersContainer.appendChild(createAnswerElement(answer)));
+            }
+
+            window.handleNextList = function() {
+                listGameState.deck.shift();
+                renderListGame();
+            }
+            
+            function getNewAnswer() {
+                if (listGameState.unseenCorrect.length > 0 && Math.random() < 0.4) {
+                    return listGameState.unseenCorrect.pop();
+                }
+                if (listGameState.unseenIncorrect.length > 0) {
+                    return listGameState.unseenIncorrect.pop();
+                }
+                if(listGameState.unseenCorrect.length > 0) {
+                     return listGameState.unseenCorrect.pop();
+                }
+                return null;
+            }
+
+            function createAnswerElement(answerText) {
+                const item = document.createElement('div');
+                item.className = 'list-item flex items-center justify-between p-3 rounded-lg';
+                
+                const textSpan = document.createElement('span');
+                textSpan.className = 'flex-grow mr-4';
+                textSpan.textContent = answerText;
+
+                const btnContainer = document.createElement('div');
+                btnContainer.className = 'list-item-btn-container flex space-x-2';
+
+                const checkBtn = document.createElement('button');
+                checkBtn.className = 'list-item-btn check-btn flex items-center justify-center';
+                checkBtn.innerHTML = '&#10003;'; // Checkmark
+                
+                const xBtn = document.createElement('button');
+                xBtn.className = 'list-item-btn x-btn flex items-center justify-center';
+                xBtn.innerHTML = 'X';
+
+                checkBtn.onclick = () => handleListSelection(item, 'select', answerText);
+                xBtn.onclick = () => handleListSelection(item, 'eliminate', answerText);
+
+                btnContainer.appendChild(checkBtn);
+                btnContainer.appendChild(xBtn);
+                item.appendChild(textSpan);
+                item.appendChild(btnContainer);
+                return item;
+            }
+
+            function replaceAndShuffle(oldElement) {
+                const parent = oldElement.parentNode;
+                const newAnswer = getNewAnswer();
+                if (newAnswer) {
+                    const newItem = createAnswerElement(newAnswer);
+                    parent.replaceChild(newItem, oldElement);
+                } else {
+                    oldElement.remove();
+                }
+                shuffleAnswerBoard();
+            }
+            
+            function shuffleAnswerBoard() {
+                const answersContainer = document.getElementById('list-game-answers');
+                if (!answersContainer) return;
+                const currentItems = Array.from(answersContainer.children);
+                const shuffledItems = shuffle(currentItems);
+                shuffledItems.forEach(item => answersContainer.appendChild(item));
+            }
+
+            window.handleListSelection = function(itemElement, action, answerText) {
+                if (itemElement.dataset.processed) return;
+                itemElement.dataset.processed = true;
+
+                const isCorrect = listGameState.currentQuestion.correctAnswers.includes(answerText);
+                const btnContainer = itemElement.querySelector('.list-item-btn-container');
+
+                if (action === 'select') { 
+                    if (isCorrect) {
+                        itemElement.classList.add('strobing-green');
+                        const correctSlot = document.getElementById(`correct-slot-${listGameState.nextCorrectSlot}`);
+                        if(correctSlot) {
+                           correctSlot.textContent = answerText;
+                           correctSlot.classList.add('filled');
+                        }
+                        listGameState.nextCorrectSlot++;
+                        listGameState.foundCorrectCount++;
+                        setTimeout(() => replaceAndShuffle(itemElement), 1000);
+                    } else {
+                        itemElement.classList.add('strobing-red'); 
+                        listGameState.score = Math.max(0, listGameState.score - 10);
+                        document.getElementById('list-game-score').textContent = listGameState.score;
+                        btnContainer.innerHTML = `<span class="text-2xl text-red-600 font-bold">X</span>`;
+                        setTimeout(() => replaceAndShuffle(itemElement), 2500);
+                    }
+                } else if (action === 'eliminate') { 
+                    if (!isCorrect) {
+                        itemElement.classList.add('fading-out');
+                        setTimeout(() => replaceAndShuffle(itemElement), 500);
+                    } else {
+                        itemElement.classList.add('strobing-purple');
+                        const correctSlot = document.getElementById(`correct-slot-${listGameState.nextCorrectSlot}`);
+                        if(correctSlot) {
+                           correctSlot.textContent = answerText;
+                           correctSlot.classList.add('filled', 'purple');
+                        }
+                        listGameState.nextCorrectSlot++;
+                        listGameState.foundCorrectCount++;
+                        listGameState.score = Math.max(0, listGameState.score - 15);
+                        document.getElementById('list-game-score').textContent = listGameState.score;
+                        setTimeout(() => replaceAndShuffle(itemElement), 1000);
+                    }
+                }
+
+                if (listGameState.foundCorrectCount === listGameState.currentQuestion.correctAnswers.length) {
+                    document.getElementById('list-game-win-message').classList.remove('hidden');
+                    document.getElementById('next-list-container').classList.remove('hidden');
+                }
+            }
+            
+            // --- ORDERED LIST GAME ---
+            window.renderOrderedListGame = function() {
+                orderedListGameState = {
+                    questions: shuffle([...data.orderedListGame]),
+                    currentIndex: 0
+                }
+                setupOrderedListGame();
+            }
+
+            function setupOrderedListGame() {
+                if (orderedListGameState.currentIndex >= orderedListGameState.questions.length) {
+                    pages.orderedListPage.innerHTML = `<div class="game-card text-center"><h2 class="text-2xl font-bold">All lists completed!</h2><p class="my-4">You've successfully completed all the ordered lists.</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                    return;
+                }
+                
+                const question = orderedListGameState.questions[orderedListGameState.currentIndex];
+                orderedListGameState.currentQuestion = question;
+                orderedListGameState.score = 100;
+                
+                const shuffledItems = shuffle([...question.items]);
+
+                let draggableHtml = `<p class="text-lg font-semibold text-center">Steps (Drag These)</p>`;
+                shuffledItems.forEach((itemText) => {
+                    draggableHtml += `<div class="draggable-item p-3 bg-gray-200 rounded-lg shadow cursor-grab" draggable="true">${itemText}</div>`;
+                });
+
+                let dropZoneHtml = `<p class="text-lg font-semibold text-center">Correct Order (Drop Here)</p>`;
+                question.items.forEach((_, index) => {
+                    dropZoneHtml += `<div class="drop-zone p-3 rounded-lg flex items-center min-h-[3.5rem]"><span class="mr-3 font-bold text-lg">${index + 1}.</span></div>`;
+                });
+                
+                pages.orderedListPage.innerHTML = `
+                    <div class="game-card w-full max-w-4xl mx-auto">
+                         <div class="flex justify-between items-center mb-6">
+                            <button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button>
+                            <h2 class="text-2xl font-bold">Ordered List Game</h2>
+                            <button onclick="nextOrderedList()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New List</button>
+                        </div>
+                        <p class="text-center font-bold text-lg mb-4">${question.question}</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div id="draggable-items-container" class="space-y-3 min-h-[10rem] bg-gray-50 p-2 rounded-lg">${draggableHtml}</div>
+                            <div id="drop-zones-container" class="space-y-3">${dropZoneHtml}</div>
+                        </div>
+                         <div id="ordered-list-feedback" class="text-center mt-8">
+                            <button id="check-order-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Check Order</button>
+                            <button id="next-ordered-list-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hidden">Next List</button>
+                        </div>
+                    </div>`;
+
+                addDragAndDropListeners();
+            }
+            
+            window.nextOrderedList = function() {
+                orderedListGameState.currentIndex++;
+                setupOrderedListGame();
+            }
+
+            function addDragAndDropListeners() {
+                const draggables = document.querySelectorAll('.draggable-item');
+                const dropZones = document.querySelectorAll('.drop-zone');
+                const sourceContainer = document.getElementById('draggable-items-container');
+
+                draggables.forEach(draggable => {
+                    draggable.addEventListener('dragstart', e => {
+                        e.dataTransfer.setData('text/plain', e.target.textContent);
+                        setTimeout(() => e.target.classList.add('dragging'), 0);
+                    });
+                    draggable.addEventListener('dragend', e => e.target.classList.remove('dragging'));
+                });
+
+                function handleDragOver(e) {
+                    e.preventDefault();
+                    // 'this' refers to the element the event listener is attached to
+                    if (this.classList.contains('drop-zone') || this.id === 'draggable-items-container') {
+                        this.classList.add('drag-over');
+                    }
+                }
+
+                function handleDragLeave(e) {
+                    // 'this' refers to the element the event listener is attached to
+                     if (this.classList.contains('drop-zone') || this.id === 'draggable-items-container') {
+                        this.classList.remove('drag-over');
+                    }
+                }
+
+                function handleDrop(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                    const draggedText = e.dataTransfer.getData('text/plain');
+                    const draggedEl = document.querySelector(`.draggable-item.dragging`);
+                    
+                    if (this.classList.contains('drop-zone')) { // Dropping on a drop zone
+                        if (this.children.length > 1) { 
+                           const existingItem = this.children[1];
+                           sourceContainer.appendChild(existingItem);
+                        }
+                         if(draggedEl) this.appendChild(draggedEl);
+                    } else if (this.id === 'draggable-items-container') { // Dropping back on source
+                        if(draggedEl) this.appendChild(draggedEl);
+                    }
+                }
+
+                dropZones.forEach(zone => {
+                    zone.addEventListener('dragover', handleDragOver);
+                    zone.addEventListener('dragleave', handleDragLeave);
+                    zone.addEventListener('drop', handleDrop);
+                });
+
+                sourceContainer.addEventListener('dragover', handleDragOver);
+                sourceContainer.addEventListener('dragleave', handleDragLeave);
+                sourceContainer.addEventListener('drop', handleDrop);
+                
+                document.getElementById('check-order-btn').onclick = checkOrder;
+            }
+            
+            function checkOrder() {
+                const dropZones = document.querySelectorAll('#drop-zones-container .drop-zone');
+                const correctOrder = orderedListGameState.currentQuestion.items;
+                const sourceContainer = document.getElementById('draggable-items-container');
+                let allCorrect = true;
+
+                dropZones.forEach((zone, index) => {
+                    const droppedItem = zone.querySelector('.draggable-item');
+                    if (droppedItem && droppedItem.textContent === correctOrder[index]) {
+                        zone.classList.add('correct');
+                        zone.classList.remove('incorrect');
+                        droppedItem.setAttribute('draggable', 'false'); // Lock correct items
+                        droppedItem.style.cursor = 'default';
+                    } else if (droppedItem) {
+                        allCorrect = false;
+                        zone.classList.add('incorrect');
+                        zone.classList.remove('correct');
+                        setTimeout(() => {
+                           zone.classList.remove('incorrect');
+                           sourceContainer.appendChild(droppedItem); // Return incorrect item
+                        }, 1000);
+                    } else {
+                        allCorrect = false; // A slot is empty
+                    }
+                });
+
+                if (allCorrect) {
+                    document.getElementById('check-order-btn').classList.add('hidden');
+                    document.getElementById('next-ordered-list-btn').classList.remove('hidden');
+                    document.getElementById('next-ordered-list-btn').onclick = nextOrderedList;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

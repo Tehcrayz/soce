@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Guide: Criminal Justice Firearms </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Arial&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f8fb;
+            color: #1f2937;
+        }
+        .header-bar {
+            background-color: #1f2937;
+            color: white;
+        }
+        .footer-bar {
+            background: #dbeafe;
+        }
+        /* Card styles for menu and games */
+        .game-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+
+        /* Flip animation for flashcards */
+        .perspective-1000 { perspective: 1000px; }
+        .flip-card-inner { transition: transform 0.6s; transform-style: preserve-3d; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+        .flip-card-back { transform: rotateY(180deg); }
+        .flashcard-container.large .flip-card { height: 28rem; }
+        .flashcard-container.large .game-card { max-width: 48rem; }
+
+
+        /* Styles for matching game */
+        .match-item.selected { background-color: #3b82f6; color: white; border-color: #2563eb; }
+        .match-item.matched { background-color: #16a34a; color: white; border-color: #15803d; opacity: 0.7; pointer-events: none; }
+        .match-item.incorrect-match { background-color: #dc2626; color: white; animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Styles for list game */
+        .list-item { transition: all 0.3s ease; border: 1px solid #d1d5db; }
+        .list-item-btn-container { flex-shrink: 0; }
+        .list-item-btn {
+            cursor: pointer;
+            border-radius: 9999px;
+            width: 2rem;
+            height: 2rem;
+            font-weight: bold;
+            transition: all 0.2s ease-in-out;
+            border: 2px solid transparent;
+        }
+        .check-btn { background-color: #dcfce7; color: #15803d; }
+        .check-btn:hover { background-color: #22c55e; color: white; border-color: #15803d; }
+        .x-btn { background-color: #fee2e2; color: #b91c1c; }
+        .x-btn:hover { background-color: #ef4444; color: white; border-color: #991b1b; }
+        
+        .correct-placeholder {
+             background-color: #e5e7eb;
+             border: 2px dashed #9ca3af;
+             transition: all 0.5s ease;
+             min-height: 2.5rem;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             padding: 0.5rem;
+             word-break: break-word;
+        }
+        .correct-placeholder.filled {
+            background-color: #dcfce7;
+            border-color: #16a34a;
+            color: #14532d;
+            font-weight: 600;
+            border-style: solid;
+        }
+        .correct-placeholder.purple {
+            background-color: #f3e8ff;
+            border-color: #8b5cf6;
+            color: #5b21b6;
+        }
+
+        .list-item.strobing-green { animation: strobe-green 1s forwards; }
+        .list-item.strobing-red { animation: incorrect-answer-animation 2.5s forwards; }
+        .list-item.strobing-purple { animation: strobe-purple 1s forwards; }
+        .list-item.fading-out { animation: fade-out 0.5s forwards; }
+        
+        @keyframes fade-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.9); } }
+        
+        @keyframes strobe-green {
+            0%, 100% { background-color: white; }
+            50% { background-color: #22c55e; color: white; }
+        }
+
+        @keyframes strobe-purple {
+            0%, 100% { background-color: white; }
+            50% { background-color: #a855f7; color: white; }
+        }
+
+        @keyframes incorrect-answer-animation {
+            0% { transform: translateX(0); background-color: #fee2e2; }
+            10%, 30%, 50%, 70% { background-color: #b91c1c; color: white; }
+            20%, 40%, 60%, 80% { background-color: #fee2e2; color: #1f2937; }
+            0%, 20%, 40%, 60% { transform: translateX(5px); }
+            10%, 30%, 50%, 70% { transform: translateX(-5px); }
+            85% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.9); }
+        }
+        
+        /* Fill in the blank game styles */
+        .fill-blank-input {
+            border: 2px solid #ccc;
+            transition: border-color 0.3s;
+        }
+        .fill-blank-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .feedback-correct {
+            color: #16a34a;
+        }
+        .feedback-incorrect {
+            color: #dc2626;
+        }
+        #statute-answer-display span {
+            display: inline-block;
+            width: 1.2ch; /* Character unit */
+            text-align: center;
+        }
+
+        /* Ordered List Game Styles */
+        .draggable-item { cursor: grab; }
+        .drop-zone { border: 2px dashed #9ca3af; transition: background-color 0.2s; }
+        .drop-zone.drag-over { background-color: #e0f2fe; }
+        .drop-zone.correct { background-color: #dcfce7; border-color: #16a34a; }
+        .drop-zone.incorrect { background-color: #fee2e2; border-color: #b91c1c; animation: shake 0.5s; }
+        .dragging { opacity: 0.5; }
+
+
+        /* Hide scrollbar for the main content area */
+        #mainContentArea::-webkit-scrollbar { display: none; }
+        #mainContentArea { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- JSON Question Bank -->
+    <script id="questionBank" type="application/json">
+    {
+        "flashcards": [
+    { "term": "Primary Hand", "definition": "The hand you use to shoot the firearm." },
+    { "term": "Support Hand", "definition": "The hand that assists the primary hand." },
+    { "term": "General Rules of Firearms Safety", "definition": "1. Treat every firearm as if it were loaded. 2. Never point your firearm at anything that you do not intend to shoot. 3. Keep your finger straight and off the trigger until you are ready to fire. 4. Keep your firearm on safe until you intend to fire (if applicable). 5. Know your target and beyond." },
+    { "term": "Firing Line", "definition": "The position on a range in which gunfire is directed at targets." },
+    { "term": "Safety Check", "definition": "A procedure of pulling back the slide to the locked position to visually and physically verify that the firearm is not loaded." },
+    { "term": "Spent Casing", "definition": "The metal part of ammunition that is ejected from the firearm once a round has been fired." },
+    { "term": "Dry Fire", "definition": "The discharging of a firearm with an empty chamber and no magazine inserted." },
+    { "term": "Section 790.174, F.S.", "definition": "The Florida Statute that addresses the requirements for storing firearms safely away from minors." },
+    { "term": "Minor (per s. 790.174, F.S.)", "definition": "For the purposes of firearm storage laws, this refers to a person under the age of 16." },
+    { "term": "Chapter 776, F.S.", "definition": "The Florida Statute that governs all use of force by criminal justice officers." },
+    { "term": "Section 776.05, F.S.", "definition": "The Florida Statute that identifies that an officer's use of force is justified to apprehend a subject, make an arrest, or to defend self or others." },
+    { "term": "Deadly Force", "definition": "Force that is likely to cause death or great bodily harm." },
+    { "term": "Section 776.06, F.S.", "definition": "The Florida Statute that defines deadly force, including the firing of a firearm in the direction of a person or at a vehicle in which the person is riding." },
+    { "term": "Section 776.07, F.S.", "definition": "The Florida Statute that justifies the use of deadly force by a correctional officer to prevent the escape of a person from a penal institution." },
+    { "term": "Round", "definition": "A complete ammunition cartridge that contains all parts of ammunition: primer, powder, casing, and bullet." },
+    { "term": "Bullet", "definition": "The portion of the cartridge that becomes a projectile when in flight." },
+    { "term": "Case/Casing", "definition": "The metal or plastic container that holds all parts of a round of ammunition." },
+    { "term": "Headstamp", "definition": "Markings found on the head of ammunition that indicate caliber or gauge and identify the manufacturer." },
+    { "term": "Powder", "definition": "The propellant used in most firearms that produces a large volume of gas when ignited." },
+    { "term": "Primer", "definition": "The mixture used to ignite the propellant or powder in a round of ammunition." },
+    { "term": "Rim", "definition": "The edge on a cartridge case that stops the progress of the case into the chamber." },
+    { "term": "Caliber", "definition": "A measurement used to identify different cartridge and projectile sizes, determined by measuring the diameter of the bore of the firearm." },
+    { "term": "Gauge", "definition": "A measurement of shotgun bores derived from the number of bore-sized balls of lead per pound." },
+    { "term": "Bore", "definition": "The inside of the firearm's barrel, the diameter of which is used to determine caliber." },
+    { "term": "Scrape (Ammunition Defect)", "definition": "An indentation in the case that may weaken the case wall." },
+    { "term": "Dent (Ammunition Defect)", "definition": "A dimple or depression in the case of the ammunition." },
+    { "term": "Corrosion (Ammunition Defect)", "definition": "Layering of the case with oxidation or foreign material, such as mold or congealed oil." },
+    { "term": "Puncture (Ammunition Defect)", "definition": "An actual opening in the case body of the ammunition." },
+    { "term": "Reloads", "definition": "Cartridges that have been prepared using previously fired brass cases. They should not be used for duty ammunition." },
+    { "term": "Handgun", "definition": "A term that refers to either the semiautomatic pistol or the revolver." },
+    { "term": "Semiautomatic Pistol", "definition": "The handgun that most criminal justice officers carry, which functions by using the energy from the recoil of a single round." },
+    { "term": "Accessory Rail", "definition": "Provides space for lighting and sighting devices on a firearm." },
+    { "term": "Back Strap", "definition": "The portion of the grip that is placed in the palm of the shooting hand." },
+    { "term": "De-cocker", "definition": "A mechanism that safely de-cocks the pistol without allowing the hammer or striker to reach the round." },
+    { "term": "Frame/Receiver", "definition": "The part of the pistol that holds the internal parts and the slide assembly." },
+    { "term": "Front Sight", "definition": "The sight located on the front of the slide, used to bring the firearm into alignment for accuracy." },
+    { "term": "Front Strap", "definition": "The portion of the grip that allows the fingers of the shooting hand to rest." },
+    { "term": "Hammer", "definition": "The part of a pistol that strikes the primer or firing pin to ignite the propellant and fire the round." },
+    { "term": "Magazine Release", "definition": "The mechanism that releases the magazine from the frame (magazine well)." },
+    { "term": "Muzzle/Barrel", "definition": "The part of a pistol that provides a path for the fired bullet." },
+    { "term": "Rear Sight", "definition": "The sight located on the rear of the slide, used to bring the firearm into alignment for accuracy." },
+    { "term": "Slide", "definition": "The part of the pistol that houses the firing pin, barrel, recoil spring, sights, and extractor." },
+    { "term": "Slide Lock/Takedown Lever", "definition": "A device that allows for quick and simple fieldstripping." },
+    { "term": "Slide Stop Lever", "definition": "A device that locks the slide in the open position." },
+    { "term": "Trigger", "definition": "The mechanism that activates the pistol's operation." },
+    { "term": "Trigger Guard", "definition": "The part of the frame that protects the trigger." },
+    { "term": "Follower", "definition": "The part of a magazine that activates the slide stop and pushes the rounds up." },
+    { "term": "Magazine Floor/Butt Plate", "definition": "The part of a magazine that holds the spring and follower in place." },
+    { "term": "Magazine Insert", "definition": "The part of a magazine that keeps the floor/butt plate secure." },
+    { "term": "Magazine Tube", "definition": "The part of a magazine that holds the internal components and ammunition." },
+    { "term": "Spring (Magazine)", "definition": "The part of a magazine that pushes the follower up." },
+    { "term": "Cycle of Operation", "definition": "The eight steps of a semiautomatic pistol's function: loading, feeding/chambering, locking, firing, unlocking, extraction, ejecting, and cocking." },
+    { "term": "Function Check", "definition": "A check performed after fieldstripping or cleaning to ensure the firearm functions properly." },
+    { "term": "Workspace", "definition": "The area where a handgun is held close to the body and in the direct line of sight for manipulations like loading or clearing a malfunction." },
+    { "term": "Moving 'off the X'", "definition": "Stepping outside a threat's visual cone or direct line of sight when drawing a handgun to make oneself a hard target." },
+    { "term": "Recoil Management", "definition": "The ability to control the movement of the handgun when it fires, allowing the sights to return on target." },
+    { "term": "Empty Gun Reload", "definition": "The procedure for reloading a firearm after the slide has locked to the rear because the gun is empty." },
+    { "term": "Malfunction", "definition": "A condition that prevents a firearm from operating properly." },
+    { "term": "Squib Load", "definition": "A malfunction that occurs when the primer ignites but there is no burn or only partial burn of the powder, causing a bullet to become lodged in the bore." },
+    { "term": "Failure to Fire", "definition": "A malfunction that occurs when the trigger is pressed, but the round fails to detonate." },
+    { "term": "Failure to Feed", "definition": "A malfunction where the cartridge fails to feed into the chamber." },
+    { "term": "Failure to Eject (Stovepipe)", "definition": "A malfunction where a fired cartridge case does not completely eject." },
+    { "term": "Double Feed", "definition": "A malfunction where a round fails to extract from the chamber and is met with a new round being fed from the magazine." },
+    { "term": "Failure to Extract", "definition": "A malfunction where the pistol fails to extract a spent casing from its chamber." },
+    { "term": "Armorer", "definition": "A certified individual who must repair a firearm if parts like the extractor are worn or broken." },
+    { "term": "Phase I Clearance", "definition": "An immediate action drill ('tap, rack, ready') used to fix malfunctions like failure to feed, fire, or eject." },
+    { "term": "Phase II Clearance", "definition": "A more detailed action drill used to clear malfunctions like a double feed or when Phase I fails." },
+    { "term": "Stance", "definition": "The posture a shooter assumes while firing a weapon." },
+    { "term": "Offensive Ready Stance", "definition": "A shooting stance that most closely represents the instinctive response to a threat and minimizes exposed body areas." },
+    { "term": "Kneeling Stance", "definition": "A shooting stance where the shooter drops down to one or two knees." },
+    { "term": "Compressed Ready Position", "definition": "A handgun position used when covering a subject at close range; the firearm is held close to the body for stability and retention." },
+    { "term": "Two-Hand High Point Position", "definition": "The most common position to fire a handgun, with arms extended and sights on the target." },
+    { "term": "Hip Shooting Position", "definition": "A handgun position used within arm's reach (3-4 feet) of a threat to maintain control of the firearm." },
+    { "term": "Sight Alignment", "definition": "The relationship of the front sight and rear sight with the shooter's eye(s)." },
+    { "term": "Sight Picture", "definition": "The relationship between the eye, front sight, rear sight, and target." },
+    { "term": "Point Shooting", "definition": "A technique used when you cannot use the sights on your firearm or have no time to align them properly, where the handgun becomes an extension of the arm and hand." },
+    { "term": "Trigger Control", "definition": "The process of pressing the trigger straight back with increasing yet constant and steady pressure until the firearm discharges." },
+    { "term": "Follow-Through", "definition": "Maintaining sight alignment, proper stance, grip, and finger placement on the trigger before, during, and after firing a round." },
+    { "term": "Weapon-Mounted Flashlight", "definition": "A flashlight that can be attached to the frame of a firearm for tactical lighting." },
+    { "term": "Watchman Grip", "definition": "A flashlight grip where the illuminating end projects from the index finger side of the support hand." },
+    { "term": "Law Enforcement or Tactical Grip", "definition": "A flashlight grip where the illuminating end projects from the little finger side of the support hand." },
+    { "term": "Ayoob Technique", "definition": "A flashlight technique where the flashlight is held in the support hand (watchman grip) and the hands are pressed together at the thumbs with arms extended." },
+    { "term": "Harries Technique", "definition": "A flashlight technique where the support hand (holding the flashlight) crosses under the primary hand, with the backs of the hands braced together." },
+    { "term": "Neck Index Technique", "definition": "A flashlight technique where the flashlight is held to the side of the neck to illuminate the target through the handgun sights." },
+    { "term": "FBI Technique", "definition": "A flashlight technique where the flashlight is held straight out to the side or above the head to illuminate a target, useful around a barricade." },
+    { "term": "Fieldstripping", "definition": "Disassembling a firearm to its major parts for cleaning." },
+    { "term": "Cover", "definition": "Any object or obstacle that creates a bullet-resistant barrier between you and a threat." },
+    { "term": "Concealment", "definition": "Any object or group of objects that create a visual barrier between you and a threat but may not stop a projectile." },
+    { "term": "Ricochet", "definition": "A projectile that has been deflected by a surface. It is noted as a danger when an officer is too close to their cover." },
+    { "term": "Barricade Position", "definition": "A position behind cover." },
+    { "term": "Tactical Reload", "definition": "A technique performed behind cover during a lull in engagement to replace a partially spent magazine with a full one." },
+    { "term": "Slide-Lock Reload", "definition": "The specific procedure for reloading a handgun with one hand when the slide is locked to the rear." },
+    { "term": "Active Threat/Shooter Incident", "definition": "One or more individuals using deadly force to kill or attempt to kill people in a confined or populated area." },
+    { "term": "Survival Stress", "definition": "The body and mind's response to a perceived threat, which can induce physiological changes that affect performance." },
+    { "term": "Fine Motor Skills", "definition": "Small, precise movements, such as basic firearms manipulation or aiming, which can be lost under survival stress." },
+    { "term": "Gross Motor Skills", "definition": "Movements that demand more from the large or major muscles, such as running or taking cover." },
+    { "term": "Complex Motor Skills", "definition": "Tasks that require a combination of fine and gross motor skills using hand-eye coordination timed to a single event, such as shooting while moving." },
+    { "term": "OODA Loop", "definition": "A decision cycle used to manage survival stress: Observe, Orient, Decide, Act." },
+    { "term": "Immediate Response", "definition": "A tactical principle of preparing to respond to a threat with whatever equipment is immediately available." },
+    { "term": "Violence of Action", "definition": "A tactical principle of using unrestricted speed, strength, surprise, and aggression to stop a threat." },
+    { "term": "Direct-to-Threat Clearing", "definition": "A tactical principle of bypassing all doors, rooms, and potential unknown threats if the location of the primary threat is known." },
+    { "term": "Noise Discipline", "definition": "A tactical principle of using the element of surprise by moving quietly." },
+    { "term": "Pass (Threat Assessment)", "definition": "A person who holds a nonthreatening posture and has been visually cleared of weapons." },
+    { "term": "Hold or Assess (Threat Assessment)", "definition": "A person who poses a fear of attack and does not assume a surrender position or nonthreatening posture." },
+    { "term": "Shoot (Threat Assessment)", "definition": "An active threat or active shooter that has been identified and recognized as not being able to be safely and immediately captured or contained by lesser means." },
+    { "term": "Tactics After Neutralizing the Threat", "definition": "Assess 360° security for other threats. Perform a self-check for injuries. Communicate with responding backup. Provide first aid." }
+        ],
+        "matching": [
+    { "term": "Primary Hand", "definition": "The hand you use to shoot the firearm." },
+    { "term": "Support Hand", "definition": "The hand that assists the primary hand." },
+    { "term": "General Rules of Firearms Safety", "definition": "1. Treat every firearm as if it were loaded. 2. Never point your firearm at anything that you do not intend to shoot. 3. Keep your finger straight and off the trigger until you are ready to fire. 4. Keep your firearm on safe until you intend to fire (if applicable). 5. Know your target and beyond." },
+    { "term": "Firing Line", "definition": "The position on a range in which gunfire is directed at targets." },
+    { "term": "Safety Check", "definition": "A procedure of pulling back the slide to the locked position to visually and physically verify that the firearm is not loaded." },
+    { "term": "Spent Casing", "definition": "The metal part of ammunition that is ejected from the firearm once a round has been fired." },
+    { "term": "Dry Fire", "definition": "The discharging of a firearm with an empty chamber and no magazine inserted." },
+    { "term": "Section 790.174, F.S.", "definition": "The Florida Statute that addresses the requirements for storing firearms safely away from minors." },
+    { "term": "Minor (per s. 790.174, F.S.)", "definition": "For the purposes of firearm storage laws, this refers to a person under the age of 16." },
+    { "term": "Chapter 776, F.S.", "definition": "The Florida Statute that governs all use of force by criminal justice officers." },
+    { "term": "Section 776.05, F.S.", "definition": "The Florida Statute that identifies that an officer's use of force is justified to apprehend a subject, make an arrest, or to defend self or others." },
+    { "term": "Deadly Force", "definition": "Force that is likely to cause death or great bodily harm." },
+    { "term": "Section 776.06, F.S.", "definition": "The Florida Statute that defines deadly force, including the firing of a firearm in the direction of a person or at a vehicle in which the person is riding." },
+    { "term": "Section 776.07, F.S.", "definition": "The Florida Statute that justifies the use of deadly force by a correctional officer to prevent the escape of a person from a penal institution." },
+    { "term": "Round", "definition": "A complete ammunition cartridge that contains all parts of ammunition: primer, powder, casing, and bullet." },
+    { "term": "Bullet", "definition": "The portion of the cartridge that becomes a projectile when in flight." },
+    { "term": "Case/Casing", "definition": "The metal or plastic container that holds all parts of a round of ammunition." },
+    { "term": "Headstamp", "definition": "Markings found on the head of ammunition that indicate caliber or gauge and identify the manufacturer." },
+    { "term": "Powder", "definition": "The propellant used in most firearms that produces a large volume of gas when ignited." },
+    { "term": "Primer", "definition": "The mixture used to ignite the propellant or powder in a round of ammunition." },
+    { "term": "Rim", "definition": "The edge on a cartridge case that stops the progress of the case into the chamber." },
+    { "term": "Caliber", "definition": "A measurement used to identify different cartridge and projectile sizes, determined by measuring the diameter of the bore of the firearm." },
+    { "term": "Gauge", "definition": "A measurement of shotgun bores derived from the number of bore-sized balls of lead per pound." },
+    { "term": "Bore", "definition": "The inside of the firearm's barrel, the diameter of which is used to determine caliber." },
+    { "term": "Scrape (Ammunition Defect)", "definition": "An indentation in the case that may weaken the case wall." },
+    { "term": "Dent (Ammunition Defect)", "definition": "A dimple or depression in the case of the ammunition." },
+    { "term": "Corrosion (Ammunition Defect)", "definition": "Layering of the case with oxidation or foreign material, such as mold or congealed oil." },
+    { "term": "Puncture (Ammunition Defect)", "definition": "An actual opening in the case body of the ammunition." },
+    { "term": "Reloads", "definition": "Cartridges that have been prepared using previously fired brass cases. They should not be used for duty ammunition." },
+    { "term": "Handgun", "definition": "A term that refers to either the semiautomatic pistol or the revolver." },
+    { "term": "Semiautomatic Pistol", "definition": "The handgun that most criminal justice officers carry, which functions by using the energy from the recoil of a single round." },
+    { "term": "Accessory Rail", "definition": "Provides space for lighting and sighting devices on a firearm." },
+    { "term": "Back Strap", "definition": "The portion of the grip that is placed in the palm of the shooting hand." },
+    { "term": "De-cocker", "definition": "A mechanism that safely de-cocks the pistol without allowing the hammer or striker to reach the round." },
+    { "term": "Frame/Receiver", "definition": "The part of the pistol that holds the internal parts and the slide assembly." },
+    { "term": "Front Sight", "definition": "The sight located on the front of the slide, used to bring the firearm into alignment for accuracy." },
+    { "term": "Front Strap", "definition": "The portion of the grip that allows the fingers of the shooting hand to rest." },
+    { "term": "Hammer", "definition": "The part of a pistol that strikes the primer or firing pin to ignite the propellant and fire the round." },
+    { "term": "Magazine Release", "definition": "The mechanism that releases the magazine from the frame (magazine well)." },
+    { "term": "Muzzle/Barrel", "definition": "The part of a pistol that provides a path for the fired bullet." },
+    { "term": "Rear Sight", "definition": "The sight located on the rear of the slide, used to bring the firearm into alignment for accuracy." },
+    { "term": "Slide", "definition": "The part of the pistol that houses the firing pin, barrel, recoil spring, sights, and extractor." },
+    { "term": "Slide Lock/Takedown Lever", "definition": "A device that allows for quick and simple fieldstripping." },
+    { "term": "Slide Stop Lever", "definition": "A device that locks the slide in the open position." },
+    { "term": "Trigger", "definition": "The mechanism that activates the pistol's operation." },
+    { "term": "Trigger Guard", "definition": "The part of the frame that protects the trigger." },
+    { "term": "Follower", "definition": "The part of a magazine that activates the slide stop and pushes the rounds up." },
+    { "term": "Magazine Floor/Butt Plate", "definition": "The part of a magazine that holds the spring and follower in place." },
+    { "term": "Magazine Insert", "definition": "The part of a magazine that keeps the floor/butt plate secure." },
+    { "term": "Magazine Tube", "definition": "The part of a magazine that holds the internal components and ammunition." },
+    { "term": "Spring (Magazine)", "definition": "The part of a magazine that pushes the follower up." },
+    { "term": "Cycle of Operation", "definition": "The eight steps of a semiautomatic pistol's function: loading, feeding/chambering, locking, firing, unlocking, extraction, ejecting, and cocking." },
+    { "term": "Function Check", "definition": "A check performed after fieldstripping or cleaning to ensure the firearm functions properly." },
+    { "term": "Workspace", "definition": "The area where a handgun is held close to the body and in the direct line of sight for manipulations like loading or clearing a malfunction." },
+    { "term": "Moving 'off the X'", "definition": "Stepping outside a threat's visual cone or direct line of sight when drawing a handgun to make oneself a hard target." },
+    { "term": "Recoil Management", "definition": "The ability to control the movement of the handgun when it fires, allowing the sights to return on target." },
+    { "term": "Empty Gun Reload", "definition": "The procedure for reloading a firearm after the slide has locked to the rear because the gun is empty." },
+    { "term": "Malfunction", "definition": "A condition that prevents a firearm from operating properly." },
+    { "term": "Squib Load", "definition": "A malfunction that occurs when the primer ignites but there is no burn or only partial burn of the powder, causing a bullet to become lodged in the bore." },
+    { "term": "Failure to Fire", "definition": "A malfunction that occurs when the trigger is pressed, but the round fails to detonate." },
+    { "term": "Failure to Feed", "definition": "A malfunction where the cartridge fails to feed into the chamber." },
+    { "term": "Failure to Eject (Stovepipe)", "definition": "A malfunction where a fired cartridge case does not completely eject." },
+    { "term": "Double Feed", "definition": "A malfunction where a round fails to extract from the chamber and is met with a new round being fed from the magazine." },
+    { "term": "Failure to Extract", "definition": "A malfunction where the pistol fails to extract a spent casing from its chamber." },
+    { "term": "Armorer", "definition": "A certified individual who must repair a firearm if parts like the extractor are worn or broken." },
+    { "term": "Phase I Clearance", "definition": "An immediate action drill ('tap, rack, ready') used to fix malfunctions like failure to feed, fire, or eject." },
+    { "term": "Phase II Clearance", "definition": "A more detailed action drill used to clear malfunctions like a double feed or when Phase I fails." },
+    { "term": "Stance", "definition": "The posture a shooter assumes while firing a weapon." },
+    { "term": "Offensive Ready Stance", "definition": "A shooting stance that most closely represents the instinctive response to a threat and minimizes exposed body areas." },
+    { "term": "Kneeling Stance", "definition": "A shooting stance where the shooter drops down to one or two knees." },
+    { "term": "Compressed Ready Position", "definition": "A handgun position used when covering a subject at close range; the firearm is held close to the body for stability and retention." },
+    { "term": "Two-Hand High Point Position", "definition": "The most common position to fire a handgun, with arms extended and sights on the target." },
+    { "term": "Hip Shooting Position", "definition": "A handgun position used within arm's reach (3-4 feet) of a threat to maintain control of the firearm." },
+    { "term": "Sight Alignment", "definition": "The relationship of the front sight and rear sight with the shooter's eye(s)." },
+    { "term": "Sight Picture", "definition": "The relationship between the eye, front sight, rear sight, and target." },
+    { "term": "Point Shooting", "definition": "A technique used when you cannot use the sights on your firearm or have no time to align them properly, where the handgun becomes an extension of the arm and hand." },
+    { "term": "Trigger Control", "definition": "The process of pressing the trigger straight back with increasing yet constant and steady pressure until the firearm discharges." },
+    { "term": "Follow-Through", "definition": "Maintaining sight alignment, proper stance, grip, and finger placement on the trigger before, during, and after firing a round." },
+    { "term": "Weapon-Mounted Flashlight", "definition": "A flashlight that can be attached to the frame of a firearm for tactical lighting." },
+    { "term": "Watchman Grip", "definition": "A flashlight grip where the illuminating end projects from the index finger side of the support hand." },
+    { "term": "Law Enforcement or Tactical Grip", "definition": "A flashlight grip where the illuminating end projects from the little finger side of the support hand." },
+    { "term": "Ayoob Technique", "definition": "A flashlight technique where the flashlight is held in the support hand (watchman grip) and the hands are pressed together at the thumbs with arms extended." },
+    { "term": "Harries Technique", "definition": "A flashlight technique where the support hand (holding the flashlight) crosses under the primary hand, with the backs of the hands braced together." },
+    { "term": "Neck Index Technique", "definition": "A flashlight technique where the flashlight is held to the side of the neck to illuminate the target through the handgun sights." },
+    { "term": "FBI Technique", "definition": "A flashlight technique where the flashlight is held straight out to the side or above the head to illuminate a target, useful around a barricade." },
+    { "term": "Fieldstripping", "definition": "Disassembling a firearm to its major parts for cleaning." },
+    { "term": "Cover", "definition": "Any object or obstacle that creates a bullet-resistant barrier between you and a threat." },
+    { "term": "Concealment", "definition": "Any object or group of objects that create a visual barrier between you and a threat but may not stop a projectile." },
+    { "term": "Ricochet", "definition": "A projectile that has been deflected by a surface. It is noted as a danger when an officer is too close to their cover." },
+    { "term": "Barricade Position", "definition": "A position behind cover." },
+    { "term": "Tactical Reload", "definition": "A technique performed behind cover during a lull in engagement to replace a partially spent magazine with a full one." },
+    { "term": "Slide-Lock Reload", "definition": "The specific procedure for reloading a handgun with one hand when the slide is locked to the rear." },
+    { "term": "Active Threat/Shooter Incident", "definition": "One or more individuals using deadly force to kill or attempt to kill people in a confined or populated area." },
+    { "term": "Survival Stress", "definition": "The body and mind's response to a perceived threat, which can induce physiological changes that affect performance." },
+    { "term": "Fine Motor Skills", "definition": "Small, precise movements, such as basic firearms manipulation or aiming, which can be lost under survival stress." },
+    { "term": "Gross Motor Skills", "definition": "Movements that demand more from the large or major muscles, such as running or taking cover." },
+    { "term": "Complex Motor Skills", "definition": "Tasks that require a combination of fine and gross motor skills using hand-eye coordination timed to a single event, such as shooting while moving." },
+    { "term": "OODA Loop", "definition": "A decision cycle used to manage survival stress: Observe, Orient, Decide, Act." },
+    { "term": "Immediate Response", "definition": "A tactical principle of preparing to respond to a threat with whatever equipment is immediately available." },
+    { "term": "Violence of Action", "definition": "A tactical principle of using unrestricted speed, strength, surprise, and aggression to stop a threat." },
+    { "term": "Direct-to-Threat Clearing", "definition": "A tactical principle of bypassing all doors, rooms, and potential unknown threats if the location of the primary threat is known." },
+    { "term": "Noise Discipline", "definition": "A tactical principle of using the element of surprise by moving quietly." },
+    { "term": "Pass (Threat Assessment)", "definition": "A person who holds a nonthreatening posture and has been visually cleared of weapons." },
+    { "term": "Hold or Assess (Threat Assessment)", "definition": "A person who poses a fear of attack and does not assume a surrender position or nonthreatening posture." },
+    { "term": "Shoot (Threat Assessment)", "definition": "An active threat or active shooter that has been identified and recognized as not being able to be safely and immediately captured or contained by lesser means." },
+    { "term": "Tactics After Neutralizing the Threat", "definition": "Assess 360° security for other threats. Perform a self-check for injuries. Communicate with responding backup. Provide first aid." }
+        ],
+        "listGame": [
+{"question": "What are the general rules of safety that should be applied to all firearms?", "correctAnswers": ["Treat every firearm as if it were loaded.", "Never point your firearm at anything that you do not intend to shoot.", "Keep your finger straight and off the trigger until you are ready to fire.", "Keep your firearm on safe until you intend to fire (if applicable).", "Know your target and beyond."], "incorrectAnswers": ["Always keep a round chambered for faster response time.", "Rest your finger on the trigger for better control.", "It is okay to point a firearm at something you probably won't shoot.", "Use reloaded ammunition for duty to save on costs.", "A firearm can be considered unloaded if the magazine is removed."]},
+{"question": "According to Florida Statute 776.05, in which general situations is an officer's use of force justified?", "correctAnswers": ["To defend himself or herself or another from bodily harm while making the arrest.", "When necessarily committed in retaking felons who have escaped.", "When necessarily committed in arresting felons fleeing from justice."], "incorrectAnswers": ["To intimidate a subject into a confession.", "To prevent a suspect from verbally insulting an officer.", "As a warning to disperse a non-violent protest.", "To stop a suspect from fleeing a minor traffic infraction."]},
+{"question": "As defined by Florida Statute 776.06, what actions are included under the term 'deadly force'?", "correctAnswers": ["The firing of a firearm in the direction of the person to be arrested, even though no intent exists to kill or inflict great bodily harm.", "The firing of a firearm at a vehicle in which the person to be arrested is riding."], "incorrectAnswers": ["A firm, two-handed grip on the firearm.", "Using a flashlight to disorient a suspect.", "Verbally commanding a suspect to stop.", "Applying handcuffs to a compliant subject."]},
+{"question": "What are the basic parts of a round of pistol ammunition?", "correctAnswers": ["bullet", "case/casing", "headstamp", "powder", "primer", "rim", "round"], "incorrectAnswers": ["slide serrations", "recoil spring", "extractor", "firing pin", "bore"]},
+{"question": "What are the common types of abnormalities or defects to look for when inspecting ammunition?", "correctAnswers": ["scrape", "dent", "corrosion", "puncture"], "incorrectAnswers": ["discoloration", "over-polish", "slight tarnish", "water spots"]},
+{"question": "Identify the major parts of a semiautomatic pistol.", "correctAnswers": ["accessory rail", "back strap", "frame/receiver", "front sight", "hammer", "magazine release", "muzzle/barrel", "rear sight", "slide", "slide stop lever", "trigger", "trigger guard"], "incorrectAnswers": ["caliber stamp", "butt plate", "magazine well insert", "gas port", "cylinder"]},
+{"question": "What are the parts of a semiautomatic pistol magazine?", "correctAnswers": ["follower", "magazine floor/butt plate", "magazine insert", "magazine tube", "spring"], "incorrectAnswers": ["cartridge rim", "bullet tip", "casing wall", "powder chamber", "primer pocket"]},
+{"question": "What are the steps in the cycle of operation for a semiautomatic pistol?", "correctAnswers": ["loading", "feeding/chambering", "locking", "firing", "unlocking", "extraction", "ejecting", "cocking"], "incorrectAnswers": ["aligning", "breathing", "aiming", "squeezing", "holding", "recovering"]},
+{"question": "Identify the different shooting stances and positions for a handgun.", "correctAnswers": ["Offensive Ready Stance", "Kneeling Stance", "Compressed Ready Position", "Two-Hand High Point Position", "Hip Shooting Position"], "incorrectAnswers": ["Center Axis Relock Stance", "The Weaver Stance", "The Chapman Stance", "The Tactical Turtle Stance"]},
+{"question": "What are the two primary flashlight grips mentioned for use with a firearm?", "correctAnswers": ["Watchman grip", "Law enforcement or tactical grip"], "incorrectAnswers": ["Syringe grip", "Cigar grip", "Rogers grip", "Temple index grip"]},
+{"question": "What are the different flashlight-assisted shooting techniques?", "correctAnswers": ["Ayoob technique", "Harries technique", "Neck index technique", "FBI technique"], "incorrectAnswers": ["Chapman technique", "Weaver technique", "Center-line technique", "Low-light engagement method"]},
+{"question": "What are the common supplies and tools found in a firearm cleaning kit?", "correctAnswers": ["bore brush", "solvent", "gun-cleaning patches", "nylon cleaning brush", "cleaning cord", "cleaning pad", "gun oil or lubricant", "rags", "pipe cleaners", "cotton swabs"], "incorrectAnswers": ["steel wool pads", "household bleach", "automotive grease", "a wire hanger", "dish soap"]},
+{"question": "When cleaning a semiautomatic pistol, which parts require special attention?", "correctAnswers": ["magazines", "bore", "recoil spring and guide", "slide", "extractor", "firing pin hole"], "incorrectAnswers": ["the grip panels", "the trigger guard", "the front sight post", "the accessory rail", "the lanyard loop"]},
+{"question": "What factors should be considered when choosing appropriate cover?", "correctAnswers": ["size", "density", "location", "versatility"], "incorrectAnswers": ["comfort", "color", "appearance", "brand"]},
+{"question": "What are some of the physiological changes associated with survival stress?", "correctAnswers": ["tunnel vision", "diminished or amplified hearing", "increased heart rate", "loss of fine motor skills", "loss of complex motor skills"], "incorrectAnswers": ["enhanced memory recall", "a feeling of extreme calm", "heightened sense of touch", "improved mathematical ability", "a sudden desire to organize"]},
+{"question": "What are the four steps of the OODA loop decision cycle?", "correctAnswers": ["Observe", "Orient", "Decide", "Act"], "incorrectAnswers": ["Assess", "Breathe", "Control", "Deploy"]},
+{"question": "What are possible sources of stress during an active threat or shooter incident?", "correctAnswers": ["people that are injured, dying, or dead", "people pleading for help", "people running and screaming", "sounds of gunfire", "smell of smoke", "smell of blood", "loud alarms", "flashing lights"], "incorrectAnswers": ["the need to qualify on the range", "the pressure of a written exam", "a malfunctioning training weapon", "disagreement with a training partner", "running late to a training session"]},
+{"question": "What are the principles of tactical response to an active shooter incident?", "correctAnswers": ["immediate response", "violence of action", "direct-to-threat clearing", "noise discipline", "positive target identification"], "incorrectAnswers": ["wait for specialized units", "establish a perimeter and contain", "use the least amount of force possible", "move slowly and methodically", "avoid direct confrontation"]},
+{"question": "When scanning for and recognizing threats at an active shooter scene, what are the three main classifications for individuals encountered?", "correctAnswers": ["pass", "hold or assess", "shoot"], "incorrectAnswers": ["friend", "foe", "neutral", "unknown"]},
+{"question": "What are the immediate tactics to use after neutralizing a threat?", "correctAnswers": ["Assess 360° security, making sure there are no other active threats/active shooters or accomplices.", "Self-check.", "Communicate with responding backup.", "Provide first aid."], "incorrectAnswers": ["Immediately holster your weapon.", "Secure the suspect's weapon as primary evidence.", "Begin interviewing witnesses.", "Clear the weapon and render it safe."]}
+        ],
+        "orderedListGame": [
+             {"question": "Place the steps for inspecting ammunition for defects in the correct order.", "items": ["Make sure that the casing and rim are free of defects like scrapes, dents, corrosion, and punctures.", "Determine that the projectile is firmly seated in the casing.", "Make sure that the primer is seated properly and free of dents."]},
+    {"question": "Arrange the Cycle of Operation for a semiautomatic pistol in the correct sequence.", "items": ["Loading", "Feeding/Chambering", "Locking", "Firing", "Unlocking", "Extraction", "Ejecting", "Cocking"]},
+    {"question": "Place the steps for performing a function check on a semiautomatic pistol in the correct order.", "items": ["Visually and physically check the firearm to make sure it is unloaded.", "Operate the slide several times to ensure it operates freely.", "Press the trigger to check its function.", "Fully insert an empty magazine into the magazine well.", "Pull the slide to the rear and confirm that it locks open.", "Depress the magazine release; the magazine should fall free.", "Depress the slide stop lever or cycle the slide; it should function properly."]},
+    {"question": "Arrange the steps to safely hand a semiautomatic pistol to another person in the correct order.", "items": ["Engage the safety, if applicable.", "Press the magazine release and remove the magazine.", "Secure the magazine.", "Point the firearm in a safe direction and pull the slide to the rear to eject the live round.", "Lock the slide to the rear.", "Visually and physically inspect the chamber, magazine well, and barrel to ensure they are empty.", "With the slide locked to the rear, hand the pistol to the other person, grip first."]},
+    {"question": "Place the steps for drawing a handgun in the correct order.", "items": ["Disengage the holster retention device.", "Establish the grip high on the backstrap before the handgun leaves the holster.", "Lift the handgun upward so its muzzle clears the top of your holster.", "Join the support hand with the primary hand in your workspace and drive the muzzle toward the target."]},
+    {"question": "Arrange the steps for holstering a handgun in the correct order.", "items": ["Maintain a proper grip and keep your finger off the trigger and outside the trigger guard.", "Smoothly return the handgun to your holster until it is seated properly.", "Align the retention device components and secure them until locked."]},
+    {"question": "Place the steps to load and charge a semiautomatic pistol in the correct order.", "items": ["Hold the firearm in your primary hand and bring it into the workspace.", "Retrieve a magazine from your pouch with your support hand.", "Use your index finger to guide the magazine into the magazine well.", "Push the magazine into the magazine well with a sharp upward motion and tug to ensure it is seated.", "Grasp the slide, pull it all the way to the rear, and then release it to chamber a round."]},
+    {"question": "Arrange the steps to unload an equipped semiautomatic pistol in the correct order.", "items": ["Engage the safety, if applicable.", "Press the magazine release and let the magazine fall to the ground.", "Eject the round from the chamber by grabbing the slide and pulling it to the rear several times.", "Lock the slide to the rear.", "Visually and physically inspect the chamber and magazine well to make sure they are empty."]},
+    {"question": "Place the steps for a Phase I Malfunction Clearance (Tap, Rack, Ready) in the correct order.", "items": ["Tap the bottom of the magazine to ensure it is seated.", "Rack the slide to the rear and release it to eject the bad round and chamber a new one.", "Ready by assessing the situation and re-engaging if necessary.", "Fire if necessary."]},
+    {"question": "Arrange the steps for a Phase II Malfunction Clearance in the correct order.", "items": ["Lock the slide to the rear.", "Depress the magazine release and forcibly strip the magazine from the magazine well.", "Work the slide back and forth until the barrel and chamber are clear.", "Push a new magazine into the magazine well and ensure it is seated.", "Chamber a round by pulling the slide to the rear and releasing it.", "Ready by assessing the situation."]},
+    {"question": "Place the steps to assume the Offensive Ready Stance in the correct order.", "items": ["Plant both feet shoulder-width apart or slightly wider.", "Align your head, hips, and feet toward the threat with your toes pointed forward.", "Bend your knees slightly.", "Bring the weapon-side leg to the rear so the toe aligns with the heel or arch of the support-side foot.", "Lean slightly forward to distribute more weight to the balls of the feet."]},
+    {"question": "Arrange the steps to perform a tactical reload with a semiautomatic pistol.", "items": ["Ensure you have a lull in the engagement and assume a position of cover.", "Hold the firearm in your primary hand and bring it into your workspace.", "Retrieve a fresh magazine with your support hand.", "Press the magazine release and catch the partially loaded magazine.", "Use your index finger to guide the fully loaded magazine into the magazine well.", "Place the partially loaded magazine in your pocket."]},
+    {"question": "Place the steps to draw a handgun with the support hand only in the correct order.", "items": ["Reach across the front or back of your body to find the holster retention devices.", "With your support hand fingers, disengage the retention devices.", "Grip the handgun.", "Safely draw the handgun and place it in a secure location, like between your knees.", "Acquire a shooting grip on the handgun.", "Safely bring the handgun across your body and point it at the threat."]},
+    {"question": "Arrange the steps to perform a slide-lock reload with one hand only.", "items": ["Pull the firearm into your workspace while ejecting the empty magazine.", "Safely place the firearm in a secure location, such as your holster or between your legs.", "Retrieve a fresh magazine.", "Load the fresh magazine into the firearm.", "Acquire a shooting grip and draw the firearm.", "Safely charge your firearm by pressing the slide release or using a ridged edge."]},
+    {"question": "Place the steps of the OODA loop decision cycle in the correct order.", "items": ["Observe: take in information using the senses.", "Orient: sort through what is observed and focus on what is really important.", "Decide: make a decision based on what is important.", "Act: take appropriate action based on the decision."]},
+    {"question": "Arrange the tactics to use immediately after neutralizing a threat in the correct order.", "items": ["Assess 360° security for other threats.", "Self-check for injuries.", "Communicate with responding backup.", "Provide first aid."]},
+    {"question": "Place the steps to safely fieldstrip a semiautomatic pistol in the correct order.", "items": ["Remove live ammunition from the cleaning area.", "Safety check the firearm by removing the magazine and locking the slide to the rear.", "Visually and physically inspect the chamber, magazine well, and barrel.", "Remove the ammunition from the magazine and place it in a secure area."]},
+    {"question": "Arrange the steps for cleaning and lubricating a pistol after it has been fieldstripped.", "items": ["Brush all surfaces of your firearm properly with solvent.", "Wipe all parts repeatedly to remove all solvent and debris.", "Lubricate the frame/slide rails and other points recommended by the manufacturer.", "Wipe off excess lubrication.", "Reassemble the pistol and its magazines.", "Perform a function check.", "Properly dispose of all cleaning supplies and wash your hands."]},
+    {"question": "Place the steps for firing from a barricade position in the correct order.", "items": ["Draw your firearm as you move to cover and identify your target.", "Stay completely behind and away from cover.", "Emerge from a different part of cover than where you arrived.", "Present your firearm to the two-hand high point position before rolling out.", "Roll out, expose only the necessary portion of your shoulder and head, and fire."]}
+        ],
+        "statuteGame": [
+{"prompt": "The hand you use to shoot the firearm is the _______.", "answer": "primary hand", "displayAnswer": "primary hand"},
+{"prompt": "The hand that assists the primary hand when shooting is the _______.", "answer": "support hand", "displayAnswer": "support hand"},
+{"prompt": "The position on a range where gunfire is directed at targets is known as the _______.", "answer": "firing line", "displayAnswer": "firing line"},
+{"prompt": "A procedure of pulling back the slide to the locked position to visually and physically verify that the firearm is not loaded is a _______.", "answer": "safety check", "displayAnswer": "safety check"},
+{"prompt": "The metal part of ammunition that is ejected from the firearm after a round has been fired is the _______.", "answer": "spent casing", "displayAnswer": "spent casing"},
+{"prompt": "Discharging a firearm with an empty chamber and no magazine inserted is called _______.", "answer": "dry fire", "displayAnswer": "dry fire"},
+{"prompt": "For the purposes of s. 790.174, F.S., a person under the age of 16 is considered a _______.", "answer": "minor", "displayAnswer": "minor"},
+{"prompt": "Force that is likely to cause death or great bodily harm is known as _______.", "answer": "deadly force", "displayAnswer": "deadly force"},
+{"prompt": "A complete cartridge that contains a primer, powder, casing, and bullet is called _______.", "answer": "ammunition", "displayAnswer": "ammunition"},
+{"prompt": "The portion of a cartridge that becomes a projectile when in flight is the _______.", "answer": "bullet", "displayAnswer": "bullet"},
+{"prompt": "The metal or plastic container that holds all parts of a round of ammunition is the _______.", "answer": "case", "displayAnswer": "case/casing"},
+{"prompt": "Markings on the head of ammunition that indicate caliber or gauge and identify the manufacturer are known as the _______.", "answer": "headstamp", "displayAnswer": "headstamp"},
+{"prompt": "The propellant in a firearm cartridge that produces a large volume of gas when ignited is the _______.", "answer": "powder", "displayAnswer": "powder"},
+{"prompt": "The mixture used to ignite the propellant in a round of ammunition is the _______.", "answer": "primer", "displayAnswer": "primer"},
+{"prompt": "The edge on a cartridge case that stops its progress into the chamber is the _______.", "answer": "rim", "displayAnswer": "rim"},
+{"prompt": "A complete ammunition cartridge that contains all parts of ammunition is also called a _______.", "answer": "round", "displayAnswer": "round"},
+{"prompt": "A measurement used to identify cartridge sizes, determined by measuring the diameter of the firearm's bore, is _______.", "answer": "caliber", "displayAnswer": "caliber"},
+{"prompt": "A measurement of shotgun bores derived from the number of bore-sized balls of lead per pound is the _______.", "answer": "gauge", "displayAnswer": "gauge"},
+{"prompt": "The inside of a firearm's barrel, which determines the caliber, is the _______.", "answer": "bore", "displayAnswer": "bore"},
+{"prompt": "An indentation in an ammunition case that may weaken the case wall is known as a _______.", "answer": "scrape", "displayAnswer": "scrape"},
+{"prompt": "A dimple or depression in the case of the ammunition is called a _______.", "answer": "dent", "displayAnswer": "dent"},
+{"prompt": "A layering of the ammunition case with oxidation or foreign material, such as mold or congealed oil, is known as _______.", "answer": "corrosion", "displayAnswer": "corrosion"},
+{"prompt": "An actual opening in the case body of the ammunition is called a _______.", "answer": "puncture", "displayAnswer": "puncture"},
+{"prompt": "Cartridges prepared using previously fired brass cases, which are not recommended for duty, are called _______.", "answer": "reloads", "displayAnswer": "reloads"},
+{"prompt": "A term that refers to either a semiautomatic pistol or a revolver is a _______.", "answer": "handgun", "displayAnswer": "handgun"},
+{"prompt": "The type of handgun that uses energy from the recoil of a single round to chamber the next is the _______.", "answer": "semiautomatic pistol", "displayAnswer": "semiautomatic pistol"},
+{"prompt": "The part of a pistol frame that provides space for lighting and sighting devices is the _______.", "answer": "accessory rail", "displayAnswer": "accessory rail"},
+{"prompt": "The portion of the grip that is placed in the palm of the shooting hand is the _______.", "answer": "back strap", "displayAnswer": "back strap"},
+{"prompt": "A mechanism that safely releases the spring tension on a cocked hammer without firing the round is the _______.", "answer": "de-cocker", "displayAnswer": "de-cocker"},
+{"prompt": "The part of the pistol that holds the internal parts and the slide assembly is the _______.", "answer": "frame", "displayAnswer": "frame/receiver"},
+{"prompt": "The sight located on the front of the slide used for accuracy is the _______.", "answer": "front sight", "displayAnswer": "front sight"},
+{"prompt": "The portion of the grip where the fingers of the shooting hand rest is the _______.", "answer": "front strap", "displayAnswer": "front strap"},
+{"prompt": "The part of a pistol that strikes the primer or firing pin to ignite the propellant is the _______.", "answer": "hammer", "displayAnswer": "hammer"},
+{"prompt": "The mechanism that releases the magazine from the pistol's frame is the _______.", "answer": "magazine release", "displayAnswer": "magazine release"},
+{"prompt": "The part of a pistol that provides a path for the fired bullet is the _______.", "answer": "muzzle", "displayAnswer": "muzzle/barrel"},
+{"prompt": "The sight located on the rear of the slide used for accuracy is the _______.", "answer": "rear sight", "displayAnswer": "rear sight"},
+{"prompt": "The part of the pistol that houses the firing pin, barrel, and extractor is the _______.", "answer": "slide", "displayAnswer": "slide"},
+{"prompt": "A device that allows for quick and simple fieldstripping of a firearm is the _______.", "answer": "takedown lever", "displayAnswer": "slide lock/takedown lever"},
+{"prompt": "A device that locks the slide in the open position is the _______.", "answer": "slide stop lever", "displayAnswer": "slide stop lever"},
+{"prompt": "The mechanism that activates the pistol's operation is the _______.", "answer": "trigger", "displayAnswer": "trigger"},
+{"prompt": "The part of the frame that protects the trigger is the _______.", "answer": "trigger guard", "displayAnswer": "trigger guard"},
+{"prompt": "The part of a magazine that activates the slide stop and pushes the rounds up is the _______.", "answer": "follower", "displayAnswer": "follower"},
+{"prompt": "The part of a magazine that holds the spring and follower in place is the _______.", "answer": "magazine floor", "displayAnswer": "magazine floor/butt plate"},
+{"prompt": "The part of a magazine that keeps the floor/butt plate secure is the _______.", "answer": "magazine insert", "displayAnswer": "magazine insert"},
+{"prompt": "The part of a magazine that holds the ammunition and internal components is the _______.", "answer": "magazine tube", "displayAnswer": "magazine tube"},
+{"prompt": "The part of a magazine that pushes the follower up is the _______.", "answer": "spring", "displayAnswer": "spring"},
+{"prompt": "The complete sequence of actions a semiautomatic pistol performs to fire a round and chamber the next is the _______.", "answer": "cycle of operation", "displayAnswer": "cycle of operation"},
+{"prompt": "A check performed after cleaning to ensure the firearm functions properly is a _______.", "answer": "function check", "displayAnswer": "function check"},
+{"prompt": "The area where a handgun is held close to the body for manipulations is the _______.", "answer": "workspace", "displayAnswer": "workspace"},
+{"prompt": "Stepping outside a threat's visual cone when drawing a handgun is known as _______.", "answer": "moving off the X", "displayAnswer": "moving \"off the X\""},
+{"prompt": "The ability to control the movement of the handgun when it fires is known as _______.", "answer": "recoil management", "displayAnswer": "recoil management"},
+{"prompt": "A condition that prevents a firearm from operating properly is called a _______.", "answer": "malfunction", "displayAnswer": "malfunction"},
+{"prompt": "A malfunction where the primer ignites but there is little to no burn of the powder is a _______.", "answer": "squib load", "displayAnswer": "squib load"},
+{"prompt": "A malfunction that occurs when the trigger is pressed but the round fails to detonate is a _______.", "answer": "failure to fire", "displayAnswer": "failure to fire"},
+{"prompt": "A malfunction where the cartridge fails to feed into the chamber is a _______.", "answer": "failure to feed", "displayAnswer": "failure to feed"},
+{"prompt": "A malfunction where a fired cartridge case does not completely eject, often called a _______, can be caused by limp-wristing.", "answer": "stovepipe", "displayAnswer": "failure to eject (stovepipe)"},
+{"prompt": "A malfunction where a round fails to extract and is met with a new round from the magazine is a _______.", "answer": "double feed", "displayAnswer": "double feed"},
+{"prompt": "A malfunction where the pistol fails to extract a spent casing from its chamber is a _______.", "answer": "failure to extract", "displayAnswer": "failure to extract"},
+{"prompt": "A certified individual who must repair a firearm if parts are worn or broken is an _______.", "answer": "armorer", "displayAnswer": "armorer"},
+{"prompt": "An immediate action drill known as 'tap, rack, ready' used to fix common malfunctions is called _______.", "answer": "Phase I clearance", "displayAnswer": "Phase I clearance"},
+{"prompt": "A detailed action drill used to clear a double feed or when Phase I fails is _______.", "answer": "Phase II clearance", "displayAnswer": "Phase II clearance"},
+{"prompt": "The posture a shooter assumes while firing a weapon is their _______.", "answer": "stance", "displayAnswer": "stance"},
+{"prompt": "A shooting stance that minimizes exposed body areas and represents an instinctive response to a threat is the _______.", "answer": "offensive ready stance", "displayAnswer": "offensive ready stance"},
+{"prompt": "A shooting stance where the shooter drops down to one or two knees is the _______.", "answer": "kneeling stance", "displayAnswer": "kneeling stance"},
+{"prompt": "A handgun position used when covering a subject at close range for weapon retention is the _______.", "answer": "compressed ready position", "displayAnswer": "compressed ready position"},
+{"prompt": "The most common position to fire a handgun, with arms extended and sights on the target, is the _______.", "answer": "two-hand high point position", "displayAnswer": "two-hand high point position"},
+{"prompt": "A handgun position used within arm's reach (3-4 feet) of a threat is the _______.", "answer": "hip shooting position", "displayAnswer": "hip shooting position"},
+{"prompt": "The relationship of the front sight and rear sight with the shooter's eye is called _______.", "answer": "sight alignment", "displayAnswer": "sight alignment"},
+{"prompt": "The relationship between the eye, front sight, rear sight, and target is the _______.", "answer": "sight picture", "displayAnswer": "sight picture"},
+{"prompt": "A technique used when you cannot use the sights on your firearm or have no time to align them is _______.", "answer": "point shooting", "displayAnswer": "point shooting"},
+{"prompt": "Pressing the trigger straight back with increasing yet constant pressure until the firearm discharges is known as _______.", "answer": "trigger control", "displayAnswer": "trigger control"},
+{"prompt": "Maintaining sight alignment, proper stance, and grip before, during, and after firing a round is called _______.", "answer": "follow-through", "displayAnswer": "follow-through"},
+{"prompt": "A flashlight that can be attached to a firearm's frame for tactical lighting is a _______.", "answer": "weapon-mounted flashlight", "displayAnswer": "weapon-mounted flashlight"},
+{"prompt": "A flashlight grip where the illuminating end projects from the index finger side of the support hand is the _______.", "answer": "watchman grip", "displayAnswer": "watchman grip"},
+{"prompt": "A flashlight grip where the illuminating end projects from the little finger side of the support hand is the _______.", "answer": "tactical grip", "displayAnswer": "law enforcement or tactical grip"},
+{"prompt": "A flashlight technique where the flashlight is held in the support hand and the hands are pressed together at the thumbs is the _______.", "answer": "Ayoob technique", "displayAnswer": "Ayoob technique"},
+{"prompt": "A flashlight technique where the support hand holding the flashlight crosses under the primary hand is the _______.", "answer": "Harries technique", "displayAnswer": "Harries technique"},
+{"prompt": "A flashlight technique where the flashlight is held to the side of the neck to illuminate the target is the _______.", "answer": "neck index technique", "displayAnswer": "neck index technique"},
+{"prompt": "A flashlight technique where the flashlight is held straight out to the side or above the head is the _______.", "answer": "FBI technique", "displayAnswer": "FBI technique"},
+{"prompt": "Disassembling a firearm to its major parts for cleaning is known as _______.", "answer": "fieldstripping", "displayAnswer": "fieldstripping"},
+{"prompt": "Any object or obstacle that creates a bullet-resistant barrier between you and a threat is known as _______.", "answer": "cover", "displayAnswer": "cover"},
+{"prompt": "Any object that creates a visual barrier but may not stop a projectile is known as _______.", "answer": "concealment", "displayAnswer": "concealment"},
+{"prompt": "A projectile that has been deflected by a surface is known as a _______.", "answer": "ricochet", "displayAnswer": "ricochet"},
+{"prompt": "A shooting position behind cover is known as a _______.", "answer": "barricade position", "displayAnswer": "barricade position"},
+{"prompt": "A technique performed behind cover to replace a partially spent magazine with a full one is a _______.", "answer": "tactical reload", "displayAnswer": "tactical reload"},
+{"prompt": "An incident where an individual uses deadly force to kill or attempt to kill people in a confined area is an _______.", "answer": "active threat incident", "displayAnswer": "active threat/shooter incident"},
+{"prompt": "The body and mind's response to a perceived threat, which can induce physiological changes, is _______.", "answer": "survival stress", "displayAnswer": "survival stress"},
+{"prompt": "Small, precise movements, such as basic firearms manipulation, which can be lost under survival stress, are _______.", "answer": "fine motor skills", "displayAnswer": "fine motor skills"},
+{"prompt": "Movements that demand more from the large or major muscles, such as running or taking cover, are _______.", "answer": "gross motor skills", "displayAnswer": "gross motor skills"},
+{"prompt": "Tasks that require a combination of fine and gross motor skills using hand-eye coordination are _______.", "answer": "complex motor skills", "displayAnswer": "complex motor skills"},
+{"prompt": "The decision cycle of Observe, Orient, Decide, Act, used to manage survival stress, is the _______.", "answer": "OODA loop", "displayAnswer": "OODA loop"},
+{"prompt": "A tactical principle of responding to a threat with whatever equipment is immediately available is called _______.", "answer": "immediate response", "displayAnswer": "immediate response"},
+{"prompt": "A tactical principle of using unrestricted speed, strength, and aggression to stop a threat is called _______.", "answer": "violence of action", "displayAnswer": "violence of action"},
+{"prompt": "A tactical principle of bypassing other rooms if the location of the primary threat is known is called _______.", "answer": "direct-to-threat clearing", "displayAnswer": "direct-to-threat clearing"},
+{"prompt": "A tactical principle of using the element of surprise by moving quietly is called _______.", "answer": "noise discipline", "displayAnswer": "noise discipline"},
+{"prompt": "The procedure for reloading a firearm after the slide has locked to the rear is an _______.", "answer": "empty gun reload", "displayAnswer": "empty gun reload"},
+{"prompt": "The first general rule of firearms safety is to treat every firearm as if it were _______.", "answer": "loaded", "displayAnswer": "loaded"},
+{"prompt": "According to firearm safety rules, you should keep your finger straight and off the _______ until you are ready to fire.", "answer": "trigger", "displayAnswer": "trigger"},
+{"prompt": "When on a range, you should stop firing immediately upon hearing the '_______' command.", "answer": "cease fire", "displayAnswer": "cease fire"},
+{"prompt": "One of the two general areas where an officer's use of force is justified under s. 776.05, F.S., is to defend self or _______.", "answer": "others", "displayAnswer": "others"},
+{"prompt": "The leading cause of malfunctions in semiautomatic weapons is the failure to properly seat the _______.", "answer": "magazine", "displayAnswer": "magazine"},
+{"prompt": "When obtaining a sight picture, your focus should be on the _______; the target will be blurry.", "answer": "front sight", "displayAnswer": "front sight"},
+{"prompt": "A physiological effect of survival stress where vision narrows on a threat is known as _______.", "answer": "tunnel vision", "displayAnswer": "tunnel vision"},
+{"prompt": "After ensuring a pistol is unloaded and the slide is locked back, you should hand it to another person _______ first.", "answer": "grip", "displayAnswer": "grip"},
+{"prompt": "A tactical principle that involves correctly identifying a target to avoid harming bystanders or other responders is _______.", "answer": "positive target identification", "displayAnswer": "positive target identification"},
+{"prompt": "Immediately after neutralizing a threat, one of the first tactical steps is to perform a _______ for any injuries.", "answer": "self-check", "displayAnswer": "self-check"}
+        ]
+    }
+    </script>
+
+    <!-- Header -->
+    <header class="header-bar p-2 shadow-md z-10">
+        <div class="container mx-auto flex justify-between items-center">
+             <svg viewBox="0 0 270 170" class="h-16">
+                <path fill="#2563eb" d="M120.8,11.3l-81.2,49.2c-6.1,3.7-9.8,10.2-9.8,17.2v83.5c0,4.8,3.9,8.7,8.7,8.7h162.3c4.8,0,8.7-3.9,8.7-8.7V77.7c0-7-3.7-13.5-9.8-17.2L119.2,11.3z"/>
+                <path fill="#60a5fa" d="M135,10.5l81.2,49.2c6.1,3.7,9.8,10.2,9.8,17.2v83.5c0,4.8-3.9,8.7-8.7,8.7H135V10.5z"/>
+                <text x="10" y="145" font-family="Arial, sans-serif" font-size="38" fill="#FFFFFF" font-weight="bold">BKRDI-FY</text>
+                <text x="10" y="165" font-family="Arial, sans-serif" font-size="14" fill="#FFFFFF" font-weight="bold">TEST & STUDY</text>
+            </svg>
+            <div id="gameTitle" class="text-lg font-semibold">Home Screen</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="mainContentArea" class="flex-grow container mx-auto p-4 sm:p-6 lg:p-8 overflow-y-auto">
+
+        <!-- Main Menu Page -->
+        <div id="menuPage">
+            <div class="game-card text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold text-slate-800 mb-2">Criminal Justice Firearms</h2>
+                <p class="text-lg text-slate-600 mb-8">Interactive Study Guide</p>
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-6">
+                    <button onclick="startApp('flashcards')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Flash Cards</span>
+                        <p class="font-normal text-blue-100 mt-1">Review key terms.</p>
+                    </button>
+                    <button onclick="startApp('matching')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                         <span class="text-2xl">Matching Game</span>
+                         <p class="font-normal text-green-100 mt-1">Match terms to definitions.</p>
+                    </button>
+                    <button onclick="startApp('listGameMenu')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                         <span class="text-2xl">List Game</span>
+                         <p class="font-normal text-purple-100 mt-1">Identify items from a list.</p>
+                    </button>
+                     <button onclick="startApp('statuteGame')" class="bg-red-600 hover:bg-red-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Fill In Game</span>
+                        <p class="font-normal text-red-100 mt-1">Fill in the blanks.</p>
+                    </button>
+                    <button onclick="window.open('https://bkrdify.tiiny.site/', '_blank')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Tests & Study</span>
+                        <p class="font-normal text-yellow-100 mt-1">BKRDIFY EXAMS.</p>
+                    </button>
+                    <button onclick="window.open('https://tinyurl.com/bkrdify3/', '_blank')" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Chapter Notes</span>
+                        <p class="font-normal text-cyan-100 mt-1">The full deal.</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Game Pages -->
+        <div id="flashcardsPage" class="hidden"></div>
+        <div id="matchingPage" class="hidden"></div>
+        <div id="listGamePage" class="hidden"></div>
+        <div id="orderedListPage" class="hidden"></div>
+        <div id="statuteGamePage" class="hidden"></div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer-bar p-3 shadow-md z-10">
+        <div class="container mx-auto text-center text-sm text-gray-700">
+            BKRDI-Fy Version 1.9.0
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- DATA & DOM ---
+            let data = {};
+            try {
+                data = JSON.parse(document.getElementById('questionBank').textContent);
+            } catch (e) {
+                console.error("Error parsing JSON data:", e);
+                document.body.innerHTML = `<div class="p-4 text-red-700 bg-red-100">Error loading study data. Please check the JSON format.</div>`;
+                return;
+            }
+            
+            const pages = {
+                menuPage: document.getElementById('menuPage'),
+                flashcardsPage: document.getElementById('flashcardsPage'),
+                matchingPage: document.getElementById('matchingPage'),
+                listGamePage: document.getElementById('listGamePage'),
+                orderedListPage: document.getElementById('orderedListPage'),
+                statuteGamePage: document.getElementById('statuteGamePage')
+            };
+            const gameTitle = document.getElementById('gameTitle');
+
+            // --- STATE ---
+            let flashcardGameState = {};
+            let listGameState = {};
+            let statuteGameState = {};
+            let orderedListGameState = {};
+
+            // --- UTILITY ---
+            function shuffle(array) {
+                const newArray = [...array];
+                for (let i = newArray.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+                }
+                return newArray;
+            }
+
+            // --- NAVIGATION ---
+            function showPage(pageId) {
+                Object.values(pages).forEach(page => page && page.classList.add('hidden'));
+                if (pages[pageId]) {
+                    pages[pageId].classList.remove('hidden');
+                }
+            }
+
+            window.goHome = function() {
+                Object.keys(pages).forEach(key => {
+                    if (key !== 'menuPage' && pages[key]) {
+                        pages[key].innerHTML = '';
+                    }
+                });
+                showPage('menuPage');
+                gameTitle.textContent = "Home Screen";
+            }
+
+            window.startApp = function(appType) {
+                const pageMap = {
+                    flashcards: { title: "Flash Cards", renderFunc: renderFlashcardSetup, page: 'flashcardsPage' },
+                    matching: { title: "Matching Game", renderFunc: renderMatchingGame, page: 'matchingPage' },
+                    listGameMenu: { title: "List Game", renderFunc: renderListGameMenu, page: 'listGamePage'},
+                    listGame: { title: "General Lists", renderFunc: renderListGame, page: 'listGamePage' },
+                    orderedListGame: { title: "Ordered Lists", renderFunc: renderOrderedListGame, page: 'orderedListPage'},
+                    statuteGame: { title: "Fill In Game", renderFunc: renderStatuteGame, page: 'statuteGamePage' }
+                };
+                if (pageMap[appType]) {
+                    gameTitle.textContent = pageMap[appType].title;
+                    pageMap[appType].renderFunc();
+                    showPage(pageMap[appType].page);
+                }
+            }
+            
+            // --- FLASHCARD LOGIC ---
+            function renderFlashcardSetup() {
+                pages.flashcardsPage.innerHTML = `<div class="game-card flashcard-container w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Flash Card Setup</h2><div class="mb-6"><label for="cards-per-round" class="block text-lg mb-2">How many cards per round?</label><select id="cards-per-round" class="p-2 border rounded-md"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="${data.flashcards.length}">All (${data.flashcards.length})</option></select></div><button onclick="setupFlashcardGame()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Start Studying</button></div>`;
+            }
+            
+            window.setupFlashcardGame = function() {
+                const cardsPerRound = parseInt(document.getElementById('cards-per-round').value, 10);
+                flashcardGameState = {
+                    mainDeck: shuffle([...data.flashcards]),
+                    currentRoundDeck: [],
+                    roundSize: cardsPerRound,
+                    currentIndex: 0,
+                    carryOver: []
+                };
+                startNewFlashcardRound();
+            }
+
+            window.startNewFlashcardRound = function() {
+                const needed = flashcardGameState.roundSize - flashcardGameState.carryOver.length;
+                const newCards = flashcardGameState.mainDeck.splice(0, needed);
+                
+                flashcardGameState.currentRoundDeck = shuffle([...flashcardGameState.carryOver, ...newCards]);
+                flashcardGameState.carryOver = [];
+                flashcardGameState.currentIndex = 0;
+                
+                if (flashcardGameState.currentRoundDeck.length === 0) {
+                     pages.flashcardsPage.innerHTML = `<div class="game-card w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Congratulations!</h2><p class="mb-6">You have mastered all the flashcards!</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                     return;
+                }
+                
+                renderFlashcard();
+            }
+
+            function renderFlashcard() {
+                if (flashcardGameState.currentIndex >= flashcardGameState.currentRoundDeck.length) {
+                    renderEndOfRoundScreen();
+                    return;
+                }
+                const card = flashcardGameState.currentRoundDeck[flashcardGameState.currentIndex];
+                pages.flashcardsPage.innerHTML = `<div class="game-card flashcard-container w-full max-w-2xl mx-auto"><div class="flex justify-between items-center mb-4"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><div class="text-slate-500 font-medium">Card ${flashcardGameState.currentIndex + 1} of ${flashcardGameState.currentRoundDeck.length} (Deck: ${flashcardGameState.mainDeck.length})</div></div><div class="perspective-1000"><div id="flashcard" class="flip-card relative w-full h-80 cursor-pointer rounded-xl" onclick="this.classList.toggle('flipped')"><div class="flip-card-inner relative w-full h-full"><div class="flip-card-front absolute w-full h-full bg-slate-200 rounded-xl flex items-center justify-center p-6 text-center"><p class="text-xl">${card.definition}</p></div><div class="flip-card-back absolute w-full h-full bg-blue-600 text-white rounded-xl flex items-center justify-center p-6 text-center"><h2 class="text-3xl font-bold">${card.term}</h2></div></div></div></div><div class="mt-6 flex justify-center space-x-4"><button onclick="markCardAsKnown()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">I Know This</button><button onclick="markCardAsUnsure()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Not Sure</button></div></div>`;
+            }
+            
+            function renderEndOfRoundScreen() {
+                 pages.flashcardsPage.innerHTML = `<div class="game-card w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Round Complete!</h2><p class="mb-2">${flashcardGameState.carryOver.length} cards from this round will be carried over.</p><p class="mb-6">You have ${flashcardGameState.mainDeck.length} new cards left to learn.</p><button onclick="startNewFlashcardRound()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Start Next Round</button></div>`;
+            }
+
+            window.markCardAsKnown = function() {
+                flashcardGameState.currentRoundDeck.splice(flashcardGameState.currentIndex, 1);
+                renderFlashcard();
+            }
+
+            window.markCardAsUnsure = function() {
+                const card = flashcardGameState.currentRoundDeck.splice(flashcardGameState.currentIndex, 1)[0];
+                flashcardGameState.carryOver.push(card);
+                renderFlashcard();
+            }
+
+            // --- STATUTE GAME LOGIC ---
+            window.renderStatuteGame = function() {
+                statuteGameState = {
+                    questions: shuffle([...data.statuteGame]),
+                    currentIndex: 0,
+                    totalScore: 0,
+                    results: []
+                };
+                displayStatuteQuestion();
+            }
+            
+            window.displayStatuteQuestion = function() {
+                if (statuteGameState.currentIndex >= statuteGameState.questions.length) {
+                    displayStatuteResults();
+                    return;
+                }
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                statuteGameState.currentQuestionPoints = 100;
+                statuteGameState.revealedIndices = new Set();
+
+                const answerMask = q.answer.split('').map(char => (char === ' ' ? ' ' : '_')).join('');
+                
+                pages.statuteGamePage.innerHTML = `
+                    <div class="game-card max-w-3xl mx-auto">
+                        <div class="flex justify-between items-center mb-4">
+                            <button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button>
+                             <span class="font-bold">${statuteGameState.currentIndex + 1} out of ${statuteGameState.questions.length} items</span>
+                        </div>
+                        <h2 class="text-center text-xl font-bold my-4">FILL IN THE BLANK</h2>
+                        <div id="statute-score" class="text-center font-bold text-lg mb-4">Question Points: ${statuteGameState.currentQuestionPoints}</div>
+                        <div class="bg-gray-100 p-8 rounded-lg text-center text-lg mb-4">${q.prompt}</div>
+                        <div id="statute-feedback" class="text-center font-bold text-lg h-8 mb-2"></div>
+                        <div class="bg-blue-800 text-white p-4 rounded-lg text-center mb-4">
+                            <p id="statute-answer-display" class="tracking-widest text-2xl font-mono">${answerMask}</p>
+                        </div>
+                        <div class="flex">
+                            <input id="statute-input" type="text" class="fill-blank-input flex-grow p-4 text-xl rounded-l-lg" placeholder="Type your answer here...">
+                            <button id="statute-submit-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold p-4 rounded-r-lg">Submit</button>
+                        </div>
+                        <div class="flex justify-between mt-6 text-sm">
+                            <button onclick="handleHint()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg">Hint (-10 pts)</button>
+                            <button onclick="showStatuteAnswer()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg">Show Answer</button>
+                            <button id="statute-next-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg hidden">Next Term</button>
+                        </div>
+                    </div>`;
+
+                const input = document.getElementById('statute-input');
+                const submitBtn = document.getElementById('statute-submit-btn');
+                input.focus();
+                submitBtn.onclick = checkStatuteAnswer;
+                input.onkeyup = (e) => { if (e.key === 'Enter') checkStatuteAnswer(); };
+            }
+
+            function updateAnswerMask() {
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const display = q.answer.split('').map((char, index) => {
+                    if (char === ' ' || statuteGameState.revealedIndices.has(index)) {
+                        return `<span>${char}</span>`;
+                    }
+                    return '<span>_</span>';
+                }).join('');
+                document.getElementById('statute-answer-display').innerHTML = display;
+            }
+
+            window.handleHint = function() {
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const unrevealed = q.answer.split('').map((c, i) => i).filter(i => !statuteGameState.revealedIndices.has(i) && q.answer[i] !== ' ');
+                
+                if (unrevealed.length > 0) {
+                    statuteGameState.currentQuestionPoints = Math.max(0, statuteGameState.currentQuestionPoints - 10);
+                    document.getElementById('statute-score').textContent = `Question Points: ${statuteGameState.currentQuestionPoints}`;
+                    
+                    for(let i=0; i < 2 && unrevealed.length > 0; i++) {
+                         const randomIndex = Math.floor(Math.random() * unrevealed.length);
+                         const revealIndex = unrevealed.splice(randomIndex, 1)[0];
+                         statuteGameState.revealedIndices.add(revealIndex);
+                    }
+                    updateAnswerMask();
+                }
+            }
+
+            function checkStatuteAnswer() {
+                const input = document.getElementById('statute-input');
+                const feedbackEl = document.getElementById('statute-feedback');
+                const userAnswer = input.value.trim().toLowerCase();
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const isMatch = q.answer.toLowerCase() === userAnswer;
+
+                if (isMatch) {
+                    feedbackEl.textContent = "CORRECT!";
+                    feedbackEl.className = "text-center font-bold text-lg h-8 mb-2 feedback-correct";
+                    statuteGameState.totalScore += statuteGameState.currentQuestionPoints;
+                    statuteGameState.results.push({ question: q, correct: true, score: statuteGameState.currentQuestionPoints });
+                    document.getElementById('statute-answer-display').textContent = q.displayAnswer;
+                    endStatuteQuestion();
+                } else {
+                    feedbackEl.textContent = "INCORRECT - Try again.";
+                    feedbackEl.className = "text-center font-bold text-lg h-8 mb-2 feedback-incorrect";
+                    statuteGameState.currentQuestionPoints = Math.max(0, statuteGameState.currentQuestionPoints - 20);
+                    document.getElementById('statute-score').textContent = `Question Points: ${statuteGameState.currentQuestionPoints}`;
+                    
+                    const correctLetters = userAnswer.split('');
+                    q.answer.split('').forEach((char, index) => {
+                        if (char.toLowerCase() === correctLetters[index]?.toLowerCase()) {
+                            statuteGameState.revealedIndices.add(index);
+                        }
+                    });
+                    updateAnswerMask();
+                }
+            }
+            
+            function endStatuteQuestion() {
+                 const input = document.getElementById('statute-input');
+                 const submitBtn = document.getElementById('statute-submit-btn');
+                 const nextBtn = document.getElementById('statute-next-btn');
+                 if(input) input.disabled = true;
+                 if(submitBtn) submitBtn.disabled = true;
+                 if(nextBtn) {
+                     nextBtn.classList.remove('hidden');
+                     nextBtn.onclick = () => {
+                        statuteGameState.currentIndex++;
+                        displayStatuteQuestion();
+                    };
+                    nextBtn.focus();
+                 }
+            }
+
+            window.showStatuteAnswer = function() {
+                 const q = statuteGameState.questions[statuteGameState.currentIndex];
+                 document.getElementById('statute-answer-display').textContent = q.displayAnswer;
+                 statuteGameState.currentQuestionPoints = 0;
+                 statuteGameState.results.push({ question: q, correct: false, score: 0 });
+                 endStatuteQuestion();
+            }
+            
+            function displayStatuteResults() {
+                let resultsHtml = `<div class="game-card w-full max-w-3xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Game Results</h2><div class="text-lg mb-6">Final Score: ${statuteGameState.totalScore}</div><div class="space-y-4 text-left">`;
+                statuteGameState.results.forEach(res => {
+                    const bgColor = res.correct ? 'bg-green-100' : 'bg-red-100';
+                    const icon = res.correct ? `<span class="text-green-600 font-bold">&#10003;</span>` : `<span class="text-red-600 font-bold">X</span>`;
+                    resultsHtml += `<div class="${bgColor} p-4 rounded-lg"><p class="font-semibold">${res.question.prompt}</p><p>Correct Answer: <span class="font-bold">${res.question.displayAnswer}</span></p><p>Your score: ${res.score} ${icon}</p></div>`;
+                });
+                resultsHtml += `</div><button onclick="renderStatuteGame()" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Play Again</button></div>`;
+                pages.statuteGamePage.innerHTML = resultsHtml;
+            }
+
+            // --- MATCHING GAME LOGIC ---
+            let selectedTerm = null;
+            let selectedDef = null;
+            let matchedPairs = 0;
+            let totalPairs = 0;
+            window.renderMatchingGame = function() {
+                const gamePool = shuffle([...data.matching]);
+                const gameSize = Math.min(6, gamePool.length);
+                const gameSet = gamePool.slice(0, gameSize);
+                totalPairs = gameSize;
+                matchedPairs = 0;
+                selectedTerm = null;
+                selectedDef = null;
+                const terms = shuffle(gameSet.map((item, index) => ({ text: item.term, id: index })));
+                const definitions = shuffle(gameSet.map((item, index) => ({ text: item.definition, id: index })));
+                pages.matchingPage.innerHTML = `<div class="game-card w-full max-w-4xl mx-auto"><div class="flex justify-between items-center mb-6"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><h2 class="text-2xl font-bold">Matching Game</h2><button onclick="renderMatchingGame()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New Game</button></div><p id="match-instructions" class="text-center text-slate-600 mb-6">Select a term from the left and its matching definition from the right.</p><div id="win-message" class="hidden text-center p-4 mb-4 bg-green-100 text-green-800 rounded-lg"><p class="font-bold text-lg">Congratulations! You've matched all the pairs!</p></div><div class="grid grid-cols-2 gap-2 sm:gap-4 md:gap-6"><div id="terms-col" class="flex flex-col gap-3">${terms.map(t => `<div class="match-item p-4 border-2 border-slate-300 rounded-lg cursor-pointer hover:bg-slate-200 transition" data-type="term" data-id="${t.id}" onclick="handleMatchSelection(this)">${t.text}</div>`).join('')}</div><div id="definitions-col" class="flex flex-col gap-3">${definitions.map(d => `<div class="match-item p-4 border-2 border-slate-300 rounded-lg cursor-pointer hover:bg-slate-200 transition" data-type="definition" data-id="${d.id}" onclick="handleMatchSelection(this)">${d.text}</div>`).join('')}</div></div></div>`;
+            }
+            window.handleMatchSelection = function(target) {
+                if (target.classList.contains('matched')) return;
+                const type = target.dataset.type;
+                const id = target.dataset.id;
+                if (target.classList.contains('selected')) {
+                    target.classList.remove('selected');
+                    if (type === 'term') selectedTerm = null;
+                    if (type === 'definition') selectedDef = null;
+                    return;
+                }
+                document.querySelectorAll(`.match-item[data-type="${type}"].selected`).forEach(el => el.classList.remove('selected'));
+                target.classList.add('selected');
+                if (type === 'term') { selectedTerm = { el: target, id: id }; } else { selectedDef = { el: target, id: id }; }
+                if (selectedTerm && selectedDef) checkForMatch();
+            }
+            function checkForMatch() {
+                if (selectedTerm && selectedDef && selectedTerm.id === selectedDef.id) {
+                    selectedTerm.el.classList.add('matched');
+                    selectedDef.el.classList.add('matched');
+                    selectedTerm.el.classList.remove('selected');
+                    selectedDef.el.classList.remove('selected');
+                    matchedPairs++;
+                    if (matchedPairs === totalPairs) {
+                        document.getElementById('win-message').classList.remove('hidden');
+                        document.getElementById('match-instructions').classList.add('hidden');
+                    }
+                } else if (selectedTerm && selectedDef) {
+                    const termEl = selectedTerm.el;
+                    const defEl = selectedDef.el;
+                    termEl.classList.add('incorrect-match');
+                    defEl.classList.add('incorrect-match');
+                    setTimeout(() => {
+                        termEl.classList.remove('incorrect-match', 'selected');
+                        defEl.classList.remove('incorrect-match', 'selected');
+                    }, 500);
+                }
+                selectedTerm = null;
+                selectedDef = null;
+            }
+
+            // --- LIST GAME LOGIC ---
+            function renderListGameMenu() {
+                pages.listGamePage.innerHTML = `<div class="game-card text-center"><h2 class="text-3xl font-bold mb-6">List Games</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><button onclick="startApp('listGame')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105"><span class="text-2xl">General Lists</span><p class="font-normal text-purple-100 mt-1">Identify items from a list.</p></button><button onclick="startApp('orderedListGame')" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105"><span class="text-2xl">Ordered Lists</span><p class="font-normal text-teal-100 mt-1">Put items in the correct order.</p></button></div><button onclick="goHome()" class="mt-8 text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Main Menu</button></div>`;
+                showPage('listGamePage');
+            }
+            
+            window.renderListGame = function(questionIndex = -1) {
+                if (!listGameState.deck || listGameState.deck.length === 0) {
+                     listGameState.deck = shuffle([...data.listGame]);
+                }
+                if (questionIndex === -1) {
+                     listGameState.deck.shift();
+                     if (listGameState.deck.length === 0) {
+                         pages.listGamePage.innerHTML = `<div class="game-card text-center"><h2 class="text-2xl font-bold">All lists completed!</h2><p class="my-4">You've successfully completed all the lists for this session.</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                         return;
+                     }
+                 }
+                const question = listGameState.deck[0];
+                
+                listGameState.currentQuestion = question;
+                listGameState.foundCorrectCount = 0;
+                listGameState.score = 100;
+                listGameState.unseenCorrect = shuffle(question.correctAnswers);
+                listGameState.unseenIncorrect = shuffle(question.incorrectAnswers);
+                listGameState.nextCorrectSlot = 0;
+                
+                let answerPool = [];
+                const displayCount = 8;
+                for (let i = 0; i < displayCount; i++) {
+                    const newAnswer = getNewAnswer();
+                    if (newAnswer) answerPool.push(newAnswer);
+                }
+
+                const correctPlaceholders = question.correctAnswers.map((_, index) => 
+                    `<div id="correct-slot-${index}" class="correct-placeholder rounded-lg p-2 text-center text-gray-500">[...]</div>`
+                ).join('');
+
+                pages.listGamePage.innerHTML = `<div class="game-card w-full max-w-3xl mx-auto"><div class="flex justify-between items-center mb-4"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><h2 class="text-xl font-bold text-center">General Lists</h2><button onclick="renderListGame(-1)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New List</button></div><div class="text-center p-4 mb-4 bg-blue-50 border-l-4 border-blue-500 text-blue-800 rounded-r-lg"><p class="font-bold text-lg">${question.question}</p><p class="text-sm">Use ✓ to select correct items and X to eliminate incorrect ones.</p></div><div class="mb-6"><h3 class="font-bold text-center mb-2">Correct Answers Found</h3><div id="correct-answers-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">${correctPlaceholders}</div></div><div id="list-game-status" class="flex justify-between items-center font-bold text-lg mb-4 p-2 rounded-lg bg-gray-100"><span>Score: <span id="list-game-score">100</span></span></div><div id="list-game-win-message" class="hidden text-center p-4 mb-4 bg-green-100 text-green-800 rounded-lg"><p class="font-bold text-lg">Great job! You found all correct items for this list!</p></div><div id="next-list-container" class="hidden text-center mt-4"><button onclick="renderListGame(-1)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105">Next List &rarr;</button></div><div id="list-game-answers" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div></div>`;
+                const answersContainer = document.getElementById('list-game-answers');
+                answerPool.forEach(answer => answersContainer.appendChild(createAnswerElement(answer)));
+            }
+            
+            function getNewAnswer() {
+                if (listGameState.unseenCorrect.length > 0 && Math.random() < 0.4) {
+                    return listGameState.unseenCorrect.pop();
+                }
+                if (listGameState.unseenIncorrect.length > 0) {
+                    return listGameState.unseenIncorrect.pop();
+                }
+                if(listGameState.unseenCorrect.length > 0) {
+                     return listGameState.unseenCorrect.pop();
+                }
+                return null;
+            }
+
+            function createAnswerElement(answerText) {
+                const item = document.createElement('div');
+                item.className = 'list-item flex items-center justify-between p-3 rounded-lg';
+                
+                const textSpan = document.createElement('span');
+                textSpan.className = 'flex-grow mr-4';
+                textSpan.textContent = answerText;
+
+                const btnContainer = document.createElement('div');
+                btnContainer.className = 'list-item-btn-container flex space-x-2';
+
+                const checkBtn = document.createElement('button');
+                checkBtn.className = 'list-item-btn check-btn flex items-center justify-center';
+                checkBtn.innerHTML = '&#10003;'; // Checkmark
+                
+                const xBtn = document.createElement('button');
+                xBtn.className = 'list-item-btn x-btn flex items-center justify-center';
+                xBtn.innerHTML = 'X';
+
+                checkBtn.onclick = () => handleListSelection(item, 'select', answerText);
+                xBtn.onclick = () => handleListSelection(item, 'eliminate', answerText);
+
+                btnContainer.appendChild(checkBtn);
+                btnContainer.appendChild(xBtn);
+                item.appendChild(textSpan);
+                item.appendChild(btnContainer);
+                return item;
+            }
+
+            function replaceAndShuffle(oldElement) {
+                const parent = oldElement.parentNode;
+                const newAnswer = getNewAnswer();
+                if (newAnswer) {
+                    const newItem = createAnswerElement(newAnswer);
+                    parent.replaceChild(newItem, oldElement);
+                } else {
+                    oldElement.remove();
+                }
+                shuffleAnswerBoard();
+            }
+            
+            function shuffleAnswerBoard() {
+                const answersContainer = document.getElementById('list-game-answers');
+                if (!answersContainer) return;
+                const currentItems = Array.from(answersContainer.children);
+                const shuffledItems = shuffle(currentItems);
+                shuffledItems.forEach(item => answersContainer.appendChild(item));
+            }
+
+            window.handleListSelection = function(itemElement, action, answerText) {
+                if (itemElement.dataset.processed) return;
+                itemElement.dataset.processed = true;
+
+                const isCorrect = listGameState.currentQuestion.correctAnswers.includes(answerText);
+                const btnContainer = itemElement.querySelector('.list-item-btn-container');
+
+                if (action === 'select') { 
+                    if (isCorrect) {
+                        itemElement.classList.add('strobing-green');
+                        const correctSlot = document.getElementById(`correct-slot-${listGameState.nextCorrectSlot}`);
+                        if(correctSlot) {
+                           correctSlot.textContent = answerText;
+                           correctSlot.classList.add('filled');
+                        }
+                        listGameState.nextCorrectSlot++;
+                        listGameState.foundCorrectCount++;
+                        setTimeout(() => replaceAndShuffle(itemElement), 1000);
+                    } else {
+                        itemElement.classList.add('strobing-red'); 
+                        listGameState.score = Math.max(0, listGameState.score - 10);
+                        document.getElementById('list-game-score').textContent = listGameState.score;
+                        btnContainer.innerHTML = `<span class="text-2xl text-red-600 font-bold">X</span>`;
+                        setTimeout(() => replaceAndShuffle(itemElement), 2500);
+                    }
+                } else if (action === 'eliminate') { 
+                    if (!isCorrect) {
+                        itemElement.classList.add('fading-out');
+                        setTimeout(() => replaceAndShuffle(itemElement), 500);
+                    } else {
+                        itemElement.classList.add('strobing-purple');
+                        const correctSlot = document.getElementById(`correct-slot-${listGameState.nextCorrectSlot}`);
+                        if(correctSlot) {
+                           correctSlot.textContent = answerText;
+                           correctSlot.classList.add('filled', 'purple');
+                        }
+                        listGameState.nextCorrectSlot++;
+                        listGameState.foundCorrectCount++;
+                        listGameState.score = Math.max(0, listGameState.score - 15);
+                        document.getElementById('list-game-score').textContent = listGameState.score;
+                        setTimeout(() => replaceAndShuffle(itemElement), 1000);
+                    }
+                }
+
+                if (listGameState.foundCorrectCount === listGameState.currentQuestion.correctAnswers.length) {
+                    document.getElementById('list-game-win-message').classList.remove('hidden');
+                    document.getElementById('next-list-container').classList.remove('hidden');
+                }
+            }
+            
+            // --- ORDERED LIST GAME ---
+            window.renderOrderedListGame = function() {
+                orderedListGameState = {
+                    questions: shuffle([...data.orderedListGame]),
+                    currentIndex: 0
+                }
+                setupOrderedListGame();
+            }
+
+            function setupOrderedListGame() {
+                if (orderedListGameState.currentIndex >= orderedListGameState.questions.length) {
+                    pages.orderedListPage.innerHTML = `<div class="game-card text-center"><h2 class="text-2xl font-bold">All lists completed!</h2><p class="my-4">You've successfully completed all the ordered lists.</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                    return;
+                }
+                
+                const question = orderedListGameState.questions[orderedListGameState.currentIndex];
+                orderedListGameState.currentQuestion = question;
+                orderedListGameState.score = 100;
+                
+                const shuffledItems = shuffle([...question.items]);
+
+                let draggableHtml = `<p class="text-lg font-semibold text-center">Steps (Drag These)</p>`;
+                shuffledItems.forEach((itemText) => {
+                    draggableHtml += `<div class="draggable-item p-3 bg-gray-200 rounded-lg shadow cursor-grab" draggable="true">${itemText}</div>`;
+                });
+
+                let dropZoneHtml = `<p class="text-lg font-semibold text-center">Correct Order (Drop Here)</p>`;
+                question.items.forEach((_, index) => {
+                    dropZoneHtml += `<div class="drop-zone p-3 rounded-lg flex items-center min-h-[3.5rem]"><span class="mr-3 font-bold text-lg">${index + 1}.</span></div>`;
+                });
+                
+                pages.orderedListPage.innerHTML = `
+                    <div class="game-card w-full max-w-4xl mx-auto">
+                         <div class="flex justify-between items-center mb-6">
+                            <button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button>
+                            <h2 class="text-2xl font-bold">Ordered List Game</h2>
+                            <button onclick="nextOrderedList()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New List</button>
+                        </div>
+                        <p class="text-center font-bold text-lg mb-4">${question.question}</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div id="draggable-items-container" class="space-y-3 min-h-[10rem] bg-gray-50 p-2 rounded-lg">${draggableHtml}</div>
+                            <div id="drop-zones-container" class="space-y-3">${dropZoneHtml}</div>
+                        </div>
+                         <div id="ordered-list-feedback" class="text-center mt-8">
+                            <button id="check-order-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Check Order</button>
+                            <button id="next-ordered-list-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hidden">Next List</button>
+                        </div>
+                    </div>`;
+
+                addDragAndDropListeners();
+            }
+            
+            window.nextOrderedList = function() {
+                orderedListGameState.currentIndex++;
+                setupOrderedListGame();
+            }
+
+            function addDragAndDropListeners() {
+                const draggables = document.querySelectorAll('.draggable-item');
+                const dropZones = document.querySelectorAll('.drop-zone');
+                const sourceContainer = document.getElementById('draggable-items-container');
+
+                draggables.forEach(draggable => {
+                    draggable.addEventListener('dragstart', e => {
+                        e.dataTransfer.setData('text/plain', e.target.textContent);
+                        setTimeout(() => e.target.classList.add('dragging'), 0);
+                    });
+                    draggable.addEventListener('dragend', e => e.target.classList.remove('dragging'));
+                });
+
+                function handleDragOver(e) {
+                    e.preventDefault();
+                    this.classList.add('drag-over');
+                }
+
+                function handleDragLeave() {
+                    this.classList.remove('drag-over');
+                }
+
+                function handleDrop(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                    const draggedText = e.dataTransfer.getData('text/plain');
+                    const draggedEl = document.querySelector(`.draggable-item.dragging`);
+                    
+                    if (this.classList.contains('drop-zone')) { // Dropping on a drop zone
+                        if (this.children.length > 1) { 
+                           const existingItem = this.children[1];
+                           sourceContainer.appendChild(existingItem);
+                        }
+                         if(draggedEl) this.appendChild(draggedEl);
+                    } else if (this.id === 'draggable-items-container') { // Dropping back on source
+                        if(draggedEl) this.appendChild(draggedEl);
+                    }
+                }
+
+                dropZones.forEach(zone => {
+                    zone.addEventListener('dragover', handleDragOver);
+                    zone.addEventListener('dragleave', handleDragLeave);
+                    zone.addEventListener('drop', handleDrop);
+                });
+
+                sourceContainer.addEventListener('dragover', handleDragOver);
+                sourceContainer.addEventListener('dragleave', handleDragLeave);
+                sourceContainer.addEventListener('drop', handleDrop);
+                
+                document.getElementById('check-order-btn').onclick = checkOrder;
+            }
+            
+            function checkOrder() {
+                const dropZones = document.querySelectorAll('#drop-zones-container .drop-zone');
+                const correctOrder = orderedListGameState.currentQuestion.items;
+                const sourceContainer = document.getElementById('draggable-items-container');
+                let allCorrect = true;
+
+                dropZones.forEach((zone, index) => {
+                    const droppedItem = zone.querySelector('.draggable-item');
+                    if (droppedItem && droppedItem.textContent === correctOrder[index]) {
+                        zone.classList.add('correct');
+                        zone.classList.remove('incorrect');
+                        droppedItem.setAttribute('draggable', 'false'); // Lock correct items
+                        droppedItem.style.cursor = 'default';
+                    } else if (droppedItem) {
+                        allCorrect = false;
+                        zone.classList.add('incorrect');
+                        zone.classList.remove('correct');
+                        setTimeout(() => {
+                           zone.classList.remove('incorrect');
+                           sourceContainer.appendChild(droppedItem); // Return incorrect item
+                        }, 1000);
+                    } else {
+                        allCorrect = false; // A slot is empty
+                    }
+                });
+
+                if (allCorrect) {
+                    document.getElementById('check-order-btn').classList.add('hidden');
+                    document.getElementById('next-ordered-list-btn').classList.remove('hidden');
+                    document.getElementById('next-ordered-list-btn').onclick = nextOrderedList;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

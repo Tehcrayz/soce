@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Guide: Officer Safety </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Arial&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background: #f4f8fb;
+            color: #1f2937;
+        }
+        .header-bar {
+            background-color: #1f2937;
+            color: white;
+        }
+        .footer-bar {
+            background: #dbeafe;
+        }
+        /* Card styles for menu and games */
+        .game-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+
+        /* Flip animation for flashcards */
+        .perspective-1000 { perspective: 1000px; }
+        .flip-card-inner { transition: transform 0.6s; transform-style: preserve-3d; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+        .flip-card-back { transform: rotateY(180deg); }
+        .flashcard-container.large .flip-card { height: 28rem; }
+        .flashcard-container.large .game-card { max-width: 48rem; }
+
+
+        /* Styles for matching game */
+        .match-item.selected { background-color: #3b82f6; color: white; border-color: #2563eb; }
+        .match-item.matched { background-color: #16a34a; color: white; border-color: #15803d; opacity: 0.7; pointer-events: none; }
+        .match-item.incorrect-match { background-color: #dc2626; color: white; animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Styles for list game */
+        .list-item { transition: all 0.3s ease; border: 1px solid #d1d5db; }
+        .list-item-btn-container { flex-shrink: 0; }
+        .list-item-btn {
+            cursor: pointer;
+            border-radius: 9999px;
+            width: 2rem;
+            height: 2rem;
+            font-weight: bold;
+            transition: all 0.2s ease-in-out;
+            border: 2px solid transparent;
+        }
+        .check-btn { background-color: #dcfce7; color: #15803d; }
+        .check-btn:hover { background-color: #22c55e; color: white; border-color: #15803d; }
+        .x-btn { background-color: #fee2e2; color: #b91c1c; }
+        .x-btn:hover { background-color: #ef4444; color: white; border-color: #991b1b; }
+        
+        .correct-placeholder {
+             background-color: #e5e7eb;
+             border: 2px dashed #9ca3af;
+             transition: all 0.5s ease;
+             min-height: 2.5rem;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             padding: 0.5rem;
+             word-break: break-word;
+        }
+        .correct-placeholder.filled {
+            background-color: #dcfce7;
+            border-color: #16a34a;
+            color: #14532d;
+            font-weight: 600;
+            border-style: solid;
+        }
+        .correct-placeholder.purple {
+            background-color: #f3e8ff;
+            border-color: #8b5cf6;
+            color: #5b21b6;
+        }
+
+        .list-item.strobing-green { animation: strobe-green 1s forwards; }
+        .list-item.strobing-red { animation: incorrect-answer-animation 2.5s forwards; }
+        .list-item.strobing-purple { animation: strobe-purple 1s forwards; }
+        .list-item.fading-out { animation: fade-out 0.5s forwards; }
+        
+        @keyframes fade-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.9); } }
+        
+        @keyframes strobe-green {
+            0%, 100% { background-color: white; }
+            50% { background-color: #22c55e; color: white; }
+        }
+
+        @keyframes strobe-purple {
+            0%, 100% { background-color: white; }
+            50% { background-color: #a855f7; color: white; }
+        }
+
+        @keyframes incorrect-answer-animation {
+            0% { transform: translateX(0); background-color: #fee2e2; }
+            10%, 30%, 50%, 70% { background-color: #b91c1c; color: white; }
+            20%, 40%, 60%, 80% { background-color: #fee2e2; color: #1f2937; }
+            0%, 20%, 40%, 60% { transform: translateX(5px); }
+            10%, 30%, 50%, 70% { transform: translateX(-5px); }
+            85% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.9); }
+        }
+        
+        /* Fill in the blank game styles */
+        .fill-blank-input {
+            border: 2px solid #ccc;
+            transition: border-color 0.3s;
+        }
+        .fill-blank-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .feedback-correct {
+            color: #16a34a;
+        }
+        .feedback-incorrect {
+            color: #dc2626;
+        }
+        #statute-answer-display span {
+            display: inline-block;
+            width: 1.2ch; /* Character unit */
+            text-align: center;
+        }
+
+        /* Ordered List Game Styles */
+        .draggable-item { cursor: grab; }
+        .drop-zone { border: 2px dashed #9ca3af; transition: background-color 0.2s; }
+        .drop-zone.drag-over { background-color: #e0f2fe; }
+        .drop-zone.correct { background-color: #dcfce7; border-color: #16a34a; }
+        .drop-zone.incorrect { background-color: #fee2e2; border-color: #b91c1c; animation: shake 0.5s; }
+        .dragging { opacity: 0.5; }
+
+
+        /* Hide scrollbar for the main content area */
+        #mainContentArea::-webkit-scrollbar { display: none; }
+        #mainContentArea { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- JSON Question Bank -->
+    <script id="questionBank" type="application/json">
+    {
+        "flashcards": [
+    { "term": "Complacency", "definition": "A comfortable or relaxed state of mind that lulls you into a false sense of safety and security." },
+    { "term": "Four categories of stress", "definition": "Environmental (weather, noise), personal (family, health, finances), work-related (shift work, supervisors), and self-induced (personal attitudes, goals)." },
+    { "term": "Situational awareness", "definition": "The ability to pay attention to what is going on around you; it is a state of mental responsiveness." },
+    { "term": "Stages of situational awareness", "definition": "1. Being alert, 2. Identifying a potential threat, 3. Responding to a threat." },
+    { "term": "Tunnel vision", "definition": "When your attention and field of view narrow because of stress." },
+    { "term": "Positioning", "definition": "Placing yourself in a tactically advantageous location to observe an area." },
+    { "term": "Posture", "definition": "Holding your body in a manner that shows strength, confidence, interest, and control." },
+    { "term": "Controlled behavior", "definition": "Demonstrating confidence and control and avoiding such distracting behaviors as foot tapping, nail biting, and fidgeting." },
+    { "term": "Observing", "definition": "Being aware of any occurrence or activity that may signify safety and security problems, such as irregular mood changes, emotional outbursts, or threatening behavior." },
+    { "term": "Active listening", "definition": "A learned skill that you should use to quickly determine the context, threat, and relevance of events unfolding around you." },
+    { "term": "Identity verification", "definition": "A secure and reliable form of recognizing individuals based on sound standards." },
+    { "term": "Automated Visitor Registration (AVR) hand scanner", "definition": "Recognizes distinct fingerprint features and links to a database, which may contain identifying information for visitors and vendors." },
+    { "term": "Rapid Identification System", "definition": "A fingerprint recognition system used for identification." },
+    { "term": "Automated Biometric Identification Solution (ABIS)", "definition": "Formerly known as AFIS, a biometric identification system." },
+    { "term": "Inmate face sheet", "definition": "A manual identification method printed from the agency database." },
+    { "term": "Inmate gate pass", "definition": "Authorizes supervised inmates to exit the secure perimeter." },
+    { "term": "Hologram", "definition": "A hidden image on an ID that is visible when viewed at certain angles or with appropriate lighting." },
+    { "term": "Watermark", "definition": "A recognizable image or pattern in paper that appears lighter or darker when held up to the light." },
+    { "term": "Counterfeit identification", "definition": "Appears to be valid but may be missing some or all of the essential security features and information." },
+    { "term": "Manipulation", "definition": "When an inmate attempts to get something they want by influencing an officer or staff member to do something they would not ordinarily do." },
+    { "term": "Deception", "definition": "Lying to, misleading, tricking, or fooling another person." },
+    { "term": "Methods of inmate manipulation", "definition": "Attempting to create bonds, circumventing rules, using special circumstances, distracting staff, engaging in casual conversation, spreading rumors, over-familiarization, and attempting illegal activity." },
+    { "term": "Observers (Inmate Team)", "definition": "Inmates who observe correctional officers who use inmate jargon, ignore minor rule infractions, play favorites, or are easily distracted." },
+    { "term": "Contacts (Inmate Team)", "definition": "Inmates who supply information about the correctional officer's work habits, likes, and dislikes." },
+    { "term": "Runners (Inmate Team)", "definition": "Inmates who expose themselves to an officer by asking for small items like candy or pencils to test the officer." },
+    { "term": "Turners (Inmate Team)", "definition": "Inmates who befriend a correctional officer and use the friendship to ultimately coerce the officer into engaging in rule infractions." },
+    { "term": "Point men (Inmate Team)", "definition": "Inmates who stand guard when an officer is in the process of granting illegal favors or being compromised." },
+    { "term": "Nuisance contraband", "definition": "Any authorized item found in excessive amounts or altered from its original state that usually does not pose an immediate threat to safety or security." },
+    { "term": "Hard/hazardous contraband", "definition": "Any item that poses a serious threat to the safety and security of the staff, inmates, and facility." },
+    { "term": "Shank", "definition": "The most common inmate weapon, often homemade knives, which can be made from almost anything." },
+    { "term": "Visual search", "definition": "A method of detecting contraband by visually scanning for items." },
+    { "term": "Pat down", "definition": "A method of detecting contraband by physically frisking a subject in a predetermined pattern." },
+    { "term": "Clothed search", "definition": "A method of detecting contraband by physically patting and squeezing the clothing of a person in a systematic pattern in a secure environment." },
+    { "term": "Custodial search", "definition": "A method of detecting contraband by physically patting and squeezing the clothing of a person in a systematic pattern when they are taken into custody in an unsecured environment." },
+    { "term": "Cell or area search", "definition": "A method of detecting contraband by visually and physically inspecting an area in a systematic manner." },
+    { "term": "Metal detection", "definition": "A method of detecting contraband by using electronic devices to detect a metal object on or within a person or item." },
+    { "term": "Strip search", "definition": "A method of detecting contraband by visually searching an unclothed person and physically searching their clothing." },
+    { "term": "Vehicle search", "definition": "A method of detecting contraband by visually and physically inspecting a vehicle." },
+    { "term": "Body cavity search", "definition": "A method of detecting contraband by visually and physically inspecting body openings; conducted by medical staff only." },
+    { "term": "Spiral search pattern", "definition": "Usually used by one person, this pattern begins at a central point and moves in increasingly larger circles to the outermost boundary." },
+    { "term": "Strip/line search pattern", "definition": "Usually used by several people, this pattern divides the search area into lanes that are searched in both directions." },
+    { "term": "Grid search pattern", "definition": "A variation of the strip/line search where the pattern overlaps a series of lanes in a cross pattern, making it more methodical." },
+    { "term": "Zone/quadrant search pattern", "definition": "Used for searching large areas, this pattern divides the area into four sections which are then searched using another pattern." },
+    { "term": "Probing devices", "definition": "Any item used to search holes, cracks, or hollow areas, such as a wire." },
+    { "term": "Special Disposal: Money", "definition": "Confiscated money is counted in the inmate's presence, a receipt is given, and it is deposited into the Inmate Welfare Fund or the inmate's account." },
+    { "term": "Special Disposal: Medication", "definition": "Unauthorized or excessive medication is confiscated, and the facility's medical staff determines the appropriate method of disposal." },
+    { "term": "Special Disposal: Illegal Drugs", "definition": "Held as evidence by the investigating agency, as their discovery may lead to criminal charges." },
+    { "term": "Special Disposal: Weapons", "definition": "Held as evidence, as possession may result in criminal charges." },
+    { "term": "Special Disposal: Biohazardous Materials", "definition": "Items like tattoo needles or soiled sheets are placed in appropriate biohazard containers and disposed of according to agency policy." }
+        ],
+        "matching": [
+    { "term": "Complacency", "definition": "A comfortable or relaxed state of mind that lulls you into a false sense of safety and security." },
+    { "term": "Four categories of stress", "definition": "Environmental (weather, noise), personal (family, health, finances), work-related (shift work, supervisors), and self-induced (personal attitudes, goals)." },
+    { "term": "Situational awareness", "definition": "The ability to pay attention to what is going on around you; it is a state of mental responsiveness." },
+    { "term": "Stages of situational awareness", "definition": "1. Being alert, 2. Identifying a potential threat, 3. Responding to a threat." },
+    { "term": "Tunnel vision", "definition": "When your attention and field of view narrow because of stress." },
+    { "term": "Positioning", "definition": "Placing yourself in a tactically advantageous location to observe an area." },
+    { "term": "Posture", "definition": "Holding your body in a manner that shows strength, confidence, interest, and control." },
+    { "term": "Controlled behavior", "definition": "Demonstrating confidence and control and avoiding such distracting behaviors as foot tapping, nail biting, and fidgeting." },
+    { "term": "Observing", "definition": "Being aware of any occurrence or activity that may signify safety and security problems, such as irregular mood changes, emotional outbursts, or threatening behavior." },
+    { "term": "Active listening", "definition": "A learned skill that you should use to quickly determine the context, threat, and relevance of events unfolding around you." },
+    { "term": "Identity verification", "definition": "A secure and reliable form of recognizing individuals based on sound standards." },
+    { "term": "Automated Visitor Registration (AVR) hand scanner", "definition": "Recognizes distinct fingerprint features and links to a database, which may contain identifying information for visitors and vendors." },
+    { "term": "Rapid Identification System", "definition": "A fingerprint recognition system used for identification." },
+    { "term": "Automated Biometric Identification Solution (ABIS)", "definition": "Formerly known as AFIS, a biometric identification system." },
+    { "term": "Inmate face sheet", "definition": "A manual identification method printed from the agency database." },
+    { "term": "Inmate gate pass", "definition": "Authorizes supervised inmates to exit the secure perimeter." },
+    { "term": "Hologram", "definition": "A hidden image on an ID that is visible when viewed at certain angles or with appropriate lighting." },
+    { "term": "Watermark", "definition": "A recognizable image or pattern in paper that appears lighter or darker when held up to the light." },
+    { "term": "Counterfeit identification", "definition": "Appears to be valid but may be missing some or all of the essential security features and information." },
+    { "term": "Manipulation", "definition": "When an inmate attempts to get something they want by influencing an officer or staff member to do something they would not ordinarily do." },
+    { "term": "Deception", "definition": "Lying to, misleading, tricking, or fooling another person." },
+    { "term": "Methods of inmate manipulation", "definition": "Attempting to create bonds, circumventing rules, using special circumstances, distracting staff, engaging in casual conversation, spreading rumors, over-familiarization, and attempting illegal activity." },
+    { "term": "Observers (Inmate Team)", "definition": "Inmates who observe correctional officers who use inmate jargon, ignore minor rule infractions, play favorites, or are easily distracted." },
+    { "term": "Contacts (Inmate Team)", "definition": "Inmates who supply information about the correctional officer's work habits, likes, and dislikes." },
+    { "term": "Runners (Inmate Team)", "definition": "Inmates who expose themselves to an officer by asking for small items like candy or pencils to test the officer." },
+    { "term": "Turners (Inmate Team)", "definition": "Inmates who befriend a correctional officer and use the friendship to ultimately coerce the officer into engaging in rule infractions." },
+    { "term": "Point men (Inmate Team)", "definition": "Inmates who stand guard when an officer is in the process of granting illegal favors or being compromised." },
+    { "term": "Nuisance contraband", "definition": "Any authorized item found in excessive amounts or altered from its original state that usually does not pose an immediate threat to safety or security." },
+    { "term": "Hard/hazardous contraband", "definition": "Any item that poses a serious threat to the safety and security of the staff, inmates, and facility." },
+    { "term": "Shank", "definition": "The most common inmate weapon, often homemade knives, which can be made from almost anything." },
+    { "term": "Visual search", "definition": "A method of detecting contraband by visually scanning for items." },
+    { "term": "Pat down", "definition": "A method of detecting contraband by physically frisking a subject in a predetermined pattern." },
+    { "term": "Clothed search", "definition": "A method of detecting contraband by physically patting and squeezing the clothing of a person in a systematic pattern in a secure environment." },
+    { "term": "Custodial search", "definition": "A method of detecting contraband by physically patting and squeezing the clothing of a person in a systematic pattern when they are taken into custody in an unsecured environment." },
+    { "term": "Cell or area search", "definition": "A method of detecting contraband by visually and physically inspecting an area in a systematic manner." },
+    { "term": "Metal detection", "definition": "A method of detecting contraband by using electronic devices to detect a metal object on or within a person or item." },
+    { "term": "Strip search", "definition": "A method of detecting contraband by visually searching an unclothed person and physically searching their clothing." },
+    { "term": "Vehicle search", "definition": "A method of detecting contraband by visually and physically inspecting a vehicle." },
+    { "term": "Body cavity search", "definition": "A method of detecting contraband by visually and physically inspecting body openings; conducted by medical staff only." },
+    { "term": "Spiral search pattern", "definition": "Usually used by one person, this pattern begins at a central point and moves in increasingly larger circles to the outermost boundary." },
+    { "term": "Strip/line search pattern", "definition": "Usually used by several people, this pattern divides the search area into lanes that are searched in both directions." },
+    { "term": "Grid search pattern", "definition": "A variation of the strip/line search where the pattern overlaps a series of lanes in a cross pattern, making it more methodical." },
+    { "term": "Zone/quadrant search pattern", "definition": "Used for searching large areas, this pattern divides the area into four sections which are then searched using another pattern." },
+    { "term": "Probing devices", "definition": "Any item used to search holes, cracks, or hollow areas, such as a wire." },
+    { "term": "Special Disposal: Money", "definition": "Confiscated money is counted in the inmate's presence, a receipt is given, and it is deposited into the Inmate Welfare Fund or the inmate's account." },
+    { "term": "Special Disposal: Medication", "definition": "Unauthorized or excessive medication is confiscated, and the facility's medical staff determines the appropriate method of disposal." },
+    { "term": "Special Disposal: Illegal Drugs", "definition": "Held as evidence by the investigating agency, as their discovery may lead to criminal charges." },
+    { "term": "Special Disposal: Weapons", "definition": "Held as evidence, as possession may result in criminal charges." },
+    { "term": "Special Disposal: Biohazardous Materials", "definition": "Items like tattoo needles or soiled sheets are placed in appropriate biohazard containers and disposed of according to agency policy." }
+        ],
+        "listGame": [
+ {"prompt": "A comfortable or relaxed state of mind that lulls you into a false sense of safety and security.", "answer": "Complacency", "displayAnswer": "Complacency"},
+    {"prompt": "The ability to pay attention to what is going on around you; a state of mental responsiveness.", "answer": "Situational awareness", "displayAnswer": "Situational awareness"},
+    {"prompt": "When your attention and field of view narrow because of stress.", "answer": "Tunnel vision", "displayAnswer": "Tunnel vision"},
+    {"prompt": "Placing yourself in a tactically advantageous location to observe an area.", "answer": "Positioning", "displayAnswer": "Positioning"},
+    {"prompt": "Holding your body in a manner that shows strength, confidence, interest, and control.", "answer": "Posture", "displayAnswer": "Posture"},
+    {"prompt": "Being aware of any occurrence or activity that may signify safety and security problems.", "answer": "Observing", "displayAnswer": "Observing"},
+    {"prompt": "A learned skill used to quickly determine the context, threat, and relevance of events unfolding around you.", "answer": "Active listening", "displayAnswer": "Active listening"},
+    {"prompt": "A secure and reliable form of recognizing individuals based on sound standards.", "answer": "Identity verification", "displayAnswer": "Identity verification"},
+    {"prompt": "A hidden image on an ID that is visible when viewed at certain angles or with appropriate lighting.", "answer": "Hologram", "displayAnswer": "Hologram"},
+    {"prompt": "A recognizable image or pattern in paper that appears lighter or darker when held up to the light.", "answer": "Watermark", "displayAnswer": "Watermark"},
+    {"prompt": "When an inmate attempts to get something they want by influencing an officer to do something they would not ordinarily do.", "answer": "Inmate manipulation", "displayAnswer": "Inmate manipulation"},
+    {"prompt": "Lying to, misleading, tricking, or fooling another person.", "answer": "Deception", "displayAnswer": "Deception"},
+    {"prompt": "Inmate manipulation team members who observe officers for vulnerabilities like ignoring minor rules or playing favorites.", "answer": "Observers", "displayAnswer": "Observers"},
+    {"prompt": "Inmate manipulation team members who supply information about an officer's work habits, likes, and dislikes.", "answer": "Contacts", "displayAnswer": "Contacts"},
+    {"prompt": "Inmate manipulation team members who expose themselves to an officer by asking for small items like candy or cigarettes.", "answer": "Runners", "displayAnswer": "Runners"},
+    {"prompt": "Inmate manipulation team members who befriend an officer to ultimately coerce them into rule infractions.", "answer": "Turners", "displayAnswer": "Turners"},
+    {"prompt": "Inmate manipulation team members who stand guard when an officer is granting illegal favors or being compromised.", "answer": "Point men", "displayAnswer": "Point men"},
+    {"prompt": "Any unauthorized article or any authorized article in excessive quantities or altered from its original state.", "answer": "Contraband", "displayAnswer": "Contraband"},
+    {"prompt": "Any authorized item found in excessive amounts or altered from its original state that does not pose an immediate threat.", "answer": "Nuisance contraband", "displayAnswer": "Nuisance contraband"},
+    {"prompt": "Any item that poses a serious threat to the safety and security of the staff, inmates, and facility.", "answer": "Hard/hazardous contraband", "displayAnswer": "Hard/hazardous contraband"},
+    {"prompt": "The most common inmate weapon, which can be made from almost anything.", "answer": "Shanks", "displayAnswer": "Shanks"},
+    {"prompt": "A search pattern that begins at a central point and moves in increasingly larger circles to the outermost boundary.", "answer": "Spiral search pattern", "displayAnswer": "Spiral search pattern"},
+    {"prompt": "A search pattern that divides the area into lanes which are searched by one or more people in both directions.", "answer": "Strip/line search pattern", "displayAnswer": "Strip/line search pattern"},
+    {"prompt": "A search pattern that overlaps a series of lanes in a cross pattern, making the search more methodical and thorough.", "answer": "Grid search pattern", "displayAnswer": "Grid search pattern"},
+    {"prompt": "A search pattern used for large areas that divides the area into four sections.", "answer": "Zone/quadrant search pattern", "displayAnswer": "Zone/quadrant search pattern"}
+
+        ],
+        "orderedListGame": [
+    {"question": "Arrange the basic elements of effective communication in the correct order.", "items": ["Consider what you want to say and construct the message.", "Convey the message via verbal, non-verbal, telecommunication, or written format.", "Allow time for the person or group to receive and understand the message.", "Gauge whether you have received an appropriate response or change in behavior."]},
+    {"question": "Place the five basic steps for writing a corrections report in the correct order.", "items": ["Gather information.", "Record facts.", "Organize facts.", "Write the report.", "Evaluate the report."]},
+    {"question": "Arrange the actions for finalizing a report in the correct order.", "items": ["Ensure that all details (who, what, where, when, how, why, and action taken) are fully answered.", "Ask yourself if someone not involved would have a clear picture of what happened from the report.", "Ensure that you identified and corrected all errors.", "Sign, date, and distribute the report according to agency policies and procedures."]}
+        ],
+        "statuteGame": [
+    {"prompt": "A comfortable or relaxed state of mind that lulls you into a false sense of safety and security.", "answer": "Complacency", "displayAnswer": "Complacency"},
+    {"prompt": "The ability to pay attention to what is going on around you; a state of mental responsiveness.", "answer": "Situational awareness", "displayAnswer": "Situational awareness"},
+    {"prompt": "When your attention and field of view narrow because of stress.", "answer": "Tunnel vision", "displayAnswer": "Tunnel vision"},
+    {"prompt": "Placing yourself in a tactically advantageous location to observe an area.", "answer": "Positioning", "displayAnswer": "Positioning"},
+    {"prompt": "Holding your body in a manner that shows strength, confidence, interest, and control.", "answer": "Posture", "displayAnswer": "Posture"},
+    {"prompt": "Being aware of any occurrence or activity that may signify safety and security problems.", "answer": "Observing", "displayAnswer": "Observing"},
+    {"prompt": "A learned skill used to quickly determine the context, threat, and relevance of events unfolding around you.", "answer": "Active listening", "displayAnswer": "Active listening"},
+    {"prompt": "A secure and reliable form of recognizing individuals based on sound standards.", "answer": "Identity verification", "displayAnswer": "Identity verification"},
+    {"prompt": "A hidden image on an ID that is visible when viewed at certain angles or with appropriate lighting.", "answer": "Hologram", "displayAnswer": "Hologram"},
+    {"prompt": "A recognizable image or pattern in paper that appears lighter or darker when held up to the light.", "answer": "Watermark", "displayAnswer": "Watermark"},
+    {"prompt": "When an inmate attempts to get something they want by influencing an officer to do something they would not ordinarily do.", "answer": "Inmate manipulation", "displayAnswer": "Inmate manipulation"},
+    {"prompt": "Lying to, misleading, tricking, or fooling another person.", "answer": "Deception", "displayAnswer": "Deception"},
+    {"prompt": "Inmate manipulation team members who observe officers for vulnerabilities like ignoring minor rules or playing favorites.", "answer": "Observers", "displayAnswer": "Observers"},
+    {"prompt": "Inmate manipulation team members who supply information about an officer's work habits, likes, and dislikes.", "answer": "Contacts", "displayAnswer": "Contacts"},
+    {"prompt": "Inmate manipulation team members who expose themselves to an officer by asking for small items like candy or cigarettes.", "answer": "Runners", "displayAnswer": "Runners"},
+    {"prompt": "Inmate manipulation team members who befriend an officer to ultimately coerce them into rule infractions.", "answer": "Turners", "displayAnswer": "Turners"},
+    {"prompt": "Inmate manipulation team members who stand guard when an officer is granting illegal favors or being compromised.", "answer": "Point men", "displayAnswer": "Point men"},
+    {"prompt": "Any unauthorized article or any authorized article in excessive quantities or altered from its original state.", "answer": "Contraband", "displayAnswer": "Contraband"},
+    {"prompt": "Any authorized item found in excessive amounts or altered from its original state that does not pose an immediate threat.", "answer": "Nuisance contraband", "displayAnswer": "Nuisance contraband"},
+    {"prompt": "Any item that poses a serious threat to the safety and security of the staff, inmates, and facility.", "answer": "Hard/hazardous contraband", "displayAnswer": "Hard/hazardous contraband"},
+    {"prompt": "The most common inmate weapon, which can be made from almost anything.", "answer": "Shanks", "displayAnswer": "Shanks"},
+    {"prompt": "A search pattern that begins at a central point and moves in increasingly larger circles to the outermost boundary.", "answer": "Spiral search pattern", "displayAnswer": "Spiral search pattern"},
+    {"prompt": "A search pattern that divides the area into lanes which are searched by one or more people in both directions.", "answer": "Strip/line search pattern", "displayAnswer": "Strip/line search pattern"},
+    {"prompt": "A search pattern that overlaps a series of lanes in a cross pattern, making the search more methodical and thorough.", "answer": "Grid search pattern", "displayAnswer": "Grid search pattern"},
+    {"prompt": "A search pattern used for large areas that divides the area into four sections.", "answer": "Zone/quadrant search pattern", "displayAnswer": "Zone/quadrant search pattern"}
+        ]
+    }
+    </script>
+
+    <!-- Header -->
+    <header class="header-bar p-2 shadow-md z-10">
+        <div class="container mx-auto flex justify-between items-center">
+             <svg viewBox="0 0 270 170" class="h-16">
+                <path fill="#2563eb" d="M120.8,11.3l-81.2,49.2c-6.1,3.7-9.8,10.2-9.8,17.2v83.5c0,4.8,3.9,8.7,8.7,8.7h162.3c4.8,0,8.7-3.9,8.7-8.7V77.7c0-7-3.7-13.5-9.8-17.2L119.2,11.3z"/>
+                <path fill="#60a5fa" d="M135,10.5l81.2,49.2c6.1,3.7,9.8,10.2,9.8,17.2v83.5c0,4.8-3.9,8.7-8.7,8.7H135V10.5z"/>
+                <text x="10" y="145" font-family="Arial, sans-serif" font-size="38" fill="#FFFFFF" font-weight="bold">BKRDI-FY</text>
+                <text x="10" y="165" font-family="Arial, sans-serif" font-size="14" fill="#FFFFFF" font-weight="bold">TEST & STUDY</text>
+            </svg>
+            <div id="gameTitle" class="text-lg font-semibold">Home Screen</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="mainContentArea" class="flex-grow container mx-auto p-4 sm:p-6 lg:p-8 overflow-y-auto">
+
+        <!-- Main Menu Page -->
+        <div id="menuPage">
+            <div class="game-card text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold text-slate-800 mb-2">Officer safety</h2>
+                <p class="text-lg text-slate-600 mb-8">Interactive Study Guide</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <button onclick="startApp('flashcards')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Flash Cards</span>
+                        <p class="font-normal text-blue-100 mt-1">Review key terms.</p>
+                    </button>
+                    <button onclick="startApp('matching')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                         <span class="text-2xl">Matching Game</span>
+                         <p class="font-normal text-green-100 mt-1">Match terms to definitions.</p>
+                    </button>
+                    <button onclick="startApp('listGameMenu')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                         <span class="text-2xl">List Game</span>
+                         <p class="font-normal text-purple-100 mt-1">Identify items from a list.</p>
+                    </button>
+                     <button onclick="startApp('statuteGame')" class="bg-red-600 hover:bg-red-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Fill In Game</span>
+                        <p class="font-normal text-red-100 mt-1">Fill in the blanks.</p>
+                    </button>
+                    <button onclick="window.open('https://tehcrayz.github.io/soce/OfficerSafety.html', '_blank')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Tests & Study</span>
+                        <p class="font-normal text-yellow-100 mt-1">BKRDIFY EXAMS.</p>
+                    </button>
+                    <button onclick="window.open('https://docs.google.com/document/d/e/2PACX-1vRKU6Pcf2znTqDXTquWhq6IOfqNx1Fiq5dbc6QElyJKMKwhARwF9z3OWCjcBavZBtvH_XQCCRs9u7OU/pub', '_blank')" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Chapter Notes</span>
+                        <p class="font-normal text-cyan-100 mt-1">The full deal.</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Game Pages -->
+        <div id="flashcardsPage" class="hidden"></div>
+        <div id="matchingPage" class="hidden"></div>
+        <div id="listGamePage" class="hidden"></div>
+        <div id="orderedListPage" class="hidden"></div>
+        <div id="statuteGamePage" class="hidden"></div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer-bar p-3 shadow-md z-10">
+        <div class="container mx-auto text-center text-sm text-gray-700">
+            BKRDI-Fy Version 1.9.3
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- DATA & DOM ---
+            let data = {};
+            try {
+                data = JSON.parse(document.getElementById('questionBank').textContent);
+            } catch (e) {
+                console.error("Error parsing JSON data:", e);
+                document.body.innerHTML = `<div class="p-4 text-red-700 bg-red-100">Error loading study data. Please check the JSON format.</div>`;
+                return;
+            }
+            
+            const pages = {
+                menuPage: document.getElementById('menuPage'),
+                flashcardsPage: document.getElementById('flashcardsPage'),
+                matchingPage: document.getElementById('matchingPage'),
+                listGamePage: document.getElementById('listGamePage'),
+                orderedListPage: document.getElementById('orderedListPage'),
+                statuteGamePage: document.getElementById('statuteGamePage')
+            };
+            const gameTitle = document.getElementById('gameTitle');
+
+            // --- STATE ---
+            let flashcardGameState = {};
+            let listGameState = {};
+            let statuteGameState = {};
+            let orderedListGameState = {};
+
+            // --- UTILITY ---
+            function shuffle(array) {
+                const newArray = [...array];
+                for (let i = newArray.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+                }
+                return newArray;
+            }
+
+            // --- NAVIGATION ---
+            function showPage(pageId) {
+                Object.values(pages).forEach(page => page && page.classList.add('hidden'));
+                if (pages[pageId]) {
+                    pages[pageId].classList.remove('hidden');
+                }
+            }
+
+            window.goHome = function() {
+                Object.keys(pages).forEach(key => {
+                    if (key !== 'menuPage' && pages[key]) {
+                        pages[key].innerHTML = '';
+                    }
+                });
+                showPage('menuPage');
+                gameTitle.textContent = "Home Screen";
+            }
+
+            window.startApp = function(appType) {
+                const pageMap = {
+                    flashcards: { title: "Flash Cards", renderFunc: renderFlashcardSetup, page: 'flashcardsPage' },
+                    matching: { title: "Matching Game", renderFunc: renderMatchingGame, page: 'matchingPage' },
+                    listGameMenu: { title: "List Game", renderFunc: renderListGameMenu, page: 'listGamePage'},
+                    listGame: { title: "General Lists", renderFunc: renderListGame, page: 'listGamePage' },
+                    orderedListGame: { title: "Ordered Lists", renderFunc: renderOrderedListGame, page: 'orderedListPage'},
+                    statuteGame: { title: "Fill In Game", renderFunc: renderStatuteGame, page: 'statuteGamePage' }
+                };
+                if (pageMap[appType]) {
+                    gameTitle.textContent = pageMap[appType].title;
+                    pageMap[appType].renderFunc();
+                    showPage(pageMap[appType].page);
+                }
+            }
+            
+            // --- FLASHCARD LOGIC ---
+            function renderFlashcardSetup() {
+                pages.flashcardsPage.innerHTML = `<div class="game-card flashcard-container w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Flash Card Setup</h2><div class="mb-6"><label for="cards-per-round" class="block text-lg mb-2">How many cards per round?</label><select id="cards-per-round" class="p-2 border rounded-md"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="${data.flashcards.length}">All (${data.flashcards.length})</option></select></div><button onclick="setupFlashcardGame()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Start Studying</button></div>`;
+            }
+            
+            window.setupFlashcardGame = function() {
+                const cardsPerRound = parseInt(document.getElementById('cards-per-round').value, 10);
+                flashcardGameState = {
+                    mainDeck: shuffle([...data.flashcards]),
+                    currentRoundDeck: [],
+                    roundSize: cardsPerRound,
+                    currentIndex: 0,
+                    carryOver: []
+                };
+                startNewFlashcardRound();
+            }
+
+            window.startNewFlashcardRound = function() {
+                const needed = flashcardGameState.roundSize - flashcardGameState.carryOver.length;
+                let newCards = [];
+                if(needed > 0) {
+                    newCards = flashcardGameState.mainDeck.splice(0, needed);
+                }
+                
+                flashcardGameState.currentRoundDeck = shuffle([...flashcardGameState.carryOver, ...newCards]);
+                flashcardGameState.carryOver = [];
+                flashcardGameState.currentIndex = 0;
+                
+                if (flashcardGameState.currentRoundDeck.length === 0) {
+                     pages.flashcardsPage.innerHTML = `<div class="game-card w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Congratulations!</h2><p class="mb-6">You have mastered all the flashcards!</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                     return;
+                }
+                
+                renderFlashcard();
+            }
+
+            function renderFlashcard() {
+                if (flashcardGameState.currentIndex >= flashcardGameState.currentRoundDeck.length) {
+                    renderEndOfRoundScreen();
+                    return;
+                }
+                const card = flashcardGameState.currentRoundDeck[flashcardGameState.currentIndex];
+                pages.flashcardsPage.innerHTML = `<div class="game-card flashcard-container w-full max-w-2xl mx-auto"><div class="flex justify-between items-center mb-4"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><div class="text-slate-500 font-medium">Card ${flashcardGameState.currentIndex + 1} of ${flashcardGameState.currentRoundDeck.length} (Deck: ${flashcardGameState.mainDeck.length})</div></div><div class="perspective-1000"><div id="flashcard" class="flip-card relative w-full h-80 cursor-pointer rounded-xl" onclick="this.classList.toggle('flipped')"><div class="flip-card-inner relative w-full h-full"><div class="flip-card-front absolute w-full h-full bg-slate-200 rounded-xl flex items-center justify-center p-6 text-center"><p class="text-xl">${card.definition}</p></div><div class="flip-card-back absolute w-full h-full bg-blue-600 text-white rounded-xl flex items-center justify-center p-6 text-center"><h2 class="text-3xl font-bold">${card.term}</h2></div></div></div></div><div class="mt-6 flex justify-center space-x-4"><button onclick="markCardAsKnown()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">I Know This</button><button onclick="markCardAsUnsure()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Not Sure</button></div></div>`;
+            }
+            
+            function renderEndOfRoundScreen() {
+                 pages.flashcardsPage.innerHTML = `<div class="game-card w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Round Complete!</h2><p class="mb-2">${flashcardGameState.carryOver.length} cards from this round will be carried over.</p><p class="mb-6">You have ${flashcardGameState.mainDeck.length} new cards left to learn.</p><button onclick="startNewFlashcardRound()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Start Next Round</button></div>`;
+            }
+
+            window.markCardAsKnown = function() {
+                flashcardGameState.currentIndex++;
+                renderFlashcard();
+            }
+
+            window.markCardAsUnsure = function() {
+                const card = flashcardGameState.currentRoundDeck[flashcardGameState.currentIndex];
+                flashcardGameState.carryOver.push(card);
+                flashcardGameState.currentIndex++;
+                renderFlashcard();
+            }
+
+            // --- STATUTE GAME LOGIC ---
+            window.renderStatuteGame = function() {
+                statuteGameState = {
+                    questions: shuffle([...data.statuteGame]),
+                    currentIndex: 0,
+                    totalScore: 0,
+                    results: []
+                };
+                displayStatuteQuestion();
+            }
+            
+            window.displayStatuteQuestion = function() {
+                if (statuteGameState.currentIndex >= statuteGameState.questions.length) {
+                    displayStatuteResults();
+                    return;
+                }
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                statuteGameState.currentQuestionPoints = 100;
+                statuteGameState.revealedIndices = new Set();
+
+                const answerMask = q.answer.split('').map(char => (char === ' ' ? ' ' : '_')).join('');
+                
+                pages.statuteGamePage.innerHTML = `
+                    <div class="game-card max-w-3xl mx-auto">
+                        <div class="flex justify-between items-center mb-4">
+                            <button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button>
+                             <span class="font-bold">${statuteGameState.currentIndex + 1} out of ${statuteGameState.questions.length} items</span>
+                        </div>
+                        <h2 class="text-center text-xl font-bold my-4">FILL IN THE BLANK</h2>
+                        <div id="statute-score" class="text-center font-bold text-lg mb-4">Question Points: ${statuteGameState.currentQuestionPoints}</div>
+                        <div class="bg-gray-100 p-8 rounded-lg text-center text-lg mb-4">${q.prompt}</div>
+                        <div id="statute-feedback" class="text-center font-bold text-lg h-8 mb-2"></div>
+                        <div class="bg-blue-800 text-white p-4 rounded-lg text-center mb-4">
+                            <p id="statute-answer-display" class="tracking-widest text-2xl font-mono">${answerMask}</p>
+                        </div>
+                        <div class="flex">
+                            <input id="statute-input" type="text" class="fill-blank-input flex-grow p-4 text-xl rounded-l-lg" placeholder="Type your answer here...">
+                            <button id="statute-submit-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold p-4 rounded-r-lg">Submit</button>
+                        </div>
+                        <div class="flex justify-between mt-6 text-sm">
+                            <button onclick="handleHint()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg">Hint (-10 pts)</button>
+                            <button onclick="showStatuteAnswer()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg">Show Answer</button>
+                            <button id="statute-next-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg hidden">Next Term</button>
+                        </div>
+                    </div>`;
+
+                const input = document.getElementById('statute-input');
+                const submitBtn = document.getElementById('statute-submit-btn');
+                input.focus();
+                submitBtn.onclick = checkStatuteAnswer;
+                input.onkeyup = (e) => { if (e.key === 'Enter') checkStatuteAnswer(); };
+            }
+
+            function updateAnswerMask() {
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const display = q.answer.split('').map((char, index) => {
+                    if (char === ' ' || statuteGameState.revealedIndices.has(index)) {
+                        return `<span>${char}</span>`;
+                    }
+                    return '<span>_</span>';
+                }).join('');
+                document.getElementById('statute-answer-display').innerHTML = display;
+            }
+
+            window.handleHint = function() {
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const unrevealed = q.answer.split('').map((c, i) => i).filter(i => !statuteGameState.revealedIndices.has(i) && q.answer[i] !== ' ');
+                
+                if (unrevealed.length > 0) {
+                    statuteGameState.currentQuestionPoints = Math.max(0, statuteGameState.currentQuestionPoints - 10);
+                    document.getElementById('statute-score').textContent = `Question Points: ${statuteGameState.currentQuestionPoints}`;
+                    
+                    for(let i=0; i < 2 && unrevealed.length > 0; i++) {
+                         const randomIndex = Math.floor(Math.random() * unrevealed.length);
+                         const revealIndex = unrevealed.splice(randomIndex, 1)[0];
+                         statuteGameState.revealedIndices.add(revealIndex);
+                    }
+                    updateAnswerMask();
+                }
+            }
+
+            function checkStatuteAnswer() {
+                const input = document.getElementById('statute-input');
+                const feedbackEl = document.getElementById('statute-feedback');
+                const userAnswer = input.value.trim().toLowerCase();
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const isMatch = q.answer.toLowerCase() === userAnswer;
+
+                if (isMatch) {
+                    feedbackEl.textContent = "CORRECT!";
+                    feedbackEl.className = "text-center font-bold text-lg h-8 mb-2 feedback-correct";
+                    statuteGameState.totalScore += statuteGameState.currentQuestionPoints;
+                    statuteGameState.results.push({ question: q, correct: true, score: statuteGameState.currentQuestionPoints });
+                    document.getElementById('statute-answer-display').textContent = q.displayAnswer;
+                    endStatuteQuestion();
+                } else {
+                    feedbackEl.textContent = "INCORRECT - Try again.";
+                    feedbackEl.className = "text-center font-bold text-lg h-8 mb-2 feedback-incorrect";
+                    statuteGameState.currentQuestionPoints = Math.max(0, statuteGameState.currentQuestionPoints - 20);
+                    document.getElementById('statute-score').textContent = `Question Points: ${statuteGameState.currentQuestionPoints}`;
+                    
+                    const correctLetters = userAnswer.split('');
+                    q.answer.split('').forEach((char, index) => {
+                        if (char.toLowerCase() === correctLetters[index]?.toLowerCase()) {
+                            statuteGameState.revealedIndices.add(index);
+                        }
+                    });
+                    updateAnswerMask();
+                }
+            }
+            
+            function endStatuteQuestion() {
+                 const input = document.getElementById('statute-input');
+                 const submitBtn = document.getElementById('statute-submit-btn');
+                 const nextBtn = document.getElementById('statute-next-btn');
+                 if(input) input.disabled = true;
+                 if(submitBtn) submitBtn.disabled = true;
+                 if(nextBtn) {
+                     nextBtn.classList.remove('hidden');
+                     nextBtn.onclick = () => {
+                        statuteGameState.currentIndex++;
+                        displayStatuteQuestion();
+                    };
+                    nextBtn.focus();
+                 }
+            }
+
+            window.showStatuteAnswer = function() {
+                 const q = statuteGameState.questions[statuteGameState.currentIndex];
+                 document.getElementById('statute-answer-display').textContent = q.displayAnswer;
+                 statuteGameState.currentQuestionPoints = 0;
+                 statuteGameState.results.push({ question: q, correct: false, score: 0 });
+                 endStatuteQuestion();
+            }
+            
+            function displayStatuteResults() {
+                let resultsHtml = `<div class="game-card w-full max-w-3xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Game Results</h2><div class="text-lg mb-6">Final Score: ${statuteGameState.totalScore}</div><div class="space-y-4 text-left">`;
+                statuteGameState.results.forEach(res => {
+                    const bgColor = res.correct ? 'bg-green-100' : 'bg-red-100';
+                    const icon = res.correct ? `<span class="text-green-600 font-bold">&#10003;</span>` : `<span class="text-red-600 font-bold">X</span>`;
+                    resultsHtml += `<div class="${bgColor} p-4 rounded-lg"><p class="font-semibold">${res.question.prompt}</p><p>Correct Answer: <span class="font-bold">${res.question.displayAnswer}</span></p><p>Your score: ${res.score} ${icon}</p></div>`;
+                });
+                resultsHtml += `</div><button onclick="renderStatuteGame()" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Play Again</button> <button onclick="goHome()" class="mt-6 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg">Main Menu</button></div>`;
+                pages.statuteGamePage.innerHTML = resultsHtml;
+            }
+
+            // --- MATCHING GAME LOGIC ---
+            let selectedTerm = null;
+            let selectedDef = null;
+            let matchedPairs = 0;
+            let totalPairs = 0;
+            window.renderMatchingGame = function() {
+                const gamePool = shuffle([...data.matching]);
+                const gameSize = Math.min(6, gamePool.length);
+                const gameSet = gamePool.slice(0, gameSize);
+                totalPairs = gameSize;
+                matchedPairs = 0;
+                selectedTerm = null;
+                selectedDef = null;
+                const terms = shuffle(gameSet.map((item, index) => ({ text: item.term, id: index })));
+                const definitions = shuffle(gameSet.map((item, index) => ({ text: item.definition, id: index })));
+                pages.matchingPage.innerHTML = `<div class="game-card w-full max-w-4xl mx-auto"><div class="flex justify-between items-center mb-6"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><h2 class="text-2xl font-bold">Matching Game</h2><button onclick="renderMatchingGame()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New Game</button></div><p id="match-instructions" class="text-center text-slate-600 mb-6">Select a term from the left and its matching definition from the right.</p><div id="win-message" class="hidden text-center p-4 mb-4 bg-green-100 text-green-800 rounded-lg"><p class="font-bold text-lg">Congratulations! You've matched all the pairs!</p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4 md:gap-6"><div id="terms-col" class="flex flex-col gap-3">${terms.map(t => `<div class="match-item p-4 border-2 border-slate-300 rounded-lg cursor-pointer hover:bg-slate-200 transition" data-type="term" data-id="${t.id}" onclick="handleMatchSelection(this)">${t.text}</div>`).join('')}</div><div id="definitions-col" class="flex flex-col gap-3">${definitions.map(d => `<div class="match-item p-4 border-2 border-slate-300 rounded-lg cursor-pointer hover:bg-slate-200 transition" data-type="definition" data-id="${d.id}" onclick="handleMatchSelection(this)">${d.text}</div>`).join('')}</div></div></div>`;
+            }
+            window.handleMatchSelection = function(target) {
+                if (target.classList.contains('matched')) return;
+                const type = target.dataset.type;
+                const id = target.dataset.id;
+                if (target.classList.contains('selected')) {
+                    target.classList.remove('selected');
+                    if (type === 'term') selectedTerm = null;
+                    if (type === 'definition') selectedDef = null;
+                    return;
+                }
+                document.querySelectorAll(`.match-item[data-type="${type}"].selected`).forEach(el => el.classList.remove('selected'));
+                target.classList.add('selected');
+                if (type === 'term') { selectedTerm = { el: target, id: id }; } else { selectedDef = { el: target, id: id }; }
+                if (selectedTerm && selectedDef) checkForMatch();
+            }
+            function checkForMatch() {
+                if (selectedTerm && selectedDef && selectedTerm.id === selectedDef.id) {
+                    selectedTerm.el.classList.add('matched');
+                    selectedDef.el.classList.add('matched');
+                    selectedTerm.el.classList.remove('selected');
+                    selectedDef.el.classList.remove('selected');
+                    matchedPairs++;
+                    if (matchedPairs === totalPairs) {
+                        document.getElementById('win-message').classList.remove('hidden');
+                        document.getElementById('match-instructions').classList.add('hidden');
+                    }
+                } else if (selectedTerm && selectedDef) {
+                    const termEl = selectedTerm.el;
+                    const defEl = selectedDef.el;
+                    termEl.classList.add('incorrect-match');
+                    defEl.classList.add('incorrect-match');
+                    setTimeout(() => {
+                        termEl.classList.remove('incorrect-match', 'selected');
+                        defEl.classList.remove('incorrect-match', 'selected');
+                    }, 500);
+                }
+                selectedTerm = null;
+                selectedDef = null;
+            }
+
+            // --- LIST GAME LOGIC ---
+            function renderListGameMenu() {
+                pages.listGamePage.innerHTML = `<div class="game-card text-center"><h2 class="text-3xl font-bold mb-6">List Games</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><button onclick="startApp('listGame')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105"><span class="text-2xl">General Lists</span><p class="font-normal text-purple-100 mt-1">Identify items from a list.</p></button><button onclick="startApp('orderedListGame')" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105"><span class="text-2xl">Ordered Lists</span><p class="font-normal text-teal-100 mt-1">Put items in the correct order.</p></button></div><button onclick="goHome()" class="mt-8 text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Main Menu</button></div>`;
+                showPage('listGamePage');
+            }
+            
+            window.renderListGame = function(questionIndex = -1) {
+                if (!listGameState.deck || listGameState.deck.length === 0 || questionIndex === -1) {
+                     listGameState.deck = shuffle([...data.listGame]);
+                }
+                
+                if (listGameState.deck.length === 0) {
+                     pages.listGamePage.innerHTML = `<div class="game-card text-center"><h2 class="text-2xl font-bold">All lists completed!</h2><p class="my-4">You've successfully completed all the lists for this session.</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                     return;
+                }
+                
+                const question = listGameState.deck[0];
+                
+                listGameState.currentQuestion = question;
+                listGameState.foundCorrectCount = 0;
+                listGameState.score = 100;
+                listGameState.unseenCorrect = shuffle([...question.correctAnswers]);
+                listGameState.unseenIncorrect = shuffle([...question.incorrectAnswers]);
+                listGameState.nextCorrectSlot = 0;
+                
+                let answerPool = [];
+                const displayCount = 8;
+                for (let i = 0; i < displayCount; i++) {
+                    const newAnswer = getNewAnswer();
+                    if (newAnswer) answerPool.push(newAnswer);
+                }
+
+                const correctPlaceholders = question.correctAnswers.map((_, index) => 
+                    `<div id="correct-slot-${index}" class="correct-placeholder rounded-lg p-2 text-center text-gray-500">[...]</div>`
+                ).join('');
+
+                pages.listGamePage.innerHTML = `<div class="game-card w-full max-w-3xl mx-auto"><div class="flex justify-between items-center mb-4"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><h2 class="text-xl font-bold text-center">General Lists</h2><button onclick="renderListGame()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New List</button></div><div class="text-center p-4 mb-4 bg-blue-50 border-l-4 border-blue-500 text-blue-800 rounded-r-lg"><p class="font-bold text-lg">${question.question}</p><p class="text-sm">Use ✓ to select correct items and X to eliminate incorrect ones.</p></div><div class="mb-6"><h3 class="font-bold text-center mb-2">Correct Answers Found</h3><div id="correct-answers-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">${correctPlaceholders}</div></div><div id="list-game-status" class="flex justify-between items-center font-bold text-lg mb-4 p-2 rounded-lg bg-gray-100"><span>Score: <span id="list-game-score">100</span></span></div><div id="list-game-win-message" class="hidden text-center p-4 mb-4 bg-green-100 text-green-800 rounded-lg"><p class="font-bold text-lg">Great job! You found all correct items for this list!</p></div><div id="next-list-container" class="hidden text-center mt-4"><button onclick="handleNextList()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105">Next List &rarr;</button></div><div id="list-game-answers" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div></div>`;
+                const answersContainer = document.getElementById('list-game-answers');
+                answerPool.forEach(answer => answersContainer.appendChild(createAnswerElement(answer)));
+            }
+
+            window.handleNextList = function() {
+                listGameState.deck.shift();
+                renderListGame();
+            }
+            
+            function getNewAnswer() {
+                if (listGameState.unseenCorrect.length > 0 && Math.random() < 0.4) {
+                    return listGameState.unseenCorrect.pop();
+                }
+                if (listGameState.unseenIncorrect.length > 0) {
+                    return listGameState.unseenIncorrect.pop();
+                }
+                if(listGameState.unseenCorrect.length > 0) {
+                     return listGameState.unseenCorrect.pop();
+                }
+                return null;
+            }
+
+            function createAnswerElement(answerText) {
+                const item = document.createElement('div');
+                item.className = 'list-item flex items-center justify-between p-3 rounded-lg';
+                
+                const textSpan = document.createElement('span');
+                textSpan.className = 'flex-grow mr-4';
+                textSpan.textContent = answerText;
+
+                const btnContainer = document.createElement('div');
+                btnContainer.className = 'list-item-btn-container flex space-x-2';
+
+                const checkBtn = document.createElement('button');
+                checkBtn.className = 'list-item-btn check-btn flex items-center justify-center';
+                checkBtn.innerHTML = '&#10003;'; // Checkmark
+                
+                const xBtn = document.createElement('button');
+                xBtn.className = 'list-item-btn x-btn flex items-center justify-center';
+                xBtn.innerHTML = 'X';
+
+                checkBtn.onclick = () => handleListSelection(item, 'select', answerText);
+                xBtn.onclick = () => handleListSelection(item, 'eliminate', answerText);
+
+                btnContainer.appendChild(checkBtn);
+                btnContainer.appendChild(xBtn);
+                item.appendChild(textSpan);
+                item.appendChild(btnContainer);
+                return item;
+            }
+
+            function replaceAndShuffle(oldElement) {
+                const parent = oldElement.parentNode;
+                const newAnswer = getNewAnswer();
+                if (newAnswer) {
+                    const newItem = createAnswerElement(newAnswer);
+                    parent.replaceChild(newItem, oldElement);
+                } else {
+                    oldElement.remove();
+                }
+                shuffleAnswerBoard();
+            }
+            
+            function shuffleAnswerBoard() {
+                const answersContainer = document.getElementById('list-game-answers');
+                if (!answersContainer) return;
+                const currentItems = Array.from(answersContainer.children);
+                const shuffledItems = shuffle(currentItems);
+                shuffledItems.forEach(item => answersContainer.appendChild(item));
+            }
+
+            window.handleListSelection = function(itemElement, action, answerText) {
+                if (itemElement.dataset.processed) return;
+                itemElement.dataset.processed = true;
+
+                const isCorrect = listGameState.currentQuestion.correctAnswers.includes(answerText);
+                const btnContainer = itemElement.querySelector('.list-item-btn-container');
+
+                if (action === 'select') { 
+                    if (isCorrect) {
+                        itemElement.classList.add('strobing-green');
+                        const correctSlot = document.getElementById(`correct-slot-${listGameState.nextCorrectSlot}`);
+                        if(correctSlot) {
+                           correctSlot.textContent = answerText;
+                           correctSlot.classList.add('filled');
+                        }
+                        listGameState.nextCorrectSlot++;
+                        listGameState.foundCorrectCount++;
+                        setTimeout(() => replaceAndShuffle(itemElement), 1000);
+                    } else {
+                        itemElement.classList.add('strobing-red'); 
+                        listGameState.score = Math.max(0, listGameState.score - 10);
+                        document.getElementById('list-game-score').textContent = listGameState.score;
+                        btnContainer.innerHTML = `<span class="text-2xl text-red-600 font-bold">X</span>`;
+                        setTimeout(() => replaceAndShuffle(itemElement), 2500);
+                    }
+                } else if (action === 'eliminate') { 
+                    if (!isCorrect) {
+                        itemElement.classList.add('fading-out');
+                        setTimeout(() => replaceAndShuffle(itemElement), 500);
+                    } else {
+                        itemElement.classList.add('strobing-purple');
+                        const correctSlot = document.getElementById(`correct-slot-${listGameState.nextCorrectSlot}`);
+                        if(correctSlot) {
+                           correctSlot.textContent = answerText;
+                           correctSlot.classList.add('filled', 'purple');
+                        }
+                        listGameState.nextCorrectSlot++;
+                        listGameState.foundCorrectCount++;
+                        listGameState.score = Math.max(0, listGameState.score - 15);
+                        document.getElementById('list-game-score').textContent = listGameState.score;
+                        setTimeout(() => replaceAndShuffle(itemElement), 1000);
+                    }
+                }
+
+                if (listGameState.foundCorrectCount === listGameState.currentQuestion.correctAnswers.length) {
+                    document.getElementById('list-game-win-message').classList.remove('hidden');
+                    document.getElementById('next-list-container').classList.remove('hidden');
+                }
+            }
+            
+            // --- ORDERED LIST GAME ---
+            window.renderOrderedListGame = function() {
+                orderedListGameState = {
+                    questions: shuffle([...data.orderedListGame]),
+                    currentIndex: 0
+                }
+                setupOrderedListGame();
+            }
+
+            function setupOrderedListGame() {
+                if (orderedListGameState.currentIndex >= orderedListGameState.questions.length) {
+                    pages.orderedListPage.innerHTML = `<div class="game-card text-center"><h2 class="text-2xl font-bold">All lists completed!</h2><p class="my-4">You've successfully completed all the ordered lists.</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                    return;
+                }
+                
+                const question = orderedListGameState.questions[orderedListGameState.currentIndex];
+                orderedListGameState.currentQuestion = question;
+                orderedListGameState.score = 100;
+                
+                const shuffledItems = shuffle([...question.items]);
+
+                let draggableHtml = `<p class="text-lg font-semibold text-center">Steps (Drag These)</p>`;
+                shuffledItems.forEach((itemText) => {
+                    draggableHtml += `<div class="draggable-item p-3 bg-gray-200 rounded-lg shadow cursor-grab" draggable="true">${itemText}</div>`;
+                });
+
+                let dropZoneHtml = `<p class="text-lg font-semibold text-center">Correct Order (Drop Here)</p>`;
+                question.items.forEach((_, index) => {
+                    dropZoneHtml += `<div class="drop-zone p-3 rounded-lg flex items-center min-h-[3.5rem]"><span class="mr-3 font-bold text-lg">${index + 1}.</span></div>`;
+                });
+                
+                pages.orderedListPage.innerHTML = `
+                    <div class="game-card w-full max-w-4xl mx-auto">
+                         <div class="flex justify-between items-center mb-6">
+                            <button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button>
+                            <h2 class="text-2xl font-bold">Ordered List Game</h2>
+                            <button onclick="nextOrderedList()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New List</button>
+                        </div>
+                        <p class="text-center font-bold text-lg mb-4">${question.question}</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div id="draggable-items-container" class="space-y-3 min-h-[10rem] bg-gray-50 p-2 rounded-lg">${draggableHtml}</div>
+                            <div id="drop-zones-container" class="space-y-3">${dropZoneHtml}</div>
+                        </div>
+                         <div id="ordered-list-feedback" class="text-center mt-8">
+                            <button id="check-order-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Check Order</button>
+                            <button id="next-ordered-list-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hidden">Next List</button>
+                        </div>
+                    </div>`;
+
+                addDragAndDropListeners();
+            }
+            
+            window.nextOrderedList = function() {
+                orderedListGameState.currentIndex++;
+                setupOrderedListGame();
+            }
+
+            function addDragAndDropListeners() {
+                const draggables = document.querySelectorAll('.draggable-item');
+                const dropZones = document.querySelectorAll('.drop-zone');
+                const sourceContainer = document.getElementById('draggable-items-container');
+
+                draggables.forEach(draggable => {
+                    draggable.addEventListener('dragstart', e => {
+                        e.dataTransfer.setData('text/plain', e.target.textContent);
+                        setTimeout(() => e.target.classList.add('dragging'), 0);
+                    });
+                    draggable.addEventListener('dragend', e => e.target.classList.remove('dragging'));
+                });
+
+                function handleDragOver(e) {
+                    e.preventDefault();
+                    // 'this' refers to the element the event listener is attached to
+                    if (this.classList.contains('drop-zone') || this.id === 'draggable-items-container') {
+                        this.classList.add('drag-over');
+                    }
+                }
+
+                function handleDragLeave(e) {
+                    // 'this' refers to the element the event listener is attached to
+                     if (this.classList.contains('drop-zone') || this.id === 'draggable-items-container') {
+                        this.classList.remove('drag-over');
+                    }
+                }
+
+                function handleDrop(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                    const draggedText = e.dataTransfer.getData('text/plain');
+                    const draggedEl = document.querySelector(`.draggable-item.dragging`);
+                    
+                    if (this.classList.contains('drop-zone')) { // Dropping on a drop zone
+                        if (this.children.length > 1) { 
+                           const existingItem = this.children[1];
+                           sourceContainer.appendChild(existingItem);
+                        }
+                         if(draggedEl) this.appendChild(draggedEl);
+                    } else if (this.id === 'draggable-items-container') { // Dropping back on source
+                        if(draggedEl) this.appendChild(draggedEl);
+                    }
+                }
+
+                dropZones.forEach(zone => {
+                    zone.addEventListener('dragover', handleDragOver);
+                    zone.addEventListener('dragleave', handleDragLeave);
+                    zone.addEventListener('drop', handleDrop);
+                });
+
+                sourceContainer.addEventListener('dragover', handleDragOver);
+                sourceContainer.addEventListener('dragleave', handleDragLeave);
+                sourceContainer.addEventListener('drop', handleDrop);
+                
+                document.getElementById('check-order-btn').onclick = checkOrder;
+            }
+            
+            function checkOrder() {
+                const dropZones = document.querySelectorAll('#drop-zones-container .drop-zone');
+                const correctOrder = orderedListGameState.currentQuestion.items;
+                const sourceContainer = document.getElementById('draggable-items-container');
+                let allCorrect = true;
+
+                dropZones.forEach((zone, index) => {
+                    const droppedItem = zone.querySelector('.draggable-item');
+                    if (droppedItem && droppedItem.textContent === correctOrder[index]) {
+                        zone.classList.add('correct');
+                        zone.classList.remove('incorrect');
+                        droppedItem.setAttribute('draggable', 'false'); // Lock correct items
+                        droppedItem.style.cursor = 'default';
+                    } else if (droppedItem) {
+                        allCorrect = false;
+                        zone.classList.add('incorrect');
+                        zone.classList.remove('correct');
+                        setTimeout(() => {
+                           zone.classList.remove('incorrect');
+                           sourceContainer.appendChild(droppedItem); // Return incorrect item
+                        }, 1000);
+                    } else {
+                        allCorrect = false; // A slot is empty
+                    }
+                });
+
+                if (allCorrect) {
+                    document.getElementById('check-order-btn').classList.add('hidden');
+                    document.getElementById('next-ordered-list-btn').classList.remove('hidden');
+                    document.getElementById('next-ordered-list-btn').onclick = nextOrderedList;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

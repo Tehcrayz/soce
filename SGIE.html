@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Guide: Responding to Incidents and Emergencies </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Arial&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f8fb;
+            color: #1f2937;
+        }
+        .header-bar {
+            background-color: #1f2937;
+            color: white;
+        }
+        .footer-bar {
+            background: #dbeafe;
+        }
+        /* Card styles for menu and games */
+        .game-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+
+        /* Flip animation for flashcards */
+        .perspective-1000 { perspective: 1000px; }
+        .flip-card-inner { transition: transform 0.6s; transform-style: preserve-3d; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+        .flip-card-back { transform: rotateY(180deg); }
+        .flashcard-container.large .flip-card { height: 28rem; }
+        .flashcard-container.large .game-card { max-width: 48rem; }
+
+
+        /* Styles for matching game */
+        .match-item.selected { background-color: #3b82f6; color: white; border-color: #2563eb; }
+        .match-item.matched { background-color: #16a34a; color: white; border-color: #15803d; opacity: 0.7; pointer-events: none; }
+        .match-item.incorrect-match { background-color: #dc2626; color: white; animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Styles for list game */
+        .list-item { transition: all 0.3s ease; border: 1px solid #d1d5db; }
+        .list-item-btn-container { flex-shrink: 0; }
+        .list-item-btn {
+            cursor: pointer;
+            border-radius: 9999px;
+            width: 2rem;
+            height: 2rem;
+            font-weight: bold;
+            transition: all 0.2s ease-in-out;
+            border: 2px solid transparent;
+        }
+        .check-btn { background-color: #dcfce7; color: #15803d; }
+        .check-btn:hover { background-color: #22c55e; color: white; border-color: #15803d; }
+        .x-btn { background-color: #fee2e2; color: #b91c1c; }
+        .x-btn:hover { background-color: #ef4444; color: white; border-color: #991b1b; }
+        
+        .correct-placeholder {
+             background-color: #e5e7eb;
+             border: 2px dashed #9ca3af;
+             transition: all 0.5s ease;
+             min-height: 2.5rem;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             padding: 0.5rem;
+             word-break: break-word;
+        }
+        .correct-placeholder.filled {
+            background-color: #dcfce7;
+            border-color: #16a34a;
+            color: #14532d;
+            font-weight: 600;
+            border-style: solid;
+        }
+        .correct-placeholder.purple {
+            background-color: #f3e8ff;
+            border-color: #8b5cf6;
+            color: #5b21b6;
+        }
+
+        .list-item.strobing-green { animation: strobe-green 1s forwards; }
+        .list-item.strobing-red { animation: incorrect-answer-animation 2.5s forwards; }
+        .list-item.strobing-purple { animation: strobe-purple 1s forwards; }
+        .list-item.fading-out { animation: fade-out 0.5s forwards; }
+        
+        @keyframes fade-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.9); } }
+        
+        @keyframes strobe-green {
+            0%, 100% { background-color: white; }
+            50% { background-color: #22c55e; color: white; }
+        }
+
+        @keyframes strobe-purple {
+            0%, 100% { background-color: white; }
+            50% { background-color: #a855f7; color: white; }
+        }
+
+        @keyframes incorrect-answer-animation {
+            0% { transform: translateX(0); background-color: #fee2e2; }
+            10%, 30%, 50%, 70% { background-color: #b91c1c; color: white; }
+            20%, 40%, 60%, 80% { background-color: #fee2e2; color: #1f2937; }
+            0%, 20%, 40%, 60% { transform: translateX(5px); }
+            10%, 30%, 50%, 70% { transform: translateX(-5px); }
+            85% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.9); }
+        }
+        
+        /* Fill in the blank game styles */
+        .fill-blank-input {
+            border: 2px solid #ccc;
+            transition: border-color 0.3s;
+        }
+        .fill-blank-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .feedback-correct {
+            color: #16a34a;
+        }
+        .feedback-incorrect {
+            color: #dc2626;
+        }
+        #statute-answer-display span {
+            display: inline-block;
+            width: 1.2ch; /* Character unit */
+            text-align: center;
+        }
+
+        /* Ordered List Game Styles */
+        .draggable-item { cursor: grab; }
+        .drop-zone { border: 2px dashed #9ca3af; transition: background-color 0.2s; }
+        .drop-zone.drag-over { background-color: #e0f2fe; }
+        .drop-zone.correct { background-color: #dcfce7; border-color: #16a34a; }
+        .drop-zone.incorrect { background-color: #fee2e2; border-color: #b91c1c; animation: shake 0.5s; }
+        .dragging { opacity: 0.5; }
+
+
+        /* Hide scrollbar for the main content area */
+        #mainContentArea::-webkit-scrollbar { display: none; }
+        #mainContentArea { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- JSON Question Bank -->
+    <script id="questionBank" type="application/json">
+    {
+        "flashcards": [
+    { "term": "Emergency", "definition": "An event that requires a strict, urgent, and immediate response, often because of a disturbance, a disaster, or an escape attempt." },
+    { "term": "Disturbance", "definition": "Any incident that disrupts the normal operations within a facility, such as a food strike or a fight between two inmates." },
+    { "term": "Riot", "definition": "A disturbance with uncontrolled violence by inmates, usually directed at the administration. Examples include fights breaking out in several locations at once, significant property damage, or hostage situations." },
+    { "term": "Hostage situation", "definition": "An event where one or more persons are held against their will by another person or group with the purpose of achieving a specific goal." },
+    { "term": "Facility assault", "definition": "A physical attack from outside the facility or any other assault that creates physical damage to the correctional facility." },
+    { "term": "Escape", "definition": "An event where an inmate breaks free from custody. It commonly occurs during work release programs or transports." },
+    { "term": "Medical emergency", "definition": "An event where a person experiences medical or psychological distress, a severe illness, or an injury. Signs can include unusual bleeding, pain, medical distress (sweating, nausea, shortness of breath), or loss of consciousness." },
+    { "term": "Hazardous material (hazmat) emergency", "definition": "An event where a substance capable of causing harm to people, the environment, and property is released or is not properly controlled." },
+    { "term": "Bomb Threat", "definition": "Any threat of an explosive device, whether mechanical, incendiary, or chemical." },
+    { "term": "Natural disaster", "definition": "An event or force of nature that has catastrophic consequences, such as a hurricane, earthquake, tornado, flood, lightning, or wildfire." },
+    { "term": "Human-instigated disaster", "definition": "A disastrous event caused directly or principally by one or more identifiable human actions, whether intentional or unintentional, such as a chemical spill, plane crash, or fire." },
+    { "term": "Crime scene", "definition": "A location where a crime has occurred, which must be secured and isolated to preserve evidence and minimize contamination." },
+    { "term": "Evidence", "definition": "Any item or fact that may clear a person of guilt or may be considered proof that a crime has been committed, such as clothing, sheets, body fluids, or any other item related to the crime." },
+    { "term": "Chain of command", "definition": "The order of authority and responsibility that joins one level of an organization to another and that outlines the coordination of resources in an emergency situation. As the first person on the scene, an officer begins the chain of command and is considered in charge until relieved." },
+    { "term": "Incident Command System (ICS)", "definition": "A systematic approach to command, control, and coordinate an emergency response. It is used to convey emergencies to designated persons or authorities following an established protocol." },
+    { "term": "Command post", "definition": "A strategic point away from an emergency where the person in command and staff will receive all communications and make all major decisions during an incident." },
+    { "term": "Post orders", "definition": "Job-specific documents that outline how to handle daily responsibilities and operations." },
+    { "term": "Emergency Plan", "definition": "A plan that outlines how to handle emergencies, including evacuation guides, chain of command protocols, and the use of the Incident Command System." },
+    { "term": "Perimeter", "definition": "A boundary established to secure and isolate a situation to prevent it from spreading. Perimeters are set up for emergencies, crime scenes, and bomb threats using structures like gates, doors, or physical barriers." },
+    { "term": "Evacuation", "definition": "The orderly movement of people in a facility to a safe, secure area upon a supervisor's direction during an emergency." },
+    { "term": "Lockdown", "definition": "A security measure related to restricting inmate movement or use of security measures during an emergency, which can differ from agency to agency." },
+    { "term": "First Officer on Scene Responsibility", "definition": "As the first person on the scene of an emergency, you begin the chain of command and are considered the person in charge, responsible for making decisions until relieved by command staff." },
+    { "term": "Liability (in emergencies)", "definition": "Potential responsibility for actions and choices made during an emergency. It can be reduced by observing surroundings, responding within the scope of training, and using reasonable judgment." },
+    { "term": "Inmate Count", "definition": "A procedure to confirm all inmates are accounted for, conducted during evacuations, after riots, and to confirm an escape has occurred using a master roster." },
+    { "term": "Master Roster Count", "definition": "A procedure to count inmates to confirm if an escape has occurred." },
+    { "term": "Scent Items", "definition": "Articles of an escaped inmate's clothing, collected without contamination, for canines to use to track the escapee." },
+    { "term": "Universal precautions", "definition": "A set of safety measures, such as using PPE, to avoid contact with a person's body fluids by treating every person as if they are infected to minimize risk." },
+    { "term": "Staging Areas", "definition": "Designated locations for outside agencies, such as EMS, to set up during a medical emergency." },
+    { "term": "Correctional Emergency Response Team (CERT)", "definition": "A specially-trained extraction team designed to handle violent and uncooperative prison inmates during events like a facility assault." },
+    { "term": "Negotiation Teams", "definition": "A specialized team that may be involved in resolving a hostage situation by communicating with the hostage taker." },
+    { "term": "Tactical Teams", "definition": "A specialized team, such as CERT, that may be involved in resolving a hostage situation or facility assault." },
+    { "term": "Trigger or hot words", "definition": "Words that may empower a hostage taker, such as 'prisoner,' 'guns,' or 'police,' which should be avoided by a hostage." },
+    { "term": "Show of force", "definition": "A visible presence of authority used as a measure to contain incidents like a facility assault." },
+    { "term": "Classes of Fire", "definition": "The five classifications of fire based on the type of fuel involved: Class A (Ordinary combustibles), Class B (Flammable liquids), Class C (Electrical), Class D (Combustible metals), Class K (Kitchen fires)." },
+    { "term": "Self-contained breathing apparatus (SCBA)", "definition": "Equipment used during a fire to help prevent smoke inhalation." },
+    { "term": "PASS Method", "definition": "A four-step procedure for using a portable fire extinguisher: Pull the pin, Aim the nozzle at the base of the fire, Squeeze the handle, and Sweep the base of the flame." },
+    { "term": "Safety Check (for fire extinguisher)", "definition": "An inspection performed each shift to ensure a fire extinguisher's charge is adequate (needle in the green area) and that the hose and nozzle are free of cracks or obstructions." },
+    { "term": "Emergency Response Guidebook (ERG)", "definition": "A resource used to guide a first responder's initial actions to a hazmat incident, including the identification of hazardous materials, areas of personal protection, and an initial safety plan." },
+    { "term": "Hazardous Materials (Hazmat) Classes", "definition": "The nine classifications of hazardous materials according to the ERG: 1-explosives, 2-gases, 3-flammable liquids, 4-flammable solids, 5-oxidizing substances, 6-poisons/infectious, 7-radioactive, 8-corrosives, 9-other." },
+    { "term": "Chemical Transportation Emergency Center (CHEMTREC)", "definition": "An emergency call center (1-800-424-9300) that provides immediate help and detailed assistance for hazardous material/waste spills, especially when the substance is unidentified or the SDS is unavailable." },
+    { "term": "Decontamination", "definition": "The process of removing or neutralizing contaminants from people or equipment. Victims and equipment must be decontaminated before an officer makes contact with them." },
+    { "term": "Suspicious Device", "definition": "An item discovered that is potentially a bomb. It should not be touched, inspected, or removed. An officer should not use a cell phone or radio near it." },
+    { "term": "Dry cell", "definition": "A cell where a victim (e.g., of sexual assault) can be placed to prevent them from cleaning themselves, thereby preserving evidence." },
+    { "term": "Crime Scene Log", "definition": "A continuous record of the activities happening at a crime scene, including which authorized personnel enter and exit the scene, along with the date and time." },
+    { "term": "Lead Investigator", "definition": "The individual who dictates all action within a crime scene and is responsible for releasing it once the investigation is complete." },
+    { "term": "Tunnel vision", "definition": "A state where an officer's attention and field of view narrow because of stress." },
+    { "term": "Evacuation Guidelines", "definition": "Upon supervisor's direction, move people orderly to a safe area. Obtain inmate rosters for counting. Give clear commands. Close/open doors/windows if time permits. Do not use elevators. Conduct an inmate count at the evacuation area." },
+    { "term": "Standard Procedures for an Inmate Escape", "definition": "Secure all inmates and lock down facility. Conduct a master roster count. Notify control center/supervisors with escapee details. Secure and isolate the escape location. Collect non-contaminated clothing articles for canines." },
+    { "term": "Standard Procedures for a Medical Emergency", "definition": "Identify severity (ask 'Are you declaring a medical emergency?'). Secure the area and control crowds. Notify medical staff/supervisors. Administer aid using PPE within training scope. Transport or set up staging areas for EMS." },
+    { "term": "Post-Riot Procedures", "definition": "Account for all staff/visitors. Check facility security. Administer first aid. Separate ringleaders. Strip search involved inmates. Conduct institutional count. Debrief staff. Investigate the riot. Repair damage." },
+    { "term": "Standard Hostage Situation Procedures", "definition": "Notify supervisor immediately. Contain subjects in smallest area possible. Restrict movement. Gather information. Move non-participants away. Provide assistance to specialized teams." },
+    { "term": "Procedures if Taken Hostage", "definition": "Cooperate but do not enable. Avoid insults or trigger words. Keep a low profile. Avoid giving up uniform. Avoid eye contact. Remain calm and rest. Cooperate fully with response teams." },
+    { "term": "Standard Procedures for a Facility Assault", "definition": "Notify staff and communicate with response teams. Follow evacuation protocols. Set up barricades. Establish perimeter security and surveillance. Maintain safety procedures (e.g., move to cover). Debrief after." },
+    { "term": "Standard Procedures for a Hazardous Materials Emergency", "definition": "Locate and verify the hazard. Refer to SDS. Communicate with control room. Enter only when safe with PPE. Provide first aid and separate contaminated people. Evacuate upwind and uphill. Isolate the area. Create a perimeter." },
+    { "term": "Standard Procedures for a Bomb Threat", "definition": "Notify supervisor of location/description. Stop using all electronic devices. Establish a secure perimeter. If a threat is received, lock down inmates and conduct a controlled search. Follow evacuation protocols." },
+    { "term": "Standard Procedures for Responding to a Disaster", "definition": "Verify and communicate the emergency. Conduct an inmate count. Inspect for structural damage. Activate emergency plan. Evacuate to a safe place. Provide first aid. Document the incident. Debrief." },
+    { "term": "Techniques for Handling Evidence", "definition": "Use PPE (put on outside the crime scene). Correctly document and secure the item via chain of custody. Use the correct type of bag or container for the evidence." },
+    { "term": "Information to Relay During an Emergency", "definition": "Nature and location of the emergency, number of people involved, nature of any injuries, and if hazardous materials or weapons are involved." },
+    { "term": "Indicators of a Possible Inmate Escape", "definition": "Inmates not in their designated area, suspicious behavior, odd phone conversations, maps or civilian clothes, inmate-created tools, alterations to facility's structure." },
+    { "term": "Preventive Measures Against Escapes", "definition": "Conducting constant surveillance, keeping an unpredictable schedule, using mobile or stationary posts, and using regular and irregular searches." },
+    { "term": "Signs and Symptoms of a Medical Emergency", "definition": "Unusual or excessive bleeding, pain, medical distress (sweating, nausea, shortness of breath, paralysis), loss of or altered consciousness." },
+    { "term": "Conditions That May Lead to a Riot", "definition": "Overcrowding, racial tensions, poor living conditions, STG activity, dissatisfaction with food/mail/medical service, policy changes, loss of privileges, fights." },
+    { "term": "Indicators Preceding a Riot", "definition": "Changes in inmate behaviors, food hoarding, weapons manufacturing, unusual groupings, elevation in fights, an inmate suggesting an officer take a day off, facility becoming too quiet or too loud." },
+    { "term": "Indicators of a Fire", "definition": "Smoke, the smell of smoke, alarm notifications, heat, light, and flame." },
+    { "term": "Ways People Can Be Contaminated by Hazmat", "definition": "Inhalation, ingestion, absorption, and injection." },
+    { "term": "Physical Indications an Inmate Was Involved in a Crime", "definition": "Suspicious activity, injuries, labored breathing, possession of weapons, presence of contraband." },
+    { "term": "Information Necessary to Establish Chain of Custody", "definition": "What the evidence consisted of, who handled it, where it was found, when it was discovered, and how it was handled, transferred, and preserved." },
+    { "term": "Chain of Custody Safeguards", "definition": "Following specific protocols for handling and storing evidence, using designated personnel and storage areas, and not cleaning a scene until released by the lead investigator." },
+    { "term": "Basic Investigative Techniques", "definition": "Collecting and preserving evidence, taking statements, taking photographs or video recordings, and working with other agencies or departments." },
+    { "term": "Information to Relay During a Riot", "definition": "Location, status and scope of the riot, approximate number of inmates and bystanders involved, and if any weapons are involved." },
+    { "term": "Information to Relay During a Facility Assault", "definition": "The area affected, nature of the assault, extent of damage, number of assailants and weapons, and their direction of travel." },
+    { "term": "Information to Relay During a Hazmat Emergency", "definition": "Type of substance or hazard, areas affected, any medical emergencies or injuries, and wind direction." },
+    { "term": "Equipment for Responding to Escapes", "definition": "Canine teams, communication equipment, cameras, vehicles, face sheets, information on associates, restraints, counting devices, flashlights, maps, and weapons." },
+    { "term": "Equipment for a Medical Emergency", "definition": "Personal Protective Equipment (PPE), Automated External Defibrillator (AED), and a first-aid kit." },
+    { "term": "Equipment for Responding to a Riot", "definition": "Restraints, chemical agents, electronic control devices (ECDs), firearms, non-lethal and impact weapons, shields, emergency keys, and communication devices." },
+    { "term": "Equipment for Responding to a Hostage Situation", "definition": "Restraints, chemical agents, weapons, emergency keys, monitoring equipment (cameras), building blueprints, and communication devices." },
+    { "term": "Equipment for Responding to a Facility Assault", "definition": "Barriers, non-lethal and impact weapons, electronic control devices, firearms, shields, vehicles, megaphones, restraints, and chemical agents." },
+    { "term": "Equipment for Responding to a Fire", "definition": "Portable extinguishers, fire alarms, fire suppression systems, SCBA, facility map, emergency keys, restraints, fire hydrants, hoods, and hoses." },
+    { "term": "Equipment for Responding to a Hazmat Incident", "definition": "PPE (mask, gloves, gown), hazmat suit, SCBA, bloodborne pathogens cleanup kit, and barriers." },
+    { "term": "Equipment for Responding to a Bomb Threat", "definition": "Mounted long-range cameras and non-electrical communication devices (landline phones, pens, paper)." },
+    { "term": "Equipment Needed in a Disaster", "definition": "Backup communications, backup power source, flashlights, emergency food supplies, stored water, medical supplies, tents, additional bedding, vehicles, and weapons." },
+    { "term": "Class A Fire", "definition": "Involves ordinary combustibles like wood, cloth, and paper. Extinguished with water-based or ABC extinguishers." },
+    { "term": "Class B Fire", "definition": "Involves flammable liquids like gasoline, diesel, and alcohol. Extinguished with ABC, CO2, or Class K extinguishers." },
+    { "term": "Class C Fire", "definition": "Involves electrical equipment like appliances and panels. Extinguished with ABC or CO2 extinguishers." },
+    { "term": "Class D Fire", "definition": "Involves combustible metals like magnesium and titanium. Requires a specific Class D extinguisher; sand or dirt can also be used." },
+    { "term": "Class K Fire", "definition": "A subcategory of Class B involving kitchen fires from cooking oils or fats. Requires a Class K extinguisher." },
+    { "term": "Hazmat Class 1: Explosives", "definition": "Presents thermal and mechanical hazards from heat, shock, or contamination." },
+    { "term": "Hazmat Class 2: Gases", "definition": "Container may rupture violently; can be flammable, poisonous, corrosive, an asphyxiate, or an oxidizer." },
+    { "term": "Hazmat Class 3: Flammable Liquids", "definition": "Container may rupture violently from heat; may be corrosive, toxic, and thermally unstable." },
+    { "term": "Hazmat Class 4: Flammable Solids", "definition": "Some are spontaneously flammable, may be water-reactive, toxic, and corrosive." },
+    { "term": "Hazmat Class 5: Oxidizing Substances", "definition": "Supports its own combustion by using oxygen; sensitive to heat, shock, friction, and contamination." },
+    { "term": "Hazmat Class 6: Poisons and Infectious Substances", "definition": "Toxic by inhalation, ingestion, and skin/eye absorption; may be flammable." },
+    { "term": "Hazmat Class 7: Radioactive Substances", "definition": "May cause burns and biologic effects; can contaminate surroundings." },
+    { "term": "Hazmat Class 8: Corrosives", "definition": "Causes disintegration of contacted tissues; may be fuming, water-reactive, and destructive to metals." },
+    { "term": "Hazmat Class 9: Other Regulated Materials (ORM)", "definition": "Miscellaneous hazardous materials that do not fit into the other eight classes." },
+    { "term": "Resolving an Emergency (Officer Roles)", "definition": "Can include transport, escort, use of physical force, providing first aid, recording events, serving as a witness, and debriefing." },
+    { "term": "Debriefing", "definition": "The process of reviewing an incident to assess what happened, what could have been done differently, and to provide emotional and psychological support to staff." },
+    { "term": "Incident Report Writing", "definition": "Documenting an incident by filling out a template or writing a standard report, clarifying if details are approximate or absolute, and keeping copies for reference." }
+        ],
+        "matching": [
+        { "term": "Emergency", "definition": "An event that requires a strict, urgent, and immediate response, often because of a disturbance, a disaster, or an escape attempt." },
+    { "term": "Disturbance", "definition": "Any incident that disrupts the normal operations within a facility, such as a food strike or a fight between two inmates." },
+    { "term": "Riot", "definition": "A disturbance with uncontrolled violence by inmates, usually directed at the administration. Examples include fights breaking out in several locations at once, significant property damage, or hostage situations." },
+    { "term": "Hostage situation", "definition": "An event where one or more persons are held against their will by another person or group with the purpose of achieving a specific goal." },
+    { "term": "Facility assault", "definition": "A physical attack from outside the facility or any other assault that creates physical damage to the correctional facility." },
+    { "term": "Escape", "definition": "An event where an inmate breaks free from custody. It commonly occurs during work release programs or transports." },
+    { "term": "Medical emergency", "definition": "An event where a person experiences medical or psychological distress, a severe illness, or an injury. Signs can include unusual bleeding, pain, medical distress (sweating, nausea, shortness of breath), or loss of consciousness." },
+    { "term": "Hazardous material (hazmat) emergency", "definition": "An event where a substance capable of causing harm to people, the environment, and property is released or is not properly controlled." },
+    { "term": "Bomb Threat", "definition": "Any threat of an explosive device, whether mechanical, incendiary, or chemical." },
+    { "term": "Natural disaster", "definition": "An event or force of nature that has catastrophic consequences, such as a hurricane, earthquake, tornado, flood, lightning, or wildfire." },
+    { "term": "Human-instigated disaster", "definition": "A disastrous event caused directly or principally by one or more identifiable human actions, whether intentional or unintentional, such as a chemical spill, plane crash, or fire." },
+    { "term": "Crime scene", "definition": "A location where a crime has occurred, which must be secured and isolated to preserve evidence and minimize contamination." },
+    { "term": "Evidence", "definition": "Any item or fact that may clear a person of guilt or may be considered proof that a crime has been committed, such as clothing, sheets, body fluids, or any other item related to the crime." },
+    { "term": "Chain of command", "definition": "The order of authority and responsibility that joins one level of an organization to another and that outlines the coordination of resources in an emergency situation." },
+    { "term": "Incident Command System (ICS)", "definition": "A systematic approach to command, control, and coordinate an emergency response. It is used to convey emergencies to designated persons or authorities following an established protocol." },
+    { "term": "Command post", "definition": "A strategic point away from an emergency where the person in command and staff will receive all communications and make all major decisions during an incident." },
+    { "term": "Post orders", "definition": "Job-specific documents that outline how to handle daily responsibilities and operations." },
+    { "term": "Emergency Plan", "definition": "A plan that outlines how to handle emergencies, including evacuation guides, chain of command protocols, and the use of the Incident Command System." },
+    { "term": "Perimeter", "definition": "A boundary established to secure and isolate a situation to prevent it from spreading. Perimeters are set up for emergencies, crime scenes, and bomb threats using structures like gates, doors, or physical barriers." },
+    { "term": "Evacuation", "definition": "The orderly movement of people in a facility to a safe, secure area upon a supervisor's direction during an emergency." },
+    { "term": "Lockdown", "definition": "A security measure related to restricting inmate movement or use of security measures during an emergency, which can differ from agency to agency." },
+    { "term": "First Officer on Scene Responsibility", "definition": "As the first person on the scene of an emergency, you begin the chain of command and are considered the person in charge, responsible for making decisions until relieved by command staff." },
+    { "term": "Liability (in emergencies)", "definition": "Potential responsibility for actions and choices made during an emergency. It can be reduced by observing surroundings, responding within the scope of training, and using reasonable judgment." },
+    { "term": "Inmate Count", "definition": "A procedure to confirm all inmates are accounted for, conducted during evacuations, after riots, and to confirm an escape has occurred using a master roster." },
+    { "term": "Master Roster Count", "definition": "A procedure to count inmates to confirm if an escape has occurred." },
+    { "term": "Scent Items", "definition": "Articles of an escaped inmate's clothing, collected without contamination, for canines to use to track the escapee." },
+    { "term": "Universal precautions", "definition": "A set of safety measures, such as using PPE, to avoid contact with a person's body fluids by treating every person as if they are infected to minimize risk." },
+    { "term": "Staging Areas", "definition": "Designated locations for outside agencies, such as EMS, to set up during a medical emergency." },
+    { "term": "Correctional Emergency Response Team (CERT)", "definition": "A specially-trained extraction team designed to handle violent and uncooperative prison inmates during events like a facility assault." },
+    { "term": "Negotiation Teams", "definition": "A specialized team that may be involved in resolving a hostage situation by communicating with the hostage taker." },
+    { "term": "Tactical Teams", "definition": "A specialized team, such as CERT, that may be involved in resolving a hostage situation or facility assault." },
+    { "term": "Trigger or hot words", "definition": "Words that may empower a hostage taker, such as 'prisoner,' 'guns,' or 'police,' which should be avoided by a hostage." },
+    { "term": "Show of force", "definition": "A visible presence of authority used as a measure to contain incidents like a facility assault." },
+    { "term": "Classes of Fire", "definition": "The five classifications of fire based on the type of fuel involved: Class A (Ordinary combustibles), Class B (Flammable liquids), Class C (Electrical), Class D (Combustible metals), Class K (Kitchen fires)." },
+    { "term": "Self-contained breathing apparatus (SCBA)", "definition": "Equipment used during a fire to help prevent smoke inhalation." },
+    { "term": "PASS Method", "definition": "A four-step procedure for using a portable fire extinguisher: Pull the pin, Aim the nozzle at the base of the fire, Squeeze the handle, and Sweep the base of the flame." },
+    { "term": "Safety Check (for fire extinguisher)", "definition": "An inspection performed each shift to ensure a fire extinguisher's charge is adequate (needle in the green area) and that the hose and nozzle are free of cracks or obstructions." },
+    { "term": "Emergency Response Guidebook (ERG)", "definition": "A resource used to guide a first responder's initial actions to a hazmat incident, including the identification of hazardous materials, areas of personal protection, and an initial safety plan." },
+    { "term": "Hazardous Materials (Hazmat) Classes", "definition": "The nine classifications of hazardous materials according to the ERG: 1-explosives, 2-gases, 3-flammable liquids, 4-flammable solids, 5-oxidizing substances, 6-poisons/infectious, 7-radioactive, 8-corrosives, 9-other." },
+    { "term": "Chemical Transportation Emergency Center (CHEMTREC)", "definition": "An emergency call center (1-800-424-9300) that provides immediate help and detailed assistance for hazardous material/waste spills, especially when the substance is unidentified or the SDS is unavailable." },
+    { "term": "Decontamination", "definition": "The process of removing or neutralizing contaminants from people or equipment. Victims and equipment must be decontaminated before an officer makes contact with them." },
+    { "term": "Suspicious Device", "definition": "An item discovered that is potentially a bomb. It should not be touched, inspected, or removed. An officer should not use a cell phone or radio near it." },
+    { "term": "Dry cell", "definition": "A cell where a victim (e.g., of sexual assault) can be placed to prevent them from cleaning themselves, thereby preserving evidence." },
+    { "term": "Crime Scene Log", "definition": "A continuous record of the activities happening at a crime scene, including which authorized personnel enter and exit the scene, along with the date and time." },
+    { "term": "Lead Investigator", "definition": "The individual who dictates all action within a crime scene and is responsible for releasing it once the investigation is complete." },
+    { "term": "Tunnel vision", "definition": "A state where an officer's attention and field of view narrow because of stress." },
+    { "term": "Techniques for Handling Evidence", "definition": "Use PPE (put on outside the crime scene). Correctly document and secure the item via chain of custody. Use the correct type of bag or container for the evidence." },
+    { "term": "Information to Relay During an Emergency", "definition": "Nature and location of the emergency, number of people involved, nature of any injuries, and if hazardous materials or weapons are involved." },
+    { "term": "Indicators of a Possible Inmate Escape", "definition": "Inmates not in their designated area, suspicious behavior, odd phone conversations, maps or civilian clothes, inmate-created tools, alterations to facility's structure." },
+    { "term": "Preventive Measures Against Escapes", "definition": "Conducting constant surveillance, keeping an unpredictable schedule, using mobile or stationary posts, and using regular and irregular searches." },
+    { "term": "Signs and Symptoms of a Medical Emergency", "definition": "Unusual or excessive bleeding, pain, medical distress (sweating, nausea, shortness of breath, paralysis), loss of or altered consciousness." },
+    { "term": "Conditions That May Lead to a Riot", "definition": "Overcrowding, racial tensions, poor living conditions, STG activity, dissatisfaction with food/mail/medical service, policy changes, loss of privileges, fights." },
+    { "term": "Indicators Preceding a Riot", "definition": "Changes in inmate behaviors, food hoarding, weapons manufacturing, unusual groupings, elevation in fights, an inmate suggesting an officer take a day off, facility becoming too quiet or too loud." },
+    { "term": "Indicators of a Fire", "definition": "Smoke, the smell of smoke, alarm notifications, heat, light, and flame." },
+    { "term": "Ways People Can Be Contaminated by Hazmat", "definition": "Inhalation, ingestion, absorption, and injection." },
+    { "term": "Physical Indications an Inmate Was Involved in a Crime", "definition": "Suspicious activity, injuries, labored breathing, possession of weapons, presence of contraband." },
+    { "term": "Information Necessary to Establish Chain of Custody", "definition": "What the evidence consisted of, who handled it, where it was found, when it was discovered, and how it was handled, transferred, and preserved." },
+    { "term": "Chain of Custody Safeguards", "definition": "Following specific protocols for handling and storing evidence, using designated personnel and storage areas, and not cleaning a scene until released by the lead investigator." },
+    { "term": "Basic Investigative Techniques", "definition": "Collecting and preserving evidence, taking statements, taking photographs or video recordings, and working with other agencies or departments." },
+    { "term": "Information to Relay During a Riot", "definition": "Location, status and scope of the riot, approximate number of inmates and bystanders involved, and if any weapons are involved." },
+    { "term": "Information to Relay During a Facility Assault", "definition": "The area affected, nature of the assault, extent of damage, number of assailants and weapons, and their direction of travel." },
+    { "term": "Information to Relay During a Hazmat Emergency", "definition": "Type of substance or hazard, areas affected, any medical emergencies or injuries, and wind direction." },
+    { "term": "Equipment for Responding to Escapes", "definition": "Canine teams, communication equipment, cameras, vehicles, face sheets, information on associates, restraints, counting devices, flashlights, maps, and weapons." },
+    { "term": "Equipment for a Medical Emergency", "definition": "Personal Protective Equipment (PPE), Automated External Defibrillator (AED), and a first-aid kit." },
+    { "term": "Equipment for Responding to a Riot", "definition": "Restraints, chemical agents, electronic control devices (ECDs), firearms, non-lethal and impact weapons, shields, emergency keys, and communication devices." },
+    { "term": "Equipment for Responding to a Hostage Situation", "definition": "Restraints, chemical agents, weapons, emergency keys, monitoring equipment (cameras), building blueprints, and communication devices." },
+    { "term": "Equipment for Responding to a Facility Assault", "definition": "Barriers, non-lethal and impact weapons, electronic control devices, firearms, shields, vehicles, megaphones, restraints, and chemical agents." },
+    { "term": "Equipment for Responding to a Fire", "definition": "Portable extinguishers, fire alarms, fire suppression systems, SCBA, facility map, emergency keys, restraints, fire hydrants, hoods, and hoses." },
+    { "term": "Equipment for Responding to a Hazmat Incident", "definition": "PPE (mask, gloves, gown), hazmat suit, SCBA, bloodborne pathogens cleanup kit, and barriers." },
+    { "term": "Equipment for Responding to a Bomb Threat", "definition": "Mounted long-range cameras and non-electrical communication devices (landline phones, pens, paper)." },
+    { "term": "Equipment Needed in a Disaster", "definition": "Backup communications, backup power source, flashlights, emergency food supplies, stored water, medical supplies, tents, additional bedding, vehicles, and weapons." },
+    { "term": "Class A Fire", "definition": "Involves ordinary combustibles like wood, cloth, and paper. Extinguished with water-based or ABC extinguishers." },
+    { "term": "Class B Fire", "definition": "Involves flammable liquids like gasoline, diesel, and alcohol. Extinguished with ABC, CO2, or Class K extinguishers." },
+    { "term": "Class C Fire", "definition": "Involves electrical equipment like appliances and panels. Extinguished with ABC or CO2 extinguishers." },
+    { "term": "Class D Fire", "definition": "Involves combustible metals like magnesium and titanium. Requires a specific Class D extinguisher; sand or dirt can also be used." },
+    { "term": "Class K Fire", "definition": "A subcategory of Class B involving kitchen fires from cooking oils or fats. Requires a Class K extinguisher." },
+    { "term": "Hazmat Class 1: Explosives", "definition": "Presents thermal and mechanical hazards from heat, shock, or contamination." },
+    { "term": "Hazmat Class 2: Gases", "definition": "Container may rupture violently; can be flammable, poisonous, corrosive, an asphyxiate, or an oxidizer." },
+    { "term": "Hazmat Class 3: Flammable Liquids", "definition": "Container may rupture violently from heat; may be corrosive, toxic, and thermally unstable." },
+    { "term": "Hazmat Class 4: Flammable Solids", "definition": "Some are spontaneously flammable, may be water-reactive, toxic, and corrosive." },
+    { "term": "Hazmat Class 5: Oxidizing Substances", "definition": "Supports its own combustion by using oxygen; sensitive to heat, shock, friction, and contamination." },
+    { "term": "Hazmat Class 6: Poisons and Infectious Substances", "definition": "Toxic by inhalation, ingestion, and skin/eye absorption; may be flammable." },
+    { "term": "Hazmat Class 7: Radioactive Substances", "definition": "May cause burns and biologic effects; can contaminate surroundings." },
+    { "term": "Hazmat Class 8: Corrosives", "definition": "Causes disintegration of contacted tissues; may be fuming, water-reactive, and destructive to metals." },
+    { "term": "Hazmat Class 9: Other Regulated Materials (ORM)", "definition": "Miscellaneous hazardous materials that do not fit into the other eight classes." },
+    { "term": "Resolving an Emergency (Officer Roles)", "definition": "Can include transport, escort, use of physical force, providing first aid, recording events, serving as a witness, and debriefing." },
+    { "term": "Debriefing", "definition": "The process of reviewing an incident to assess what happened, what could have been done differently, and to provide emotional and psychological support to staff." },
+    { "term": "Incident Report Writing", "definition": "Documenting an incident by filling out a template or writing a standard report, clarifying if details are approximate or absolute, and keeping copies for reference." }
+        ],
+        "listGame": [
+                {"question": "What are some tasks that may be assigned to an officer during an emergency situation?", "correctAnswers": ["Setting perimeters", "Using a radio to communicate", "Conducting evacuations", "Applying use of force"], "incorrectAnswers": ["Inventorying inmate property at intake", "Documenting the final disposition of contraband", "Observing inmates for signs of manipulation", "Reviewing sanitation logs", "Checking that inmate hygiene items are issued"]},
+{"question": "According to the text, which staff members should be notified during an emergency?", "correctAnswers": ["Control room staff", "Command post personnel", "Supervisory staff"], "incorrectAnswers": ["Inmate work crews", "The inmate grievance coordinator", "Commissary delivery drivers", "The mail room clerk", "The facility librarian"]},
+{"question": "What information should you be prepared to relay during an emergency?", "correctAnswers": ["Nature of the emergency", "Location of the emergency", "Number of people involved", "Nature of any injuries", "If hazardous materials or weapons are involved"], "incorrectAnswers": ["An inmate's custody grade", "The date of an inmate's release", "The contents of an inmate's legal mail", "The schedule for recreation time", "The procedure for obtaining a DNA sample"]},
+{"question": "Identify the potential roles an officer may be called upon to perform to help resolve an emergency.", "correctAnswers": ["Transport", "Escort and supervise people", "Use physical force or control", "Provide first aid", "Record events", "Serve as a witness in investigations", "Debrief"], "incorrectAnswers": ["Classifying inmates by security risk level", "Conducting a routine sanitation inspection", "Assigning inmates to housing units", "Supervising inmates during mealtime", "Processing inmate property for storage"]},
+{"question": "What details should be included when documenting an emergency?", "correctAnswers": ["Date", "Time", "Place", "People involved", "When people arrived and left", "The time outside agencies were contacted", "The scope, nature, and status of the emergency"], "incorrectAnswers": ["The inmate's preferred brand of toothpaste", "The types of books an inmate reads", "An officer's personal feelings about a situation", "The final score of a televised sports game", "The daily menu for the chow hall"]},
+{"question": "What are the general types of emergencies an officer should be able to identify?", "correctAnswers": ["Medical", "Fire", "Hazmat", "Criminal act"], "incorrectAnswers": ["A routine shift change", "A scheduled inmate transport", "A planned fire drill", "A standard facility lockdown for count", "A visitor arriving for a scheduled visit"]},
+{"question": "What are the indicators of a possible inmate escape attempt?", "correctAnswers": ["Inmates not in their designated area", "Suspicious behavior", "Odd phone conversations", "Maps or civilian clothes", "Inmate-created tools", "Alterations to the facility's structure"], "incorrectAnswers": ["An inmate requesting legal paperwork", "An inmate filing a formal grievance", "An inmate purchasing items from the canteen", "An inmate participating in a religious service", "An inmate asking for a sick call slip"]},
+{"question": "What are some preventive measures officers can take against escapes?", "correctAnswers": ["Conducting constant surveillance", "Keeping an unpredictable schedule", "Using mobile or stationary posts", "Using regular and irregular searches"], "incorrectAnswers": ["Resolving inmate grievances", "Issuing discharge gratuity to released inmates", "Providing inmates with community reentry resources", "Administering first aid for minor injuries", "Documenting inmate hygiene issuance"]},
+{"question": "What equipment and resources might be used when responding to an escape?", "correctAnswers": ["Canine teams", "Communication equipment", "Cameras or video equipment", "Vehicles", "Face sheets (for identification)", "Information about known associates", "Mechanical restraints", "Manual inmate counting and electronic identification devices", "Flashlights", "Local maps of the area", "Weapons"], "incorrectAnswers": ["Serving utensils and trays", "Brooms and mops", "Cleaning carts and supplies", "Shadow boards for tool inventory", "A lawn mower"]},
+{"question": "What are the signs and symptoms of a medical emergency?", "correctAnswers": ["Unusual or excessive bleeding", "Pain", "Medical distress (sweating, nausea, shortness of breath, paralysis)", "Loss of or altered consciousness"], "incorrectAnswers": ["Possession of authorized reading materials", "An inmate wearing their uniform correctly", "A request for protective custody", "An inmate asking for a different work assignment", "An inmate complaining about the food quality"]},
+{"question": "What equipment is needed when responding to a medical emergency?", "correctAnswers": ["PPE (e.g., gloves, masks)", "Automated external defibrillator (AED)", "First-aid kit"], "incorrectAnswers": ["A spiral search pattern diagram", "A log for documenting perimeter checks", "An inmate classification form", "A property inventory sheet", "A Biometric Identification Solutions (BIS) machine"]},
+{"question": "What conditions may lead to a riot or disturbance in a correctional facility?", "correctAnswers": ["Overcrowding", "Racial tensions", "Poor living conditions", "STG activity", "Dissatisfaction with food, mail, or medical service", "Policy changes", "Loss of privileges", "Fights"], "incorrectAnswers": ["Successful completion of a safety drill", "The arrival of new sanitation supplies", "An officer receiving a commendation", "A period of no disciplinary infractions", "Positive feedback from an accreditation commission"]},
+{"question": "What are some indicators that may precede a riot?", "correctAnswers": ["Changes in the behaviors of inmates", "Food hoarding", "Weapons manufacturing", "Unusual groupings of inmates", "An elevation in fights and requests for protective custody", "An inmate suggesting an officer take a day off", "Abrupt changes within the facility (getting too quiet or too loud)"], "incorrectAnswers": ["Inmates returning property after a visit", "Inmates lining up for medication distribution", "Inmates participating in educational programs", "Inmates cleaning their assigned living areas", "An inmate being released on schedule"]},
+{"question": "What type of equipment may be needed to respond to a riot?", "correctAnswers": ["Restraints", "Chemical agents", "Electronic control devices (ECDs)", "Firearms", "Non-lethal and impact weapons", "Shields", "Emergency keys", "Communication devices"], "incorrectAnswers": ["Laundry detergents and scouring powders", "Cooking forks and skewers", "Painting supplies", "Dental tools", "An inmate's personal property bag"]},
+{"question": "When responding to a riot or disturbance, what information should be relayed to the control room?", "correctAnswers": ["Location", "Status and scope", "Approximate number of inmates and bystanders involved", "Any weapons involved"], "incorrectAnswers": ["The procedure for issuing inmate mail", "The schedule for laundry services", "The types of valid visitor identification", "An officer's personal academic demands", "The location of the staff breakroom"]},
+{"question": "Identify the equipment that may be used when responding to a hostage situation.", "correctAnswers": ["Restraints", "Chemical agents", "Lethal and non-lethal impact weapons", "Emergency keys", "Monitoring equipment (video recorders, CCTVs, cameras)", "Building blueprints and floor plans", "Communication devices (radios, megaphones, cell phones)"], "incorrectAnswers": ["An inmate handbook", "A copy of the Prison Rape Elimination Act (PREA)", "An inmate's property receipt", "An ink pad for fingerprinting", "A Safety Data Sheet (SDS) for cleaning supplies"]},
+{"question": "What equipment is used to respond to a facility assault?", "correctAnswers": ["Barriers", "Non-lethal and impact weapons", "Electronic control devices", "Firearms", "Shields", "Vehicles", "Megaphones", "Restraints", "Chemical agents", "Communication devices"], "incorrectAnswers": ["An inmate's birth certificate", "A food service sanitation plan", "An officer's daily activity log", "A visitor sign-in sheet", "The master inventory log for tools"]},
+{"question": "During a facility assault, what information needs to be communicated?", "correctAnswers": ["The area of the compound or perimeter affected", "The nature of the assault", "The extent of the damage to the perimeter", "The number of assailants and weapons", "The direction in which the assailants are traveling"], "incorrectAnswers": ["The four categories of officer stress", "The three stages of situational awareness", "The difference between manipulation and deception", "The definition of nuisance contraband", "The process for an inmate name change"]},
+{"question": "What are the primary indicators of a fire in a correctional facility?", "correctAnswers": ["Smoke", "The smell of smoke", "Alarm notifications", "Heat, light, and flame"], "incorrectAnswers": ["A scheduled delivery of canteen items", "The sound of a flushing toilet", "The sight of an inmate reading a book", "A conversation about a recent court appearance", "An officer tapping their foot"]},
+{"question": "What equipment is utilized when responding to a fire?", "correctAnswers": ["Portable extinguishers", "Fire alarms", "Fire suppression systems", "Self-contained breathing apparatus (SCBA)", "Facility map", "Emergency keys", "Restraint devices", "Fire hydrants", "Fire hoods", "Fire hoses"], "incorrectAnswers": ["Commissary order forms", "Grievance paperwork", "Inmate request slips", "Visitor registration logs", "Employee time sheets"]},
+{"question": "Identify the common types of portable fire extinguishers found in a facility.", "correctAnswers": ["ABC", "ABCD", "K", "Water-based", "CO2"], "incorrectAnswers": ["Minimum security level inmates", "Medium custody grade inmates", "Maximum security level inmates", "Community custody grade inmates", "Close custody grade inmates"]},
+{"question": "Through what routes can people be contaminated by hazardous materials?", "correctAnswers": ["Inhalation", "Ingestion", "Absorption", "Injection"], "incorrectAnswers": ["Through a promotion", "By working overtime", "By completing a training course", "By receiving a positive performance review", "By transferring to a different facility"]},
+{"question": "What equipment might be needed to respond to a hazardous materials incident?", "correctAnswers": ["PPE (face mask, protective gloves and gowns)", "Hazmat suit", "SCBA", "Bloodborne pathogens cleanup kit", "Barriers"], "incorrectAnswers": ["An inmate's disciplinary history", "An officer's duty belt", "A set of institutional keys", "A staff identification card", "A copy of the post orders"]},
+{"question": "What information should be relayed during a hazardous materials emergency?", "correctAnswers": ["Types of substances or hazards", "Areas affected", "Any medical emergencies or injuries", "Wind direction"], "incorrectAnswers": ["The location of the inmate's stored property", "The time of the next inmate count", "The process for an inmate to post bond", "The difference between a pat down and a strip search", "The definition of command presence"]},
+{"question": "What are the primary indicators of a bomb threat?", "correctAnswers": ["Discovery of a suspicious device or package", "A bomb threat delivered by mail, phone, electronically, or in person"], "incorrectAnswers": ["A malfunctioning vending machine", "A change in the television channel", "A flickering light in a hallway", "A stain on the floor", "A loud conversation in the dayroom"]},
+{"question": "What type of equipment is appropriate to use when responding to a bomb threat?", "correctAnswers": ["Mounted long-range cameras", "Non-electrical communication devices (landline phones, pens, pencils, paper)"], "incorrectAnswers": ["A mop and bucket", "A roll of toilet paper", "A bar of soap", "An inmate's hygiene kit", "A cleaning cart"]},
+{"question": "Identify the examples of natural disasters provided in the text.", "correctAnswers": ["Hurricane", "Earthquake", "Tornado", "Flood", "Lightning", "Wildfire"], "incorrectAnswers": ["An inmate being reclassified", "A staff member being promoted", "A visitor being denied entry", "An officer working a double shift", "A new policy being implemented"]},
+{"question": "What are some examples of human-instigated disasters?", "correctAnswers": ["Chemical spills", "A water main breaking", "A plane crash", "A train derailment", "A fire"], "incorrectAnswers": ["An inmate's end of sentence (EOS) date", "A court-ordered release", "A release on recognizance (ROR)", "A notice to appear (NTA)", "The posting of a bond"]},
+{"question": "What equipment may be needed to respond to a disaster?", "correctAnswers": ["Backup communications equipment", "Backup power source", "Flashlights with batteries", "Emergency food supplies (non-perishable)", "Stored water", "Medical supplies", "Tents or temporary shelters", "Additional bedding or linens", "Vehicles", "Weapons"], "incorrectAnswers": ["An inmate face sheet", "A state driver's license", "A student identification card", "A U.S. military ID card", "An inmate gate pass"]},
+{"question": "What are the physical indications that an inmate may have been involved in a crime?", "correctAnswers": ["Suspicious activity", "Injuries", "Labored breathing", "Possession of weapons", "Presence of contraband"], "incorrectAnswers": ["Following the rules and procedures", "Being part of the correctional team", "Communicating with supervisors", "Being professional and cautious", "Saying 'no' to inmate requests"]},
+{"question": "When directed by a supervisor, what basic investigative techniques might an officer perform?", "correctAnswers": ["Collecting and preserving evidence", "Taking statements", "Taking photographs or video recordings", "Working with other agencies or departments to process evidence or investigate facts"], "incorrectAnswers": ["Addressing inmates by their last name", "Being overly friendly with inmates", "Doing personal favors for inmates", "Giving one inmate authority over another", "Engaging in personal conversations with inmates"]},
+{"question": "What are some examples of evidence that might be found at a crime scene in a correctional facility?", "correctAnswers": ["Clothing", "Sheets", "Body fluids", "Any other item that could be related to or affected by the crime"], "incorrectAnswers": ["An automated barcode scanner", "Facial recognition software", "A Rapid Identification System", "An automated visitor registration hand scanner", "A government-issued ID card"]},
+{"question": "What information is necessary to document to establish a proper chain of custody?", "correctAnswers": ["What the evidence consisted of", "Who handled the evidence", "Where the evidence was found", "When the evidence was discovered", "How it was handled, transferred, and preserved"], "incorrectAnswers": ["The criteria for security risk levels", "The five state custody grades", "The reason for temporary segregation", "The process for a housing assignment", "The high risk of suicide in the first 24 hours"]}
+        ],
+        "orderedListGame": [
+               {"question": "Arrange the standard guidelines for an emergency evacuation in the correct order.", "items": ["Upon direction of a supervisor, move people in an orderly fashion to a safe, secure area.", "Obtain copies of inmate rosters for identification and counting.", "Give clear and concise commands.", "Conduct an inmate count when reaching the evacuation area.", "Account for everyone who was in the facility."]},
+    {"question": "Place the standard procedures for responding to an inmate escape in the correct order.", "items": ["Secure all inmates and lock down the facility when appropriate.", "Conduct a master roster count to confirm the escape.", "Notify the control center or supervisors with details of the escape.", "Secure and isolate the suspected escape location as a crime scene.", "Collect articles of the escaped inmate's clothing for canine units."]},
+    {"question": "Arrange the standard procedures for resolving a medical emergency in the correct order.", "items": ["Identify the severity of the medical emergency.", "Make sure the area is secure and safe, and enforce crowd control.", "Notify medical staff and supervisors with details of the emergency.", "Administer first aid using PPE and within the scope of your training.", "Transport to a medical facility or designate staging areas for outside agencies."]},
+    {"question": "Place the post-riot procedures in the correct order of operations.", "items": ["Accounting for all on-duty staff and visitors.", "Checking security of the facility.", "Administering first aid to the injured.", "Separating ringleaders and agitators.", "Performing a strip search of all involved inmates.", "Conducting an institutional inmate count.", "Debriefing staff.", "Conducting a thorough investigation of the riot."]},
+    {"question": "If you are taken hostage, what are the standard procedures to follow, in order?", "items": ["Cooperate with, but do not enable, the hostage taker.", "Recognize that staff will respond as soon as possible.", "Avoid using insults, trigger or hot words.", "Avoid being confrontational by keeping a low profile.", "Remain calm, rest when possible, and try to eat only food provided by the negotiating team.", "Cooperate fully with any response team member."]},
+    {"question": "Place the steps for using a portable fire extinguisher (PASS Method) in the correct order.", "items": ["Pull the pin.", "Aim the nozzle at the base of the fire from a distance.", "Squeeze the handle.", "Sweep the base of the flame from side to side and front to back."]},
+    {"question": "Arrange the standard procedures for a hazardous materials emergency in the correct order.", "items": ["Locate and verify the nature of the emergency from a safe distance.", "Refer to the posted SDS for the hazardous materials.", "Communicate with control room staff and supervisors.", "Enter the area only when safe, using appropriate PPE.", "Provide first aid for the injured and separate contaminated people.", "Evacuate areas affected by hazardous materials.", "Isolate the situation so it does not spread.", "Create a barrier or perimeter and restrict access."]},
+    {"question": "Place the standard procedures for responding to a bomb threat in the correct order.", "items": ["Notify the supervisor or command staff of the exact location and description.", "Stop using all electronic devices that could emit electromagnetic signals.", "If a device is found, establish a secure perimeter around it.", "If a threat is received, lock down the inmates and conduct a controlled search.", "Follow evacuation protocols according to the agency's emergency plan."]},
+    {"question": "Arrange the standard procedures for responding to a disaster in the correct order.", "items": ["Verify and communicate the emergency.", "Conduct an institution inmate count.", "Inspect for structural damage.", "Activate the emergency plan.", "Evacuate everyone to a safe place.", "Provide first aid and medical treatment.", "Document the incident.", "Debrief after the incident."]},
+    {"question": "Place the techniques for properly handling evidence in the correct order.", "items": ["Use PPE, which must be put on outside of the crime scene.", "Correctly identify the type of bag or container to use for the evidence.", "Correctly document and secure the item through appropriate chain of custody."]},
+    {"question": "Arrange the standard procedures for a facility assault in the correct order.", "items": ["Notify the appropriate staff and communicate with response teams.", "Follow evacuation protocols according to the agency's emergency plan.", "Set up barricades.", "Establish perimeter security including surveillance.", "Maintain safety and security procedures, such as moving to cover.", "Debrief after the incident."]},
+    {"question": "Place the standard procedures for a hostage situation in the correct order.", "items": ["Notifying a supervisor immediately, following the chain of command.", "Containing the subject(s) in the smallest area possible.", "Restricting the movement of the subject(s), if possible.", "Gathering information, such as taking pictures or recording the situation.", "Moving non-participants as far from the hostage situation as possible.", "Providing assistance and support to specialized teams as needed."]},
+    {"question": "Place the stages of situational awareness during an emergency in the correct order.", "items": ["Being alert: Being aware of what is going on around you at all times.", "Identifying a potential threat: Concentrating on possible threats while remaining aware of your surroundings.", "Responding to a threat: Focusing your attention on potential threats while maintaining intense concentration."]}
+        ],
+        "statuteGame": [
+    {"prompt": "Your first priority in any emergency is the _______ and _______ of everyone.", "answer": "safety and security", "displayAnswer": "safety and security"},
+    {"prompt": "Job-specific documents that outline how to handle daily responsibilities and operations are known as _______.", "answer": "post orders", "displayAnswer": "post orders"},
+    {"prompt": "Escape attempts usually happen during work details, inmate transports, and _______ activities.", "answer": "recreational", "displayAnswer": "recreational"},
+    {"prompt": "The _______ is a systematic approach to command, control, and coordinate an emergency response.", "answer": "ICS", "displayAnswer": "Incident Command System (ICS)"},
+    {"prompt": "When an emergency occurs, you should begin the process of setting up a _______ by using structures such as internal gates, sally ports, and doors.", "answer": "perimeter", "displayAnswer": "perimeter"},
+    {"prompt": "During an evacuation, you should never use _______ for evacuation.", "answer": "elevators", "displayAnswer": "elevators"},
+    {"prompt": "To reduce _______ while resolving emergencies, you must observe your surroundings, respond within the scope of your training, and use reasonable judgment.", "answer": "liability", "displayAnswer": "liability"},
+    {"prompt": "_______ defines the order of authority and responsibility that joins one level of an organization to another.", "answer": "Chain of command", "displayAnswer": "Chain of command"},
+    {"prompt": "As the first person on the scene of an emergency, you begin the chain of command and are considered the person in charge until relieved by _______.", "answer": "command staff", "displayAnswer": "command staff"},
+    {"prompt": "A _______ may be set up at a strategic point away from the emergency for command staff to receive communications and make major decisions.", "answer": "command post", "displayAnswer": "command post"},
+    {"prompt": "An _______ occurs when an inmate breaks free from custody.", "answer": "escape", "displayAnswer": "escape"},
+    {"prompt": "An inmate having maps or civilian clothes, creating tools, or making alterations to the facility's structure are all indicators of a possible _______.", "answer": "escape attempt", "displayAnswer": "escape attempt"},
+    {"prompt": "After an escape, articles of an inmate's clothing are collected without contamination to be used by canines as _______.", "answer": "scent items", "displayAnswer": "scent items"},
+    {"prompt": "A _______ is when a person experiences medical or psychological distress, a severe illness, or an injury.", "answer": "medical emergency", "displayAnswer": "medical emergency"},
+    {"prompt": "To avoid contact with an inmate's body fluids during a medical emergency, an officer must observe _______.", "answer": "universal precautions", "displayAnswer": "universal precautions"},
+    {"prompt": "A _______ is any incident that disrupts the normal operations within a facility, such as a food strike or a fight between two inmates.", "answer": "disturbance", "displayAnswer": "disturbance"},
+    {"prompt": "A _______ is a disturbance with uncontrolled violence by inmates, usually directed at the administration.", "answer": "riot", "displayAnswer": "riot"},
+    {"prompt": "Conditions that may lead to a riot include overcrowding, racial tensions, STG activity, and dissatisfaction with food, mail, or _______.", "answer": "medical service", "displayAnswer": "medical service"},
+    {"prompt": "An abrupt change within the facility, such as it getting too quiet or too _______, may be an indicator that a disturbance is pending.", "answer": "loud", "displayAnswer": "loud"},
+    {"prompt": "A visible presence of authority used to contain incidents like a facility assault is known as a _______.", "answer": "show of force", "displayAnswer": "show of force"},
+    {"prompt": "A _______ can occur with or without warning when one or more persons are held against their will to achieve a specific goal.", "answer": "hostage situation", "displayAnswer": "hostage situation"},
+    {"prompt": "If you are taken hostage, you should avoid using insults or _______, such as 'prisoner' or 'police,' which may empower the hostage taker.", "answer": "trigger or hot words", "displayAnswer": "trigger or hot words"},
+    {"prompt": "A physical attack from outside the facility, such as a speeding vehicle failing to yield at the perimeter or gunshots being fired, is known as a _______.", "answer": "facility assault", "displayAnswer": "facility assault"},
+    {"prompt": "The major components of a fire are heat, fuel, oxygen, and _______.", "answer": "chemical chain reactions", "displayAnswer": "chemical chain reactions"},
+    {"prompt": "A fire involving ordinary combustibles like wood and paper is classified as a Class _______ fire.", "answer": "A", "displayAnswer": "A"},
+    {"prompt": "A fire involving flammable liquids like gasoline and paint thinners is classified as a Class _______ fire.", "answer": "B", "displayAnswer": "B"},
+    {"prompt": "A fire involving electrical equipment such as appliances and panels is classified as a Class _______ fire.", "answer": "C", "displayAnswer": "C"},
+    {"prompt": "A fire involving combustible metals like magnesium and titanium is classified as a Class _______ fire.", "answer": "D", "displayAnswer": "D"},
+    {"prompt": "A kitchen fire involving cooking oils or fats is classified as a Class _______ fire.", "answer": "K", "displayAnswer": "K"},
+    {"prompt": "The mnemonic for the basic steps for using a portable fire extinguisher is _______.", "answer": "PASS", "displayAnswer": "PASS"},
+    {"prompt": "When using a fire extinguisher, you should aim the nozzle at the _______ of the fire.", "answer": "base", "displayAnswer": "base"},
+    {"prompt": "Equipment used during a fire to help prevent smoke inhalation is known as a _______.", "answer": "SCBA", "displayAnswer": "self-contained breathing apparatus (SCBA)"},
+    {"prompt": "A _______ emergency occurs when a substance capable of causing harm to people, the environment, and property is released or is not properly controlled.", "answer": "hazmat", "displayAnswer": "hazardous material (hazmat)"},
+    {"prompt": "The resource used to guide a first responder's initial actions to a hazmat incident is the _______.", "answer": "ERG", "displayAnswer": "Emergency Response Guidebook (ERG)"},
+    {"prompt": "According to the ERG, the hazardous material classification for explosives is Class _______.", "answer": "1", "displayAnswer": "1"},
+    {"prompt": "According to the ERG, the hazardous material classification for gases is Class _______.", "answer": "2", "displayAnswer": "2"},
+    {"prompt": "According to the ERG, the hazardous material classification for poisons and infectious substances is Class _______.", "answer": "6", "displayAnswer": "6"},
+    {"prompt": "An officer can get help during a hazmat/waste spill by contacting _______ at 1-800-424-9300.", "answer": "CHEMTREC", "displayAnswer": "CHEMTREC"},
+    {"prompt": "A _______ is any threat of an explosive device, whether mechanical, incendiary, or chemical.", "answer": "bomb threat", "displayAnswer": "bomb threat"},
+    {"prompt": "When responding to a bomb threat, you should not use cell phones or radios because they could emit _______ and create a spark.", "answer": "electromagnetic signals", "displayAnswer": "electromagnetic signals"},
+    {"prompt": "A _______ is an event or force of nature that has catastrophic consequences, such as a hurricane, tornado, or flood.", "answer": "natural disaster", "displayAnswer": "natural disaster"},
+    {"prompt": "A _______ is a disastrous event caused directly by one or more identifiable human actions, such as a chemical spill or a plane crash.", "answer": "human-instigated disaster", "displayAnswer": "human-instigated disaster"},
+    {"prompt": "A sexual assault inside a facility will require activation of _______ guidelines.", "answer": "PREA", "displayAnswer": "PREA"},
+    {"prompt": "A _______ is a cell where a sexual assault victim can be placed to prevent them from cleaning themselves, thereby preserving evidence.", "answer": "dry cell", "displayAnswer": "dry cell"},
+    {"prompt": "To secure a crime scene, an officer can establish a perimeter with physical barriers such as fences, barrels, or _______.", "answer": "crash gates", "displayAnswer": "crash gates"},
+    {"prompt": "A continuous log of the activities happening at a crime scene, including which authorized personnel enter and exit, is known as a _______.", "answer": "crime scene log", "displayAnswer": "crime scene log"},
+    {"prompt": "When managing an incident, you should separate individuals to preserve _______ and minimize possible threats or collaboration.", "answer": "evidence", "displayAnswer": "evidence"},
+    {"prompt": "If you intentionally give false information during an investigation, you may be _______.", "answer": "terminated", "displayAnswer": "terminated"},
+    {"prompt": "_______ is the documentation of how evidence is handled and preserved to ensure the integrity of the evidence.", "answer": "Chain of custody", "displayAnswer": "Chain of custody"},
+    {"prompt": "The _______ dictates all action within a crime scene and is responsible for releasing it.", "answer": "lead investigator", "displayAnswer": "lead investigator"}
+        ]
+    }
+    </script>
+
+    <!-- Header -->
+    <header class="header-bar p-2 shadow-md z-10">
+        <div class="container mx-auto flex justify-between items-center">
+             <svg viewBox="0 0 270 170" class="h-16">
+                <path fill="#2563eb" d="M120.8,11.3l-81.2,49.2c-6.1,3.7-9.8,10.2-9.8,17.2v83.5c0,4.8,3.9,8.7,8.7,8.7h162.3c4.8,0,8.7-3.9,8.7-8.7V77.7c0-7-3.7-13.5-9.8-17.2L119.2,11.3z"/>
+                <path fill="#60a5fa" d="M135,10.5l81.2,49.2c6.1,3.7,9.8,10.2,9.8,17.2v83.5c0,4.8-3.9,8.7-8.7,8.7H135V10.5z"/>
+                <text x="10" y="145" font-family="Arial, sans-serif" font-size="38" fill="#FFFFFF" font-weight="bold">BKRDI-FY</text>
+                <text x="10" y="165" font-family="Arial, sans-serif" font-size="14" fill="#FFFFFF" font-weight="bold">TEST & STUDY</text>
+            </svg>
+            <div id="gameTitle" class="text-lg font-semibold">Home Screen</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="mainContentArea" class="flex-grow container mx-auto p-4 sm:p-6 lg:p-8 overflow-y-auto">
+
+        <!-- Main Menu Page -->
+        <div id="menuPage">
+            <div class="game-card text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold text-slate-800 mb-2">Responding to Incidents and Emergencies</h2>
+                <p class="text-lg text-slate-600 mb-8">Interactive Study Guide</p>
+                <div class="grid grid-cols-2 lg:grid-cols-3 gap-6">
+                    <button onclick="startApp('flashcards')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Flash Cards</span>
+                        <p class="font-normal text-blue-100 mt-1">Review key terms.</p>
+                    </button>
+                    <button onclick="startApp('matching')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                         <span class="text-2xl">Matching Game</span>
+                         <p class="font-normal text-green-100 mt-1">Match terms to definitions.</p>
+                    </button>
+                    <button onclick="startApp('listGameMenu')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                         <span class="text-2xl">List Game</span>
+                         <p class="font-normal text-purple-100 mt-1">Identify items from a list.</p>
+                    </button>
+                     <button onclick="startApp('statuteGame')" class="bg-red-600 hover:bg-red-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Fill In Game</span>
+                        <p class="font-normal text-red-100 mt-1">Fill in the blanks.</p>
+                    </button>
+                    <button onclick="window.open('https://tehcrayz.github.io/soce/RespondingtoIncidentsandEmergencies.html', '_blank')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Tests & Study</span>
+                        <p class="font-normal text-yellow-100 mt-1">BKRDIFY EXAMS.</p>
+                    </button>
+                    <button onclick="window.open('https://tinyurl.com/bkrdify/', '_blank')" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Chapter Notes</span>
+                        <p class="font-normal text-cyan-100 mt-1">The full deal.</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Game Pages -->
+        <div id="flashcardsPage" class="hidden"></div>
+        <div id="matchingPage" class="hidden"></div>
+        <div id="listGamePage" class="hidden"></div>
+        <div id="orderedListPage" class="hidden"></div>
+        <div id="statuteGamePage" class="hidden"></div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer-bar p-3 shadow-md z-10">
+        <div class="container mx-auto text-center text-sm text-gray-700">
+            BKRDI-Fy Version 1.8.0
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- DATA & DOM ---
+            let data = {};
+            try {
+                data = JSON.parse(document.getElementById('questionBank').textContent);
+            } catch (e) {
+                console.error("Error parsing JSON data:", e);
+                document.body.innerHTML = `<div class="p-4 text-red-700 bg-red-100">Error loading study data. Please check the JSON format.</div>`;
+                return;
+            }
+            
+            const pages = {
+                menuPage: document.getElementById('menuPage'),
+                flashcardsPage: document.getElementById('flashcardsPage'),
+                matchingPage: document.getElementById('matchingPage'),
+                listGamePage: document.getElementById('listGamePage'),
+                orderedListPage: document.getElementById('orderedListPage'),
+                statuteGamePage: document.getElementById('statuteGamePage')
+            };
+            const gameTitle = document.getElementById('gameTitle');
+
+            // --- STATE ---
+            let flashcardGameState = {};
+            let listGameState = {};
+            let statuteGameState = {};
+            let orderedListGameState = {};
+
+            // --- UTILITY ---
+            function shuffle(array) {
+                const newArray = [...array];
+                for (let i = newArray.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+                }
+                return newArray;
+            }
+
+            // --- NAVIGATION ---
+            function showPage(pageId) {
+                Object.values(pages).forEach(page => page && page.classList.add('hidden'));
+                if (pages[pageId]) {
+                    pages[pageId].classList.remove('hidden');
+                }
+            }
+
+            window.goHome = function() {
+                Object.keys(pages).forEach(key => {
+                    if (key !== 'menuPage' && pages[key]) {
+                        pages[key].innerHTML = '';
+                    }
+                });
+                showPage('menuPage');
+                gameTitle.textContent = "Home Screen";
+            }
+
+            window.startApp = function(appType) {
+                const pageMap = {
+                    flashcards: { title: "Flash Cards", renderFunc: renderFlashcardSetup, page: 'flashcardsPage' },
+                    matching: { title: "Matching Game", renderFunc: renderMatchingGame, page: 'matchingPage' },
+                    listGameMenu: { title: "List Game", renderFunc: renderListGameMenu, page: 'listGamePage'},
+                    listGame: { title: "General Lists", renderFunc: renderListGame, page: 'listGamePage' },
+                    orderedListGame: { title: "Ordered Lists", renderFunc: renderOrderedListGame, page: 'orderedListPage'},
+                    statuteGame: { title: "Fill In Game", renderFunc: renderStatuteGame, page: 'statuteGamePage' }
+                };
+                if (pageMap[appType]) {
+                    gameTitle.textContent = pageMap[appType].title;
+                    pageMap[appType].renderFunc();
+                    showPage(pageMap[appType].page);
+                }
+            }
+            
+            // --- FLASHCARD LOGIC ---
+            function renderFlashcardSetup() {
+                pages.flashcardsPage.innerHTML = `<div class="game-card flashcard-container w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Flash Card Setup</h2><div class="mb-6"><label for="cards-per-round" class="block text-lg mb-2">How many cards per round?</label><select id="cards-per-round" class="p-2 border rounded-md"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="${data.flashcards.length}">All (${data.flashcards.length})</option></select></div><button onclick="setupFlashcardGame()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Start Studying</button></div>`;
+            }
+            
+            window.setupFlashcardGame = function() {
+                const cardsPerRound = parseInt(document.getElementById('cards-per-round').value, 10);
+                flashcardGameState = {
+                    mainDeck: shuffle([...data.flashcards]),
+                    currentRoundDeck: [],
+                    roundSize: cardsPerRound,
+                    currentIndex: 0,
+                    carryOver: []
+                };
+                startNewFlashcardRound();
+            }
+
+            window.startNewFlashcardRound = function() {
+                const needed = flashcardGameState.roundSize - flashcardGameState.carryOver.length;
+                const newCards = flashcardGameState.mainDeck.splice(0, needed);
+                
+                flashcardGameState.currentRoundDeck = shuffle([...flashcardGameState.carryOver, ...newCards]);
+                flashcardGameState.carryOver = [];
+                flashcardGameState.currentIndex = 0;
+                
+                if (flashcardGameState.currentRoundDeck.length === 0) {
+                     pages.flashcardsPage.innerHTML = `<div class="game-card w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Congratulations!</h2><p class="mb-6">You have mastered all the flashcards!</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                     return;
+                }
+                
+                renderFlashcard();
+            }
+
+            function renderFlashcard() {
+                if (flashcardGameState.currentIndex >= flashcardGameState.currentRoundDeck.length) {
+                    renderEndOfRoundScreen();
+                    return;
+                }
+                const card = flashcardGameState.currentRoundDeck[flashcardGameState.currentIndex];
+                pages.flashcardsPage.innerHTML = `<div class="game-card flashcard-container w-full max-w-2xl mx-auto"><div class="flex justify-between items-center mb-4"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><div class="text-slate-500 font-medium">Card ${flashcardGameState.currentIndex + 1} of ${flashcardGameState.currentRoundDeck.length} (Deck: ${flashcardGameState.mainDeck.length})</div></div><div class="perspective-1000"><div id="flashcard" class="flip-card relative w-full h-80 cursor-pointer rounded-xl" onclick="this.classList.toggle('flipped')"><div class="flip-card-inner relative w-full h-full"><div class="flip-card-front absolute w-full h-full bg-slate-200 rounded-xl flex items-center justify-center p-6 text-center"><p class="text-xl">${card.definition}</p></div><div class="flip-card-back absolute w-full h-full bg-blue-600 text-white rounded-xl flex items-center justify-center p-6 text-center"><h2 class="text-3xl font-bold">${card.term}</h2></div></div></div></div><div class="mt-6 flex justify-center space-x-4"><button onclick="markCardAsKnown()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">I Know This</button><button onclick="markCardAsUnsure()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Not Sure</button></div></div>`;
+            }
+            
+            function renderEndOfRoundScreen() {
+                 pages.flashcardsPage.innerHTML = `<div class="game-card w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Round Complete!</h2><p class="mb-2">${flashcardGameState.carryOver.length} cards from this round will be carried over.</p><p class="mb-6">You have ${flashcardGameState.mainDeck.length} new cards left to learn.</p><button onclick="startNewFlashcardRound()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Start Next Round</button></div>`;
+            }
+
+            window.markCardAsKnown = function() {
+                flashcardGameState.currentRoundDeck.splice(flashcardGameState.currentIndex, 1);
+                renderFlashcard();
+            }
+
+            window.markCardAsUnsure = function() {
+                const card = flashcardGameState.currentRoundDeck.splice(flashcardGameState.currentIndex, 1)[0];
+                flashcardGameState.carryOver.push(card);
+                renderFlashcard();
+            }
+
+            // --- STATUTE GAME LOGIC ---
+            window.renderStatuteGame = function() {
+                statuteGameState = {
+                    questions: shuffle([...data.statuteGame]),
+                    currentIndex: 0,
+                    totalScore: 0,
+                    results: []
+                };
+                displayStatuteQuestion();
+            }
+            
+            window.displayStatuteQuestion = function() {
+                if (statuteGameState.currentIndex >= statuteGameState.questions.length) {
+                    displayStatuteResults();
+                    return;
+                }
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                statuteGameState.currentQuestionPoints = 100;
+                statuteGameState.revealedIndices = new Set();
+
+                const answerMask = q.answer.split('').map(char => (char === ' ' ? ' ' : '_')).join('');
+                
+                pages.statuteGamePage.innerHTML = `
+                    <div class="game-card max-w-3xl mx-auto">
+                        <div class="flex justify-between items-center mb-4">
+                            <button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button>
+                             <span class="font-bold">${statuteGameState.currentIndex + 1} out of ${statuteGameState.questions.length} items</span>
+                        </div>
+                        <h2 class="text-center text-xl font-bold my-4">FILL IN THE BLANK</h2>
+                        <div id="statute-score" class="text-center font-bold text-lg mb-4">Question Points: ${statuteGameState.currentQuestionPoints}</div>
+                        <div class="bg-gray-100 p-8 rounded-lg text-center text-lg mb-4">${q.prompt}</div>
+                        <div id="statute-feedback" class="text-center font-bold text-lg h-8 mb-2"></div>
+                        <div class="bg-blue-800 text-white p-4 rounded-lg text-center mb-4">
+                            <p id="statute-answer-display" class="tracking-widest text-2xl font-mono">${answerMask}</p>
+                        </div>
+                        <div class="flex">
+                            <input id="statute-input" type="text" class="fill-blank-input flex-grow p-4 text-xl rounded-l-lg" placeholder="Type your answer here...">
+                            <button id="statute-submit-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold p-4 rounded-r-lg">Submit</button>
+                        </div>
+                        <div class="flex justify-between mt-6 text-sm">
+                            <button onclick="handleHint()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg">Hint (-10 pts)</button>
+                            <button onclick="showStatuteAnswer()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg">Show Answer</button>
+                            <button id="statute-next-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg hidden">Next Term</button>
+                        </div>
+                    </div>`;
+
+                const input = document.getElementById('statute-input');
+                const submitBtn = document.getElementById('statute-submit-btn');
+                input.focus();
+                submitBtn.onclick = checkStatuteAnswer;
+                input.onkeyup = (e) => { if (e.key === 'Enter') checkStatuteAnswer(); };
+            }
+
+            function updateAnswerMask() {
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const display = q.answer.split('').map((char, index) => {
+                    if (char === ' ' || statuteGameState.revealedIndices.has(index)) {
+                        return `<span>${char}</span>`;
+                    }
+                    return '<span>_</span>';
+                }).join('');
+                document.getElementById('statute-answer-display').innerHTML = display;
+            }
+
+            window.handleHint = function() {
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const unrevealed = q.answer.split('').map((c, i) => i).filter(i => !statuteGameState.revealedIndices.has(i) && q.answer[i] !== ' ');
+                
+                if (unrevealed.length > 0) {
+                    statuteGameState.currentQuestionPoints = Math.max(0, statuteGameState.currentQuestionPoints - 10);
+                    document.getElementById('statute-score').textContent = `Question Points: ${statuteGameState.currentQuestionPoints}`;
+                    
+                    for(let i=0; i < 2 && unrevealed.length > 0; i++) {
+                         const randomIndex = Math.floor(Math.random() * unrevealed.length);
+                         const revealIndex = unrevealed.splice(randomIndex, 1)[0];
+                         statuteGameState.revealedIndices.add(revealIndex);
+                    }
+                    updateAnswerMask();
+                }
+            }
+
+            function checkStatuteAnswer() {
+                const input = document.getElementById('statute-input');
+                const feedbackEl = document.getElementById('statute-feedback');
+                const userAnswer = input.value.trim().toLowerCase();
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const isMatch = q.answer.toLowerCase() === userAnswer;
+
+                if (isMatch) {
+                    feedbackEl.textContent = "CORRECT!";
+                    feedbackEl.className = "text-center font-bold text-lg h-8 mb-2 feedback-correct";
+                    statuteGameState.totalScore += statuteGameState.currentQuestionPoints;
+                    statuteGameState.results.push({ question: q, correct: true, score: statuteGameState.currentQuestionPoints });
+                    document.getElementById('statute-answer-display').textContent = q.displayAnswer;
+                    endStatuteQuestion();
+                } else {
+                    feedbackEl.textContent = "INCORRECT - Try again.";
+                    feedbackEl.className = "text-center font-bold text-lg h-8 mb-2 feedback-incorrect";
+                    statuteGameState.currentQuestionPoints = Math.max(0, statuteGameState.currentQuestionPoints - 20);
+                    document.getElementById('statute-score').textContent = `Question Points: ${statuteGameState.currentQuestionPoints}`;
+                    
+                    const correctLetters = userAnswer.split('');
+                    q.answer.split('').forEach((char, index) => {
+                        if (char.toLowerCase() === correctLetters[index]?.toLowerCase()) {
+                            statuteGameState.revealedIndices.add(index);
+                        }
+                    });
+                    updateAnswerMask();
+                }
+            }
+            
+            function endStatuteQuestion() {
+                 const input = document.getElementById('statute-input');
+                 const submitBtn = document.getElementById('statute-submit-btn');
+                 const nextBtn = document.getElementById('statute-next-btn');
+                 if(input) input.disabled = true;
+                 if(submitBtn) submitBtn.disabled = true;
+                 if(nextBtn) {
+                     nextBtn.classList.remove('hidden');
+                     nextBtn.onclick = () => {
+                        statuteGameState.currentIndex++;
+                        displayStatuteQuestion();
+                    };
+                    nextBtn.focus();
+                 }
+            }
+
+            window.showStatuteAnswer = function() {
+                 const q = statuteGameState.questions[statuteGameState.currentIndex];
+                 document.getElementById('statute-answer-display').textContent = q.displayAnswer;
+                 statuteGameState.currentQuestionPoints = 0;
+                 statuteGameState.results.push({ question: q, correct: false, score: 0 });
+                 endStatuteQuestion();
+            }
+            
+            function displayStatuteResults() {
+                let resultsHtml = `<div class="game-card w-full max-w-3xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Game Results</h2><div class="text-lg mb-6">Final Score: ${statuteGameState.totalScore}</div><div class="space-y-4 text-left">`;
+                statuteGameState.results.forEach(res => {
+                    const bgColor = res.correct ? 'bg-green-100' : 'bg-red-100';
+                    const icon = res.correct ? `<span class="text-green-600 font-bold">&#10003;</span>` : `<span class="text-red-600 font-bold">X</span>`;
+                    resultsHtml += `<div class="${bgColor} p-4 rounded-lg"><p class="font-semibold">${res.question.prompt}</p><p>Correct Answer: <span class="font-bold">${res.question.displayAnswer}</span></p><p>Your score: ${res.score} ${icon}</p></div>`;
+                });
+                resultsHtml += `</div><button onclick="renderStatuteGame()" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Play Again</button></div>`;
+                pages.statuteGamePage.innerHTML = resultsHtml;
+            }
+
+            // --- MATCHING GAME LOGIC ---
+            let selectedTerm = null;
+            let selectedDef = null;
+            let matchedPairs = 0;
+            let totalPairs = 0;
+            window.renderMatchingGame = function() {
+                const gamePool = shuffle([...data.matching]);
+                const gameSize = Math.min(6, gamePool.length);
+                const gameSet = gamePool.slice(0, gameSize);
+                totalPairs = gameSize;
+                matchedPairs = 0;
+                selectedTerm = null;
+                selectedDef = null;
+                const terms = shuffle(gameSet.map((item, index) => ({ text: item.term, id: index })));
+                const definitions = shuffle(gameSet.map((item, index) => ({ text: item.definition, id: index })));
+                pages.matchingPage.innerHTML = `<div class="game-card w-full max-w-4xl mx-auto"><div class="flex justify-between items-center mb-6"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><h2 class="text-2xl font-bold">Matching Game</h2><button onclick="renderMatchingGame()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New Game</button></div><p id="match-instructions" class="text-center text-slate-600 mb-6">Select a term from the left and its matching definition from the right.</p><div id="win-message" class="hidden text-center p-4 mb-4 bg-green-100 text-green-800 rounded-lg"><p class="font-bold text-lg">Congratulations! You've matched all the pairs!</p></div><div class="grid grid-cols-2 gap-2 sm:gap-4 md:gap-6"><div id="terms-col" class="flex flex-col gap-3">${terms.map(t => `<div class="match-item p-4 border-2 border-slate-300 rounded-lg cursor-pointer hover:bg-slate-200 transition" data-type="term" data-id="${t.id}" onclick="handleMatchSelection(this)">${t.text}</div>`).join('')}</div><div id="definitions-col" class="flex flex-col gap-3">${definitions.map(d => `<div class="match-item p-4 border-2 border-slate-300 rounded-lg cursor-pointer hover:bg-slate-200 transition" data-type="definition" data-id="${d.id}" onclick="handleMatchSelection(this)">${d.text}</div>`).join('')}</div></div></div>`;
+            }
+            window.handleMatchSelection = function(target) {
+                if (target.classList.contains('matched')) return;
+                const type = target.dataset.type;
+                const id = target.dataset.id;
+                if (target.classList.contains('selected')) {
+                    target.classList.remove('selected');
+                    if (type === 'term') selectedTerm = null;
+                    if (type === 'definition') selectedDef = null;
+                    return;
+                }
+                document.querySelectorAll(`.match-item[data-type="${type}"].selected`).forEach(el => el.classList.remove('selected'));
+                target.classList.add('selected');
+                if (type === 'term') { selectedTerm = { el: target, id: id }; } else { selectedDef = { el: target, id: id }; }
+                if (selectedTerm && selectedDef) checkForMatch();
+            }
+            function checkForMatch() {
+                if (selectedTerm && selectedDef && selectedTerm.id === selectedDef.id) {
+                    selectedTerm.el.classList.add('matched');
+                    selectedDef.el.classList.add('matched');
+                    selectedTerm.el.classList.remove('selected');
+                    selectedDef.el.classList.remove('selected');
+                    matchedPairs++;
+                    if (matchedPairs === totalPairs) {
+                        document.getElementById('win-message').classList.remove('hidden');
+                        document.getElementById('match-instructions').classList.add('hidden');
+                    }
+                } else if (selectedTerm && selectedDef) {
+                    const termEl = selectedTerm.el;
+                    const defEl = selectedDef.el;
+                    termEl.classList.add('incorrect-match');
+                    defEl.classList.add('incorrect-match');
+                    setTimeout(() => {
+                        termEl.classList.remove('incorrect-match', 'selected');
+                        defEl.classList.remove('incorrect-match', 'selected');
+                    }, 500);
+                }
+                selectedTerm = null;
+                selectedDef = null;
+            }
+
+            // --- LIST GAME LOGIC ---
+            function renderListGameMenu() {
+                pages.listGamePage.innerHTML = `<div class="game-card text-center"><h2 class="text-3xl font-bold mb-6">List Games</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><button onclick="startApp('listGame')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105"><span class="text-2xl">General Lists</span><p class="font-normal text-purple-100 mt-1">Identify items from a list.</p></button><button onclick="startApp('orderedListGame')" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105"><span class="text-2xl">Ordered Lists</span><p class="font-normal text-teal-100 mt-1">Put items in the correct order.</p></button></div><button onclick="goHome()" class="mt-8 text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Main Menu</button></div>`;
+                showPage('listGamePage');
+            }
+            
+            window.renderListGame = function(questionIndex = -1) {
+                if (!listGameState.deck || listGameState.deck.length === 0) {
+                     listGameState.deck = shuffle([...data.listGame]);
+                }
+                if (questionIndex === -1) {
+                     listGameState.deck.shift();
+                     if (listGameState.deck.length === 0) {
+                         pages.listGamePage.innerHTML = `<div class="game-card text-center"><h2 class="text-2xl font-bold">All lists completed!</h2><p class="my-4">You've successfully completed all the lists for this session.</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                         return;
+                     }
+                 }
+                const question = listGameState.deck[0];
+                
+                listGameState.currentQuestion = question;
+                listGameState.foundCorrectCount = 0;
+                listGameState.score = 100;
+                listGameState.unseenCorrect = shuffle(question.correctAnswers);
+                listGameState.unseenIncorrect = shuffle(question.incorrectAnswers);
+                listGameState.nextCorrectSlot = 0;
+                
+                let answerPool = [];
+                const displayCount = 8;
+                for (let i = 0; i < displayCount; i++) {
+                    const newAnswer = getNewAnswer();
+                    if (newAnswer) answerPool.push(newAnswer);
+                }
+
+                const correctPlaceholders = question.correctAnswers.map((_, index) => 
+                    `<div id="correct-slot-${index}" class="correct-placeholder rounded-lg p-2 text-center text-gray-500">[...]</div>`
+                ).join('');
+
+                pages.listGamePage.innerHTML = `<div class="game-card w-full max-w-3xl mx-auto"><div class="flex justify-between items-center mb-4"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><h2 class="text-xl font-bold text-center">General Lists</h2><button onclick="renderListGame(-1)" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New List</button></div><div class="text-center p-4 mb-4 bg-blue-50 border-l-4 border-blue-500 text-blue-800 rounded-r-lg"><p class="font-bold text-lg">${question.question}</p><p class="text-sm">Use ✓ to select correct items and X to eliminate incorrect ones.</p></div><div class="mb-6"><h3 class="font-bold text-center mb-2">Correct Answers Found</h3><div id="correct-answers-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">${correctPlaceholders}</div></div><div id="list-game-status" class="flex justify-between items-center font-bold text-lg mb-4 p-2 rounded-lg bg-gray-100"><span>Score: <span id="list-game-score">100</span></span></div><div id="list-game-win-message" class="hidden text-center p-4 mb-4 bg-green-100 text-green-800 rounded-lg"><p class="font-bold text-lg">Great job! You found all correct items for this list!</p></div><div id="next-list-container" class="hidden text-center mt-4"><button onclick="renderListGame(-1)" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105">Next List &rarr;</button></div><div id="list-game-answers" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div></div>`;
+                const answersContainer = document.getElementById('list-game-answers');
+                answerPool.forEach(answer => answersContainer.appendChild(createAnswerElement(answer)));
+            }
+            
+            function getNewAnswer() {
+                if (listGameState.unseenCorrect.length > 0 && Math.random() < 0.4) {
+                    return listGameState.unseenCorrect.pop();
+                }
+                if (listGameState.unseenIncorrect.length > 0) {
+                    return listGameState.unseenIncorrect.pop();
+                }
+                if(listGameState.unseenCorrect.length > 0) {
+                     return listGameState.unseenCorrect.pop();
+                }
+                return null;
+            }
+
+            function createAnswerElement(answerText) {
+                const item = document.createElement('div');
+                item.className = 'list-item flex items-center justify-between p-3 rounded-lg';
+                
+                const textSpan = document.createElement('span');
+                textSpan.className = 'flex-grow mr-4';
+                textSpan.textContent = answerText;
+
+                const btnContainer = document.createElement('div');
+                btnContainer.className = 'list-item-btn-container flex space-x-2';
+
+                const checkBtn = document.createElement('button');
+                checkBtn.className = 'list-item-btn check-btn flex items-center justify-center';
+                checkBtn.innerHTML = '&#10003;'; // Checkmark
+                
+                const xBtn = document.createElement('button');
+                xBtn.className = 'list-item-btn x-btn flex items-center justify-center';
+                xBtn.innerHTML = 'X';
+
+                checkBtn.onclick = () => handleListSelection(item, 'select', answerText);
+                xBtn.onclick = () => handleListSelection(item, 'eliminate', answerText);
+
+                btnContainer.appendChild(checkBtn);
+                btnContainer.appendChild(xBtn);
+                item.appendChild(textSpan);
+                item.appendChild(btnContainer);
+                return item;
+            }
+
+            function replaceAndShuffle(oldElement) {
+                const parent = oldElement.parentNode;
+                const newAnswer = getNewAnswer();
+                if (newAnswer) {
+                    const newItem = createAnswerElement(newAnswer);
+                    parent.replaceChild(newItem, oldElement);
+                } else {
+                    oldElement.remove();
+                }
+                shuffleAnswerBoard();
+            }
+            
+            function shuffleAnswerBoard() {
+                const answersContainer = document.getElementById('list-game-answers');
+                if (!answersContainer) return;
+                const currentItems = Array.from(answersContainer.children);
+                const shuffledItems = shuffle(currentItems);
+                shuffledItems.forEach(item => answersContainer.appendChild(item));
+            }
+
+            window.handleListSelection = function(itemElement, action, answerText) {
+                if (itemElement.dataset.processed) return;
+                itemElement.dataset.processed = true;
+
+                const isCorrect = listGameState.currentQuestion.correctAnswers.includes(answerText);
+                const btnContainer = itemElement.querySelector('.list-item-btn-container');
+
+                if (action === 'select') { 
+                    if (isCorrect) {
+                        itemElement.classList.add('strobing-green');
+                        const correctSlot = document.getElementById(`correct-slot-${listGameState.nextCorrectSlot}`);
+                        if(correctSlot) {
+                           correctSlot.textContent = answerText;
+                           correctSlot.classList.add('filled');
+                        }
+                        listGameState.nextCorrectSlot++;
+                        listGameState.foundCorrectCount++;
+                        setTimeout(() => replaceAndShuffle(itemElement), 1000);
+                    } else {
+                        itemElement.classList.add('strobing-red'); 
+                        listGameState.score = Math.max(0, listGameState.score - 10);
+                        document.getElementById('list-game-score').textContent = listGameState.score;
+                        btnContainer.innerHTML = `<span class="text-2xl text-red-600 font-bold">X</span>`;
+                        setTimeout(() => replaceAndShuffle(itemElement), 2500);
+                    }
+                } else if (action === 'eliminate') { 
+                    if (!isCorrect) {
+                        itemElement.classList.add('fading-out');
+                        setTimeout(() => replaceAndShuffle(itemElement), 500);
+                    } else {
+                        itemElement.classList.add('strobing-purple');
+                        const correctSlot = document.getElementById(`correct-slot-${listGameState.nextCorrectSlot}`);
+                        if(correctSlot) {
+                           correctSlot.textContent = answerText;
+                           correctSlot.classList.add('filled', 'purple');
+                        }
+                        listGameState.nextCorrectSlot++;
+                        listGameState.foundCorrectCount++;
+                        listGameState.score = Math.max(0, listGameState.score - 15);
+                        document.getElementById('list-game-score').textContent = listGameState.score;
+                        setTimeout(() => replaceAndShuffle(itemElement), 1000);
+                    }
+                }
+
+                if (listGameState.foundCorrectCount === listGameState.currentQuestion.correctAnswers.length) {
+                    document.getElementById('list-game-win-message').classList.remove('hidden');
+                    document.getElementById('next-list-container').classList.remove('hidden');
+                }
+            }
+            
+            // --- ORDERED LIST GAME ---
+            window.renderOrderedListGame = function() {
+                orderedListGameState = {
+                    questions: shuffle([...data.orderedListGame]),
+                    currentIndex: 0
+                }
+                setupOrderedListGame();
+            }
+
+            function setupOrderedListGame() {
+                if (orderedListGameState.currentIndex >= orderedListGameState.questions.length) {
+                    pages.orderedListPage.innerHTML = `<div class="game-card text-center"><h2 class="text-2xl font-bold">All lists completed!</h2><p class="my-4">You've successfully completed all the ordered lists.</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                    return;
+                }
+                
+                const question = orderedListGameState.questions[orderedListGameState.currentIndex];
+                orderedListGameState.currentQuestion = question;
+                orderedListGameState.score = 100;
+                
+                const shuffledItems = shuffle([...question.items]);
+
+                let draggableHtml = `<p class="text-lg font-semibold text-center">Steps (Drag These)</p>`;
+                shuffledItems.forEach((itemText) => {
+                    draggableHtml += `<div class="draggable-item p-3 bg-gray-200 rounded-lg shadow cursor-grab" draggable="true">${itemText}</div>`;
+                });
+
+                let dropZoneHtml = `<p class="text-lg font-semibold text-center">Correct Order (Drop Here)</p>`;
+                question.items.forEach((_, index) => {
+                    dropZoneHtml += `<div class="drop-zone p-3 rounded-lg flex items-center min-h-[3.5rem]"><span class="mr-3 font-bold text-lg">${index + 1}.</span></div>`;
+                });
+                
+                pages.orderedListPage.innerHTML = `
+                    <div class="game-card w-full max-w-4xl mx-auto">
+                         <div class="flex justify-between items-center mb-6">
+                            <button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button>
+                            <h2 class="text-2xl font-bold">Ordered List Game</h2>
+                            <button onclick="nextOrderedList()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New List</button>
+                        </div>
+                        <p class="text-center font-bold text-lg mb-4">${question.question}</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div id="draggable-items-container" class="space-y-3 min-h-[10rem] bg-gray-50 p-2 rounded-lg">${draggableHtml}</div>
+                            <div id="drop-zones-container" class="space-y-3">${dropZoneHtml}</div>
+                        </div>
+                         <div id="ordered-list-feedback" class="text-center mt-8">
+                            <button id="check-order-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Check Order</button>
+                            <button id="next-ordered-list-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hidden">Next List</button>
+                        </div>
+                    </div>`;
+
+                addDragAndDropListeners();
+            }
+            
+            window.nextOrderedList = function() {
+                orderedListGameState.currentIndex++;
+                setupOrderedListGame();
+            }
+
+            function addDragAndDropListeners() {
+                const draggables = document.querySelectorAll('.draggable-item');
+                const dropZones = document.querySelectorAll('.drop-zone');
+                const sourceContainer = document.getElementById('draggable-items-container');
+
+                draggables.forEach(draggable => {
+                    draggable.addEventListener('dragstart', e => {
+                        e.dataTransfer.setData('text/plain', e.target.textContent);
+                        setTimeout(() => e.target.classList.add('dragging'), 0);
+                    });
+                    draggable.addEventListener('dragend', e => e.target.classList.remove('dragging'));
+                });
+
+                function handleDragOver(e) {
+                    e.preventDefault();
+                    this.classList.add('drag-over');
+                }
+
+                function handleDragLeave() {
+                    this.classList.remove('drag-over');
+                }
+
+                function handleDrop(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                    const draggedText = e.dataTransfer.getData('text/plain');
+                    const draggedEl = document.querySelector(`.draggable-item.dragging`);
+                    
+                    if (this.classList.contains('drop-zone')) { // Dropping on a drop zone
+                        if (this.children.length > 1) { 
+                           const existingItem = this.children[1];
+                           sourceContainer.appendChild(existingItem);
+                        }
+                         if(draggedEl) this.appendChild(draggedEl);
+                    } else if (this.id === 'draggable-items-container') { // Dropping back on source
+                        if(draggedEl) this.appendChild(draggedEl);
+                    }
+                }
+
+                dropZones.forEach(zone => {
+                    zone.addEventListener('dragover', handleDragOver);
+                    zone.addEventListener('dragleave', handleDragLeave);
+                    zone.addEventListener('drop', handleDrop);
+                });
+
+                sourceContainer.addEventListener('dragover', handleDragOver);
+                sourceContainer.addEventListener('dragleave', handleDragLeave);
+                sourceContainer.addEventListener('drop', handleDrop);
+                
+                document.getElementById('check-order-btn').onclick = checkOrder;
+            }
+            
+            function checkOrder() {
+                const dropZones = document.querySelectorAll('#drop-zones-container .drop-zone');
+                const correctOrder = orderedListGameState.currentQuestion.items;
+                const sourceContainer = document.getElementById('draggable-items-container');
+                let allCorrect = true;
+
+                dropZones.forEach((zone, index) => {
+                    const droppedItem = zone.querySelector('.draggable-item');
+                    if (droppedItem && droppedItem.textContent === correctOrder[index]) {
+                        zone.classList.add('correct');
+                        zone.classList.remove('incorrect');
+                        droppedItem.setAttribute('draggable', 'false'); // Lock correct items
+                        droppedItem.style.cursor = 'default';
+                    } else if (droppedItem) {
+                        allCorrect = false;
+                        zone.classList.add('incorrect');
+                        zone.classList.remove('correct');
+                        setTimeout(() => {
+                           zone.classList.remove('incorrect');
+                           sourceContainer.appendChild(droppedItem); // Return incorrect item
+                        }, 1000);
+                    } else {
+                        allCorrect = false; // A slot is empty
+                    }
+                });
+
+                if (allCorrect) {
+                    document.getElementById('check-order-btn').classList.add('hidden');
+                    document.getElementById('next-ordered-list-btn').classList.remove('hidden');
+                    document.getElementById('next-ordered-list-btn').onclick = nextOrderedList;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

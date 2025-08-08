@@ -1,0 +1,1587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Guide: First Aid </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Arial&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background: #f4f8fb;
+            color: #1f2937;
+        }
+        .header-bar {
+            background-color: #1f2937;
+            color: white;
+        }
+        .footer-bar {
+            background: #dbeafe;
+        }
+        /* Card styles for menu and games */
+        .game-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+
+        /* Flip animation for flashcards */
+        .perspective-1000 { perspective: 1000px; }
+        .flip-card-inner { transition: transform 0.6s; transform-style: preserve-3d; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+        .flip-card-back { transform: rotateY(180deg); }
+        .flashcard-container.large .flip-card { height: 28rem; }
+        .flashcard-container.large .game-card { max-width: 48rem; }
+
+
+        /* Styles for matching game */
+        .match-item.selected { background-color: #3b82f6; color: white; border-color: #2563eb; }
+        .match-item.matched { background-color: #16a34a; color: white; border-color: #15803d; opacity: 0.7; pointer-events: none; }
+        .match-item.incorrect-match { background-color: #dc2626; color: white; animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Styles for list game */
+        .list-item { transition: all 0.3s ease; border: 1px solid #d1d5db; }
+        .list-item-btn-container { flex-shrink: 0; }
+        .list-item-btn {
+            cursor: pointer;
+            border-radius: 9999px;
+            width: 2rem;
+            height: 2rem;
+            font-weight: bold;
+            transition: all 0.2s ease-in-out;
+            border: 2px solid transparent;
+        }
+        .check-btn { background-color: #dcfce7; color: #15803d; }
+        .check-btn:hover { background-color: #22c55e; color: white; border-color: #15803d; }
+        .x-btn { background-color: #fee2e2; color: #b91c1c; }
+        .x-btn:hover { background-color: #ef4444; color: white; border-color: #991b1b; }
+        
+        .correct-placeholder {
+             background-color: #e5e7eb;
+             border: 2px dashed #9ca3af;
+             transition: all 0.5s ease;
+             min-height: 2.5rem;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             padding: 0.5rem;
+             word-break: break-word;
+        }
+        .correct-placeholder.filled {
+            background-color: #dcfce7;
+            border-color: #16a34a;
+            color: #14532d;
+            font-weight: 600;
+            border-style: solid;
+        }
+        .correct-placeholder.purple {
+            background-color: #f3e8ff;
+            border-color: #8b5cf6;
+            color: #5b21b6;
+        }
+
+        .list-item.strobing-green { animation: strobe-green 1s forwards; }
+        .list-item.strobing-red { animation: incorrect-answer-animation 2.5s forwards; }
+        .list-item.strobing-purple { animation: strobe-purple 1s forwards; }
+        .list-item.fading-out { animation: fade-out 0.5s forwards; }
+        
+        @keyframes fade-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.9); } }
+        
+        @keyframes strobe-green {
+            0%, 100% { background-color: white; }
+            50% { background-color: #22c55e; color: white; }
+        }
+
+        @keyframes strobe-purple {
+            0%, 100% { background-color: white; }
+            50% { background-color: #a855f7; color: white; }
+        }
+
+        @keyframes incorrect-answer-animation {
+            0% { transform: translateX(0); background-color: #fee2e2; }
+            10%, 30%, 50%, 70% { background-color: #b91c1c; color: white; }
+            20%, 40%, 60%, 80% { background-color: #fee2e2; color: #1f2937; }
+            0%, 20%, 40%, 60% { transform: translateX(5px); }
+            10%, 30%, 50%, 70% { transform: translateX(-5px); }
+            85% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.9); }
+        }
+        
+        /* Fill in the blank game styles */
+        .fill-blank-input {
+            border: 2px solid #ccc;
+            transition: border-color 0.3s;
+        }
+        .fill-blank-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .feedback-correct {
+            color: #16a34a;
+        }
+        .feedback-incorrect {
+            color: #dc2626;
+        }
+        #statute-answer-display span {
+            display: inline-block;
+            width: 1.2ch; /* Character unit */
+            text-align: center;
+        }
+
+        /* Ordered List Game Styles */
+        .draggable-item { cursor: grab; }
+        .drop-zone { border: 2px dashed #9ca3af; transition: background-color 0.2s; }
+        .drop-zone.drag-over { background-color: #e0f2fe; }
+        .drop-zone.correct { background-color: #dcfce7; border-color: #16a34a; }
+        .drop-zone.incorrect { background-color: #fee2e2; border-color: #b91c1c; animation: shake 0.5s; }
+        .dragging { opacity: 0.5; }
+
+
+        /* Hide scrollbar for the main content area */
+        #mainContentArea::-webkit-scrollbar { display: none; }
+        #mainContentArea { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- JSON Question Bank -->
+    <script id="questionBank" type="application/json">
+    {
+        "flashcards": [
+                        { "term": "Shock", "definition": "The failure of the heart and blood vessels to maintain enough oxygen-rich blood flowing to the vital organs of the body" },
+            { "term": "Closed Soft-Tissue Injury", "definition": "Any injury that is bleeding internally or has pooling blood under the skin" },
+            { "term": "Airborne disease", "definition": "Any disease that spreads from person to person through the air" },
+            { "term": "Open Soft-Tissue Injury", "definition": "Any injury where the skin is open, which may lead to external bleeding" },
+            { "term": "Airway", "definition": "The passage in the body through which air travels to the lungs" },
+            { "term": "Arterial Bleeding", "definition": "Bright red blood spurting or flowing from a wound, indicating a severed or damaged artery" },
+            { "term": "AVPU Scale", "definition": "A scale to measure a patient's level of consciousness: Alert, Verbal, Pain, and Unresponsive" },
+            { "term": "Venous Bleeding", "definition": "Dark red blood flowing steadily from a wound, indicating a severed or damaged vein" },
+            { "term": "Body Substance Isolation (BSI)", "definition": "The practice of isolating yourself from all body substances of patients, which mainly relies on the use of personal protective equipment (PPE) and practicing personal behaviors that reduce risk" },
+            { "term": "Capillary Bleeding", "definition": "Dark red blood oozing slowly from a wound, indicating damaged capillaries" },
+            { "term": "COVID-19", "definition": "A respiratory illness caused by the SARS-CoV-2 virus" },
+            { "term": "Tourniquet", "definition": "A device that restricts the flow of blood to an extremity" },
+            { "term": "Direct Threat Care (Hot Zone / Care Under Fire)", "definition": "A scene that includes an active threat or any imminent danger where the primary concern is to stop the threat" },
+            { "term": "Dressing", "definition": "A sterile pad applied directly to a wound to promote healing and protect the wound from further harm" },
+            { "term": "Emergency Drag", "definition": "A technique used to move a patient quickly when they are in immediate danger" },
+            { "term": "Hemostatic Gauze or Dressing", "definition": "A wound dressing containing an agent that promotes blood clotting" },
+            { "term": "Evacuation Care (Cold Zone / Tactical Evacuation Care)", "definition": "A scene in which you are moving towards transporting an injured officer to a medical treatment facility; an area cleared of threats" },
+            { "term": "Bandage", "definition": "A covering that holds dressings in place and does not touch the wound" },
+            { "term": "Extremity Lift", "definition": "A non-emergency move, often easier than drags, that requires at least two officers' efforts to move a patient from the floor or ground" },
+            { "term": "Junctional Bleeding", "definition": "Bleeding that occurs at a junction of the torso to the extremities, such as the neck, armpit, or groin" },
+            { "term": "AED (Automated External Defibrillator)", "definition": "A medical device used to deliver an electrical shock to a patient in cardiac arrest" },
+            { "term": "Hepatitis A", "definition": "A highly infectious virus primarily spread through person-to-person contact via fecal contamination and oral ingestion" },
+            { "term": "Impaled Object", "definition": "An object that punctures the soft tissue and stays in place" },
+            { "term": "Hepatitis B", "definition": "A virus that causes inflammation of the liver and is primarily transmitted through sexual contact or sharing contaminated needles" },
+            { "term": "Gunshot Wound Cavity", "definition": "The space left by tissue that is destroyed or displaced by the passage of a bullet" },
+            { "term": "Hepatitis C", "definition": "The most common chronic bloodborne infection in the United States, primarily transmitted through direct contact with human blood" },
+            { "term": "Spinal Motion Restriction", "definition": "A procedure for minimizing movement of a patient's head, neck, and spine" },
+            { "term": "HIV (Human Immunodeficiency Virus)", "definition": "A bloodborne virus that attacks and weakens the immune system" },
+            { "term": "Jaw Thrust Maneuver", "definition": "A maneuver to open the airway of an unresponsive patient with a suspected neck or spinal injury" },
+            { "term": "Traumatic Brain Injury (TBI)", "definition": "A brain injury that occurs when sudden trauma causes damage to the brain" },
+            { "term": "ICS (Incident Command System)", "definition": "The system Florida implements for multiple agency response in times of disaster" },
+            { "term": "Shaken Baby Syndrome (SBS)", "definition": "A type of abusive head trauma caused by the violent shaking of an infant or young child" },
+            { "term": "Indirect Threat Care (Warm Zone / Tactical Field Care)", "definition": "A scene in which the officer is out of imminent danger but not yet in a safer, fully secured zone" },
+            { "term": "Extruded Eyeball", "definition": "An eyeball that is forced out of its socket" },
+            { "term": "LOC (Level of Consciousness)", "definition": "An indicator used to determine how awake, alert, and aware someone is of their surroundings" },
+            { "term": "Closed Chest Injury", "definition": "An injury resulting from blunt force trauma to the chest area, which can damage internal organs and cause internal bleeding" },
+            { "term": "Logroll", "definition": "A technique to roll a patient onto their back, front, or side while maintaining spinal alignment, ideally performed with at least three people" },
+            { "term": "Flail Chest", "definition": "An injury that occurs when two or more adjacent ribs are fractured in two or more places, causing the broken segment to move opposite to the rest of the chest" },
+            { "term": "Massive Hemorrhage", "definition": "Uncontrolled severe bleeding, which is the number one preventable cause of trauma-related deaths" },
+            { "term": "Open Chest Injury", "definition": "An injury that occurs when there is a penetration through the chest wall" },
+            { "term": "MCI (Mass Casualty Incident)", "definition": "An incident that involves multiple casualties or multiple patients with severe injuries" },
+            { "term": "Sucking Chest Injury", "definition": "A type of open chest injury with a larger hole where air moving through it causes a sucking sound" },
+            { "term": "Mechanism of Injury or Nature of Illness", "definition": "A determination of what happened to a patient, which helps judge the extent of injury or illness" },
+            { "term": "Vented Chest Seal", "definition": "A type of airtight dressing that acts as a one-way valve, allowing air to escape the chest cavity but not enter" },
+            { "term": "Medical patient", "definition": "A person who is ill" },
+            { "term": "Occlusive Dressing", "definition": "An air and water tight dressing" },
+            { "term": "MRSA (Methicillin-Resistant Staphylococcus Aureus)", "definition": "A type of bacteria that is highly contagious, resistant to certain antibiotics, and occurs most frequently among people in hospitals, health-care facilities, and detention facilities" },
+            { "term": "Tension Pneumothorax", "definition": "A situation in which air builds up in the chest cavity, causing tension that can prevent the return of blood to the heart" },
+            { "term": "OSHA (Occupational Safety and Health Administration)", "definition": "The federal agency that requires color-coded bags or containers for storing biomedical waste" },
+            { "term": "Abdominal Evisceration", "definition": "An open wound where the organs protrude from the abdominal cavity" },
+            { "term": "PPE (Personal Protective Equipment)", "definition": "A barrier against infection which includes eye protection, gloves, protective clothing, masks or shields, and biohazard bags" },
+            { "term": "Fracture", "definition": "The medical term for a broken bone" },
+            { "term": "Positional Asphyxia", "definition": "Occurs when a person's body is in a position that interferes with or prevents them from breathing adequately" },
+            { "term": "Open Fracture", "definition": "A fracture where the skin at the injury site is open, and the bone may protrude" },
+            { "term": "Primary assessment", "definition": "A rapid assessment to identify and address any immediate life-threatening conditions" },
+            { "term": "Closed Fracture", "definition": "A fracture where the skin at the injury site remains intact" },
+            { "term": "Recovery Position", "definition": "A position for an unresponsive, breathing patient with no suspected neck or back injuries that helps maintain an open airway" },
+            { "term": "Dislocation", "definition": "An injury that occurs when trauma forces the end of a bone from its normal position at a joint" },
+            { "term": "SALT", "definition": "A method of triage that stands for Sort, Assess, Life-saving interventions, Treatment/transport" },
+            { "term": "Strain", "definition": "An injury to a muscle or a tendon that becomes overstretched, sometimes called a pulled muscle" },
+            { "term": "Secondary assessment", "definition": "A thorough, full head-to-toe assessment of a patient" },
+            { "term": "Sprain", "definition": "An injury to a ligament, or the strong bands of tissue that connect bones together in a joint" },
+            { "term": "Shock", "definition": "A condition that any injury requiring MARCH interventions is likely to result in" },
+            { "term": "Amputation", "definition": "The loss or removal of a limb or body part" },
+            { "term": "Standard Precautions", "definition": "A set of infection control measures by the CDC meant to apply to all patients, under which all bodily fluids (except sweat) should be treated as potentially infectious" },
+            { "term": "Superficial Burn (First-Degree)", "definition": "A burn that damages the first layer of skin, which becomes red and feels very painful" },
+            { "term": "Trauma patient", "definition": "An injured person" },
+            { "term": "Partial-Thickness Burn (Second-Degree)", "definition": "A burn that damages the first two skin layers, causing blisters and red, white, or splotchy skin" },
+            { "term": "Triage", "definition": "The process of sorting and categorizing patients to determine the order in which they receive medical attention" },
+            { "term": "Full-Thickness Burn (Third-Degree)", "definition": "A burn that damages all skin layers and often affects the muscles and nerves underneath, causing the skin to look waxy, white, or charred" },
+            { "term": "Tripod Position", "definition": "A position of comfort where a patient sits down while leaning forward with their arms resting on their knees" },
+            { "term": "Chemical Burn", "definition": "A burn caused by exposure to a liquid or dry powder on the skin" },
+            { "term": "Tuberculosis", "definition": "An airborne disease that affects the respiratory system" },
+            { "term": "Electrical Burn", "definition": "A burn caused by exposure to an electrical current or lightning" },
+            { "term": "Universal Precautions", "definition": "A set of procedures developed by the CDC designed to prevent the transmission of bloodborne pathogens" },
+            { "term": "Inhalation Burn", "definition": "A burn to any part of the airway, caused by exposure to smoke or chemicals through the respiratory system. 373" },
+            { "term": "Vehicle Dump", "definition": "A procedure for loading a patient into a vehicle to transport them to higher care" },
+            { "term": "EMS system (Emergency Medical Services system)", "definition": "A network of trained professionals linked to provide advanced, out-of-hospital care for victims of sudden traumatic injury or illness." },
+            { "term": "Vital Signs", "definition": "A patient's pulse and breathing rate" },
+            { "term": "Duty to Act", "definition": "A duty to take some action to prevent harm to another, and for the failure of which one may be liable, depending on the relationship of the parties and the circumstances. For criminal justice officers, it refers to the contractual or legal obligation to provide care." },
+            { "term": "Hypothermia", "definition": "A condition that can be a concern when treating trauma patients, as rapidly decreasing body temperature can make bleeding symptoms worse. 151" },
+            { "term": "Breach of Duty", "definition": "Occurs when you either fail to act or act inappropriately." },
+            { "term": "Standard or Scope of Care", "definition": "The degree of care that a reasonable person should exercise. It is the care you are expected to provide to the same patient under the same conditions as would any criminal justice first-aid provider with the same level of training." },
+            { "term": "Good Samaritan Act", "definition": "Protects a first-aid provider from liability for emergency care performed in good faith or as expected of another provider with equal training. It does not prevent someone from filing a lawsuit but may provide a defense." },
+            { "term": "Abandonment", "definition": "Giving up a right or interest with the intention of never again claiming it. In first aid, it occurs when you stop providing care without ensuring the patient receives the same or better care." },
+            { "term": "Negligence", "definition": "The failure to exercise the standard of care that a reasonably prudent person would have exercised in a similar situation." },
+            { "term": "Expressed Consent", "definition": "Permission for an action that is clearly and unmistakably stated or written by the patient or legal guardian." },
+            { "term": "Implied Consent", "definition": "The assumption that a person has given permission for an action because of their actions, rather than being explicitly expressed. It also applies to an unresponsive patient at risk of death, where it's assumed they would agree to care." },
+            { "term": "Informed Consent", "definition": "A person's agreement to allow something to happen, made with full knowledge of the facts, benefits, risks, and alternatives." },
+            { "term": "Competent Adult", "definition": "One who can make an informed decision about medical care and understands the questions and implications of those decisions." },
+            { "term": "Minor", "definition": "In Florida, children younger than 18 years of age." },
+            { "term": "Emancipated Minor", "definition": "A minor who is financially independent, married, an active member of the military, or does not live with a parent or caregiver and can provide their own consent for treatment." },
+            { "term": "Do-Not-Resuscitate Order (DNR/DNRO)", "definition": "A document for a terminally or chronically ill patient that states their wish to refuse cardiopulmonary resuscitation (CPR)." },
+            { "term": "Medical Alert", "definition": "A bracelet, necklace, or card that alerts you to a specific medical condition such as an allergy, epilepsy, or diabetes." },
+            { "term": "HIPAA (Health Insurance Portability and Accountability Act)", "definition": "Protects the rights of patients and the release of patient information." },
+            { "term": "Muscular System", "definition": "Gives the body shape, protects internal organs, and allows for body movement." },
+            { "term": "Voluntary Muscles", "definition": "Muscles used for deliberate acts, such as chewing, bending, lifting, and running." },
+            { "term": "Involuntary Muscles (Smooth Muscles)", "definition": "Muscles that carry out automatic body functions and are found in the walls of tube-like organs like ducts and blood vessels." },
+            { "term": "Cardiac Muscles (Smooth Muscles)", "definition": "Involuntary muscles found only in the heart that work constantly to expand and contract it." },
+            { "term": "Nervous System", "definition": "Controls voluntary and involuntary body activity and supports higher mental functions like thought and emotion." },
+            { "term": "Central Nervous System", "definition": "Consists of the brain and the spinal cord; it is the body's 'mainframe computer' where communication and control originate." },
+            { "term": "Peripheral Nervous System", "definition": "Includes nerves that connect to the spinal cord and branch out to every other part of the body, serving as a two-way communication system." },
+            { "term": "Skin", "definition": "The largest organ of the body, which protects everything inside, provides a barrier against bacteria, and regulates body temperature." },
+            { "term": "Asymptomatic", "definition": "Showing no symptoms." },
+            { "term": "Bloodborne Pathogens", "definition": "Microorganisms in human blood that can cause disease in humans." },
+            { "term": "Airborne Pathogens", "definition": "Microorganisms discharged from an infected person that remain suspended in the air and can be breathed in." },
+            { "term": "Advance Directive", "definition": "Documents a patient's request to withhold specific medical care. It is written in advance and signed by the patient and a physician." },
+            { "term": "Epiglottis", "definition": "A small leaf-shaped flap at the upper end of the passageway to the lungs that keeps food and other foreign objects from entering the windpipe." },
+            { "term": "Diaphragm", "definition": "A large muscle below the lungs at the bottom of the chest cavity that helps move air in and out of the lungs." },
+            { "term": "Heart", "definition": "A hollow, muscular organ about the size of your fist that is positioned behind the breastbone." },
+            { "term": "Pathogens", "definition": "Microorganisms, such as bacteria and viruses, that cause disease." },
+            { "term": "Potentially Infectious Materials", "definition": "Include things like bodily fluids, tissues, and organs that may contain pathogens." },
+            { "term": "Universal Precautions", "definition": "A set of procedures developed by the CDC designed to prevent the transmission of bloodborne pathogens to first-aid or health-care providers." },
+            { "term": "Body Substance Isolation (BSI)", "definition": "The practice of isolating yourself from all body substances (not just blood and bodily fluids) of patients undergoing medical treatment. It relies on the use of personal protective equipment (PPE) and practicing personal behaviors that reduce risk." },
+            { "term": "Standard Precautions", "definition": "New infection control measures by the CDC that include elements of universal precautions and BSI, meant to apply to the care of all patients, regardless of suspected or known infection status." },
+            { "term": "Personal Protective Equipment (PPE)", "definition": "A barrier against infection, including eye protection, gloves, protective clothing, masks or shields, and biohazard bags." },
+            { "term": "Hepatitis B Virus", "definition": "A virus that causes hepatitis (inflammation of the liver) and can remain infectious in dried bodily fluids." },
+            { "term": "Hepatitis C Virus", "definition": "The most common chronic bloodborne infection in the United States, primarily transmitted through direct contact with human blood." },
+            { "term": "Human Immunodeficiency Virus (HIV)", "definition": "A bloodborne virus that attacks and weakens the immune system, which can lead to acquired immunodeficiency syndrome (AIDS)." },
+            { "term": "Airborne Disease", "definition": "Any disease that spreads from person to person through the air, often by an infected person talking, coughing, or sneezing." },
+            { "term": "Tuberculosis (TB)", "definition": "An airborne disease that affects the respiratory system and usually transmits through close, confined spaces over extended periods." },
+            { "term": "Methicillin-Resistant Staphylococcus Aureus (MRSA)", "definition": "A type of bacteria that is highly contagious and resistant to certain antibiotics, often causing skin infections." },
+            { "term": "Hepatitis A", "definition": "A highly infectious virus that is primarily spread through person-to-person contact via fecal contamination and oral ingestion." },
+            { "term": "Scene Size-Up", "definition": "A process with four components: scene safety, mechanism of injury or nature of illness, the number of victims, and the need for more rescuers and special equipment." },
+            { "term": "Trauma Patient", "definition": "An injured person." },
+            { "term": "Medical Patient", "definition": "A person who is ill." },
+            { "term": "Patient Assessment", "definition": "The process of evaluating a patient, beginning with a scene size-up and moving from general observation to specific assessments." },
+            { "term": "Level of Consciousness (LOC)", "definition": "A measurement used to indicate how awake, alert, and aware someone is of their surroundings." },
+            { "term": "AVPU", "definition": "An acronym for a scale to measure a patient's level of consciousness: Alert, Verbal, Pain, and Unresponsive." },
+            { "term": "MARCH", "definition": "A mnemonic for the primary assessment priority order: Massive hemorrhage, Airway, Respirations, Circulation, Hypothermia/Head injury." },
+            { "term": "Massive Hemorrhage", "definition": "Uncontrolled severe bleeding, which is the number one preventable cause of trauma-related deaths." },
+            { "term": "Capillary Refill Time", "definition": "A test used to rapidly assess changes in blood flow in the arms and legs by applying pressure to a nail bed." },
+            { "term": "DOTS", "definition": "A mnemonic to use when examining body parts during a secondary assessment: Deformities, Open injuries, Tenderness, and Swelling." },
+            { "term": "PMS", "definition": "A mnemonic to use when examining extremities during a secondary assessment: Pulse, Motor, and Sensory functions." },
+            { "term": "Recovery Position", "definition": "A position for an unresponsive, breathing patient that helps maintain an open airway and may prevent breathing restrictions." },
+            { "term": "Positional Asphyxia", "definition": "Occurs when someone's body is in a position that interferes with or prevents them from breathing adequately." },
+            { "term": "Mass Casualty Incident (MCI)", "definition": "An incident that involves multiple casualties or multiple patients with severe injuries." },
+            { "term": "Triage", "definition": "The process of sorting and categorizing patients to determine the order in which they receive medical attention." },
+            { "term": "START (Simple Triage And Rapid Treatment)", "definition": "A method of triage that assesses patients using RPM (Respiration, Perfusion, Mental status)." },
+            { "term": "Direct Threat Care (Hot Zone)", "definition": "A scene that includes an active threat or any imminent danger where the primary concern is to stop the threat." },
+            { "term": "Indirect Threat Care (Warm Zone)", "definition": "A scene in which an officer is out of imminent danger but not yet in a safer zone; a place of relative safety." },
+            { "term": "Evacuation Care (Cold Zone)", "definition": "A scene in which you are moving towards transporting an injured officer to a medical facility; an area cleared of threats." },
+            { "term": "Fentanyl", "definition": "A synthetic opioid up to 50 times more potent than heroin, which can cause poisoning or overdose." },
+            { "term": "Public Well-Being", "definition": "A key ethical concept mentioned in Lesson 2; placing the public's well-being first helps reduce unethical actions." },
+            { "term": "24/7 Duty to Act", "definition": "A keyword phrase specifying the duty to act for law enforcement officers within their jurisdiction, as opposed to only when on duty for correctional officers." },
+            { "term": "Reasonably Prudent Person", "definition": "A keyword phrase from the definition of negligence that establishes the benchmark for the standard of care." },
+            { "term": "SAMPLE", "definition": "A widely used mnemonic for gathering patient history, the elements of which are described in the text on page 67 (Signs/Symptoms, Allergies, Medications, Past history, Last oral intake, Events leading to injury)." },
+            { "term": "Do the Most for the Most", "definition": "The keyword principle of triage in a Mass Casualty Incident (MCI), emphasizing prioritizing patients to maximize survival across the group." },
+            { "term": "Self-Aid / Self-Application", "definition": "A keyword concept in Care Under Threat, where an injured officer is instructed to render their own first aid (like applying a tourniquet) if capable." },
+            { "term": "High and Tight", "definition": "A keyword phrase for the correct placement of a tourniquet on an extremity in a life-threatening bleeding situation." },
+            { "term": "Wound Packing", "definition": "A keyword technique for controlling bleeding, especially in junctional areas where a tourniquet cannot be used." },
+            { "term": "Burp the Seal", "definition": "A keyword phrase describing the action of lifting the corner of an occlusive dressing to relieve a tension pneumothorax." },
+            { "term": "Respiratory Medical Emergency", "definition": "A keyword phrase describing the primary nature of an opioid overdose, emphasizing the need to ensure the patient is breathing." },
+            { "term": "Overdose", "definition": "When a person takes too much of a substance or more than the recommended amount that the body can safely handle." },
+            { "term": "Opioids", "definition": "A class of drugs used to reduce or relieve pain." },
+            { "term": "Naloxone", "definition": "A medication that rapidly reverses an opioid overdose." },
+            { "term": "Fentanyl", "definition": "A synthetic opioid that mimics morphine but is up to 100 times more potent." },
+            { "term": "Withdrawal", "definition": "A physical, mental, and emotional response to suddenly or slowly quitting the use of substances." },
+            { "term": "Diabetes", "definition": "A chronic illness that influences how the body turns food into energy by affecting how it produces or uses insulin." },
+            { "term": "Insulin", "definition": "A hormone that converts sugar, starches, and other food into energy needed for daily life." },
+            { "term": "Diabetic Emergency", "definition": "A situation caused by a person's blood sugar being too high or too low." },
+            { "term": "Seizure", "definition": "A burst of uncontrolled electrical activity between cells in the brain that causes changes in a person's behavior, awareness, or bodily sensations." },
+            { "term": "Asthma", "definition": "A respiratory condition in which the airway passage narrows due to swelling and mucus, which causes breathing difficulties." },
+            { "term": "Stroke", "definition": "Damage to part of the brain due to the rupture or blockage of a blood vessel." },
+            { "term": "BEFAST", "definition": "A mnemonic to help recognize the signs of a stroke: Balance, Eyes, Face, Arm, Speech, Time." },
+            { "term": "Heart Attack", "definition": "Occurs when a clogged blood vessel blocks blood flow to the heart, preventing it from getting the oxygen it needs." },
+            { "term": "Hyperthermia", "definition": "A condition that occurs when the body cannot recover from fluid loss due to heat, leading to an excessive increase in core body temperature. Its stages include heat cramps, heat exhaustion, and heat stroke." },
+            { "term": "Hypothermia", "definition": "An excessive cooling of the body's core temperature." },
+            { "term": "Frostbite", "definition": "A localized injury from overexposure to extreme cold, causing freezing or near-freezing of a body part." },
+            { "term": "Poisoning", "definition": "A condition that can cause an allergic reaction, injury, or death if a substance is introduced into the body through ingestion, inhalation, injection, or absorption." },
+            { "term": "Anaphylactic Shock (Anaphylaxis)", "definition": "A life-threatening emergency resulting from a severe allergic reaction to substances like insect bites, stings, medications, or certain foods." },
+            { "term": "Epinephrine Auto-Injector", "definition": "A device containing a single dose of epinephrine that, when injected, counteracts an allergic reaction." },
+            { "term": "Labor", "definition": "The process of giving birth, which occurs in stages, with contractions starting in the first stage and delivery of the baby occurring in the second stage." },
+            { "term": "Umbilical Cord", "definition": "A narrow cord of tissue that connects a developing embryo or fetus with the placenta." },
+            { "term": "Placenta", "definition": "An organ that forms during pregnancy and attaches to the uterus, nourishing the fetus through the umbilical cord." },
+            { "term": "Umbilical Cord Prolapse", "definition": "A life-threatening delivery complication where the umbilical cord comes out of the vagina before the newborn." },
+            { "term": "Breech Delivery", "definition": "A delivery complication where the newborn's feet or buttocks present first instead of the head." },
+            { "term": "Abandonment", "definition": "Giving up a right or interest with the intention of never again claiming it; occurs when you stop providing care without ensuring the patient receives the same or better care." },
+            { "term": "Abdominal Evisceration", "definition": "An open wound where the organs protrude from the abdominal cavity." },
+            { "term": "Abrasion", "definition": "An open soft-tissue injury to the outer layer of skin from rubbing or scraping." },
+            { "term": "Acquired Immunodeficiency Syndrome (AIDS)", "definition": "The condition that can develop after the Human Immunodeficiency Virus (HIV) attacks and weakens the immune system." },
+            { "term": "Advance Directive", "definition": "A document for a terminally ill patient, written in advance, that documents their request to withhold specific medical care." },
+            { "term": "Airborne Disease", "definition": "Any disease that spreads from person to person through the air." },
+            { "term": "Airborne Pathogens", "definition": "Microorganisms discharged from an infected person that remain suspended in the air and can be breathed in." },
+            { "term": "Amputation", "definition": "The loss or removal of a limb or body part." },
+            { "term": "Anaphylactic Shock (Anaphylaxis)", "definition": "A severe, life-threatening allergic reaction." },
+            { "term": "Arterial Bleeding", "definition": "Bright red blood spurting from a wound, indicating a severed or damaged artery." },
+            { "term": "Asymptomatic", "definition": "Showing no symptoms of a disease." },
+            { "term": "Asthma", "definition": "A respiratory condition where the airway narrows due to swelling and mucus, causing breathing difficulties." },
+            { "term": "AVPU", "definition": "A mnemonic for a scale to measure a patient's level of consciousness: Alert, Verbal, Pain, Unresponsive." },
+            { "term": "Bandage", "definition": "A covering that holds dressings in place." },
+            { "term": "BEFAST", "definition": "A mnemonic to help recognize the signs of a stroke: Balance, Eyes, Face, Arm, Speech, Time." },
+            { "term": "Bloodborne Pathogens", "definition": "Microorganisms in human blood that can cause disease." },
+            { "term": "Body Substance Isolation (BSI)", "definition": "The practice of isolating yourself from all body substances of all patients." },
+            { "term": "Breach of Duty", "definition": "Occurs when you either fail to act or act inappropriately when having a duty to act." },
+            { "term": "Breech Delivery", "definition": "A delivery where the newborn's feet or buttocks present first." },
+            { "term": "Bruising", "definition": "A closed, discolored injury that is somewhat flat and tender." },
+            { "term": "Burns", "definition": "Tissue damage caused by exposure to heat, chemical or electrical contact, or radiation." },
+            { "term": "Capillary Bleeding", "definition": "Dark red blood oozing slowly from a wound, indicating damaged capillaries." },
+            { "term": "Cardiac Arrest", "definition": "Occurs when the heart is no longer pumping blood throughout the body." },
+            { "term": "Care Under Fire (Direct Threat Care / Hot Zone)", "definition": "A scene that includes an active threat where the primary concern is to stop the threat." },
+            { "term": "CDC (Centers for Disease Control & Prevention)", "definition": "The U.S. agency that developed universal and standard precautions for infection control." },
+            { "term": "Chemical Burn", "definition": "A burn caused by exposure to a liquid or dry powder on the skin." },
+            { "term": "Closed Chest Injury", "definition": "An injury from blunt force trauma to the chest area." },
+            { "term": "Closed Fracture", "definition": "A fracture where the skin at the injury site remains intact." },
+            { "term": "Cold Zone (Evacuation Care)", "definition": "An area cleared of threats where you are moving toward transporting the patient to a medical facility." },
+            { "term": "Competent Adult", "definition": "One who can make an informed decision about medical care." },
+            { "term": "Concussion", "definition": "A term often used to refer to a mild traumatic brain injury (TBI)." },
+            { "term": "Diabetes", "definition": "A chronic illness that influences how the body produces or properly uses insulin." },
+            { "term": "Dislocation", "definition": "An injury where trauma forces the end of a bone from its normal position at a joint." },
+            { "term": "DNR/DNRO (Do-Not-Resuscitate Order)", "definition": "A directive for a terminally ill patient to refuse CPR." },
+            { "term": "DOTS", "definition": "A mnemonic for examining body parts: Deformities, Open injuries, Tenderness, Swelling." },
+            { "term": "Dressing", "definition": "A sterile pad applied directly to a wound." },
+            { "term": "Duty to Act", "definition": "The contractual or legal obligation to provide care." },
+            { "term": "Electrical Burn", "definition": "A burn caused by exposure to an electrical current or lightning." },
+            { "term": "Emancipated Minor", "definition": "A minor who is financially independent, married, in the military, or does not live with a parent and can provide their own consent." },
+            { "term": "EMS (Emergency Medical Services) System", "definition": "A network of trained professionals linked to provide advanced, out-of-hospital care." },
+            { "term": "Epinephrine", "definition": "A medication used to counteract a severe allergic reaction (anaphylaxis)." },
+            { "term": "Evisceration (Abdominal)", "definition": "An open wound where organs protrude from the abdominal cavity." },
+            { "term": "Expressed Consent", "definition": "Permission for an action that is clearly and unmistakably stated or written." },
+            { "term": "Extruded Eyeball", "definition": "An eyeball that is forced out of its socket." },
+            { "term": "Fentanyl", "definition": "A highly potent synthetic opioid." },
+            { "term": "Flail Chest", "definition": "An injury where two or more adjacent ribs are fractured in two or more places." },
+            { "term": "Fracture", "definition": "The medical term for a broken bone." },
+            { "term": "Frostbite", "definition": "A localized injury from overexposure to extreme cold." },
+            { "term": "Full-Thickness Burn (Third-Degree)", "definition": "A burn that damages all skin layers and often affects muscles and nerves." },
+            { "term": "Good Samaritan Act", "definition": "Protects a first-aid provider from liability for care performed in good faith." },
+            { "term": "Heart Attack", "definition": "Occurs when a clogged blood vessel blocks blood flow to the heart." },
+            { "term": "Hemostatic Dressing", "definition": "A wound dressing containing an agent that promotes blood clotting." },
+            { "term": "Hepatitis A, B, and C", "definition": "Viruses that cause inflammation of the liver (hepatitis)." },
+            { "term": "HIPAA (Health Insurance Portability and Accountability Act)", "definition": "Protects the rights of patients and the release of patient information." },
+            { "term": "HIV (Human Immunodeficiency Virus)", "definition": "A bloodborne virus that attacks the immune system." },
+            { "term": "Hot Zone (Direct Threat Care)", "definition": "A scene that includes an active threat." },
+            { "term": "Hyperthermia", "definition": "A condition where the body's core temperature rises to a dangerous level." },
+            { "term": "Hypothermia", "definition": "An excessive cooling of the body's core temperature." },
+            { "term": "ICS (Incident Command System)", "definition": "The system implemented in Florida for multiple agency responses in times of disaster." },
+            { "term": "Impaled Object", "definition": "An object that punctures the soft tissue and stays in place." },
+            { "term": "Implied Consent", "definition": "Consent assumed from a person's actions or in a life-threatening situation where a person is unresponsive." },
+            { "term": "Informed Consent", "definition": "A person's agreement to a procedure after being told the facts, benefits, risks, and alternatives." },
+            { "term": "Inhalation Burn", "definition": "A burn to any part of the airway caused by smoke or chemicals." },
+            { "term": "Insulin", "definition": "A hormone that converts sugar, starches, and other food into energy." },
+            { "term": "Jaw Thrust Maneuver", "definition": "A technique to open the airway of a patient with a suspected spinal injury." },
+            { "term": "Junctional Bleeding", "definition": "Bleeding that occurs where an extremity meets the torso (neck, armpit, groin)." },
+            { "term": "Labor", "definition": "The process of giving birth." },
+            { "term": "Laceration", "definition": "A cut in the skin." },
+            { "term": "Level of Consciousness (LOC)", "definition": "An indicator of how awake, alert, and aware someone is." },
+            { "term": "Log Roll", "definition": "A technique to roll a patient while maintaining spinal alignment." },
+            { "term": "MARCH", "definition": "Mnemonic for primary assessment priorities: Massive hemorrhage, Airway, Respirations, Circulation, Hypothermia/Head injury." },
+            { "term": "Mass Casualty Incident (MCI)", "definition": "An incident involving multiple patients with severe injuries." },
+            { "term": "Medical Patient", "definition": "A person who is ill." },
+            { "term": "MRSA (Methicillin-Resistant Staphylococcus Aureus)", "definition": "A highly contagious, antibiotic-resistant bacteria." },
+            { "term": "Naloxone", "definition": "A medication that rapidly reverses an opioid overdose." },
+            { "term": "Negligence", "definition": "The failure to exercise the standard of care that a reasonably prudent person would have." },
+            { "term": "Occlusive Dressing", "definition": "An air and water tight dressing used for chest wounds." },
+            { "term": "Open Chest Injury", "definition": "An injury where there is penetration through the chest wall." },
+            { "term": "Open Fracture", "definition": "A fracture where the skin at the injury site is broken." },
+            { "term": "Opioids", "definition": "A class of drugs used to reduce or relieve pain." },
+            { "term": "OSHA (Occupational Safety and Health Administration)", "definition": "The federal agency that sets requirements for handling biohazardous wastes." },
+            { "term": "Overdose", "definition": "Taking more of a substance than the body can safely handle." },
+            { "term": "Partial-Thickness Burn (Second-Degree)", "definition": "A burn that damages the first two skin layers and causes blisters." },
+            { "term": "Personal Protective Equipment (PPE)", "definition": "A barrier against infection, including gloves, masks, and eye protection." },
+            { "term": "Placenta", "definition": "The organ that nourishes the fetus during pregnancy." },
+            { "term": "PMS", "definition": "Mnemonic for assessing extremities: Pulse, Motor, Sensory." },
+            { "term": "Poisoning", "definition": "Injury or death from a substance introduced into the body." },
+            { "term": "Positional Asphyxia", "definition": "When a person's body position interferes with their ability to breathe." },
+            { "term": "Puncture Wound", "definition": "An injury from a sharp object that penetrates the skin." },
+            { "term": "Recovery Position", "definition": "A position for an unresponsive, breathing patient to help maintain an open airway." },
+            { "term": "RPM", "definition": "Mnemonic for START triage assessment: Respiration, Perfusion, Mental status." },
+            { "term": "SALT", "definition": "Triage method: Sort, Assess, Life-saving interventions, Treatment/transport." },
+            { "term": "Shaken Baby Syndrome (SBS)", "definition": "A type of abusive head trauma in infants." },
+            { "term": "Shock", "definition": "The failure of the heart and blood vessels to maintain enough oxygen-rich blood flowing to vital organs." },
+            { "term": "Spinal Motion Restriction", "definition": "Minimizing movement of a patient's spine." },
+            { "term": "Sprain", "definition": "An injury to a ligament." },
+            { "term": "Standard Precautions", "definition": "CDC procedures to prevent transmission of both airborne and bloodborne pathogens." },
+            { "term": "START (Simple Triage And Rapid Treatment)", "definition": "A method of triage for mass casualty incidents." },
+            { "term": "Strain", "definition": "An injury to a muscle or a tendon." },
+            { "term": "Stroke", "definition": "Damage to the brain due to rupture or blockage of a blood vessel." },
+            { "term": "Sucking Chest Injury", "definition": "An open chest injury with a larger hole that makes a sucking sound during breathing." },
+            { "term": "Superficial Burn (First-Degree)", "definition": "A burn that damages the first layer of skin." },
+            { "term": "Swelling", "definition": "A closed, discolored injury that is a raised, firm, and painful lump." },
+            { "term": "Tactical Field Care (Indirect Threat Care / Warm Zone)", "definition": "A scene where an officer is out of imminent danger but not yet in a fully safe zone." },
+            { "term": "Tension Pneumothorax", "definition": "A life-threatening condition where air builds up in the chest cavity, creating pressure on the heart." },
+            { "term": "Thermal Burn", "definition": "A burn caused by exposure to heat." },
+            { "term": "Tourniquet", "definition": "A device that restricts blood flow to an extremity to stop life-threatening bleeding." },
+            { "term": "Trauma Patient", "definition": "An injured person." },
+            { "term": "Traumatic Brain Injury (TBI)", "definition": "Damage to the brain from sudden trauma." },
+            { "term": "Triage", "definition": "The process of sorting and categorizing patients based on the severity of their injuries." },
+            { "term": "Tuberculosis (TB)", "definition": "An airborne disease that affects the respiratory system." },
+            { "term": "Umbilical Cord", "definition": "The cord that connects a developing fetus with the placenta." },
+            { "term": "Umbilical Cord Prolapse", "definition": "A delivery complication where the cord comes out before the newborn." },
+            { "term": "Universal Precautions", "definition": "CDC procedures designed to prevent transmission of bloodborne pathogens." },
+            { "term": "Venous Bleeding", "definition": "Dark red blood flowing steadily from a wound, indicating a severed vein." },
+            { "term": "Vented Chest Seal", "definition": "An airtight dressing for chest wounds that acts as a one-way valve." },
+            { "term": "Warm Zone (Indirect Threat Care)", "definition": "An area of relative safety at a scene that is not yet fully secured." },
+            { "term": "Withdrawal", "definition": "The physical, mental, and emotional response to quitting a substance." }
+        ],
+        "matching": [
+                        { "term": "Shock", "definition": "The failure of the heart and blood vessels to maintain enough oxygen-rich blood flowing to the vital organs of the body" },
+            { "term": "Closed Soft-Tissue Injury", "definition": "Any injury that is bleeding internally or has pooling blood under the skin" },
+            { "term": "Airborne disease", "definition": "Any disease that spreads from person to person through the air" },
+            { "term": "Open Soft-Tissue Injury", "definition": "Any injury where the skin is open, which may lead to external bleeding" },
+            { "term": "Airway", "definition": "The passage in the body through which air travels to the lungs" },
+            { "term": "Arterial Bleeding", "definition": "Bright red blood spurting or flowing from a wound, indicating a severed or damaged artery" },
+            { "term": "AVPU Scale", "definition": "A scale to measure a patient's level of consciousness: Alert, Verbal, Pain, and Unresponsive" },
+            { "term": "Venous Bleeding", "definition": "Dark red blood flowing steadily from a wound, indicating a severed or damaged vein" },
+            { "term": "Body Substance Isolation (BSI)", "definition": "The practice of isolating yourself from all body substances of patients, which mainly relies on the use of personal protective equipment (PPE) and practicing personal behaviors that reduce risk" },
+            { "term": "Capillary Bleeding", "definition": "Dark red blood oozing slowly from a wound, indicating damaged capillaries" },
+            { "term": "COVID-19", "definition": "A respiratory illness caused by the SARS-CoV-2 virus" },
+            { "term": "Tourniquet", "definition": "A device that restricts the flow of blood to an extremity" },
+            { "term": "Direct Threat Care (Hot Zone / Care Under Fire)", "definition": "A scene that includes an active threat or any imminent danger where the primary concern is to stop the threat" },
+            { "term": "Dressing", "definition": "A sterile pad applied directly to a wound to promote healing and protect the wound from further harm" },
+            { "term": "Emergency Drag", "definition": "A technique used to move a patient quickly when they are in immediate danger" },
+            { "term": "Hemostatic Gauze or Dressing", "definition": "A wound dressing containing an agent that promotes blood clotting" },
+            { "term": "Evacuation Care (Cold Zone / Tactical Evacuation Care)", "definition": "A scene in which you are moving towards transporting an injured officer to a medical treatment facility; an area cleared of threats" },
+            { "term": "Bandage", "definition": "A covering that holds dressings in place and does not touch the wound" },
+            { "term": "Extremity Lift", "definition": "A non-emergency move, often easier than drags, that requires at least two officers' efforts to move a patient from the floor or ground" },
+            { "term": "Junctional Bleeding", "definition": "Bleeding that occurs at a junction of the torso to the extremities, such as the neck, armpit, or groin" },
+            { "term": "AED (Automated External Defibrillator)", "definition": "A medical device used to deliver an electrical shock to a patient in cardiac arrest" },
+            { "term": "Hepatitis A", "definition": "A highly infectious virus primarily spread through person-to-person contact via fecal contamination and oral ingestion" },
+            { "term": "Impaled Object", "definition": "An object that punctures the soft tissue and stays in place" },
+            { "term": "Hepatitis B", "definition": "A virus that causes inflammation of the liver and is primarily transmitted through sexual contact or sharing contaminated needles" },
+            { "term": "Gunshot Wound Cavity", "definition": "The space left by tissue that is destroyed or displaced by the passage of a bullet" },
+            { "term": "Hepatitis C", "definition": "The most common chronic bloodborne infection in the United States, primarily transmitted through direct contact with human blood" },
+            { "term": "Spinal Motion Restriction", "definition": "A procedure for minimizing movement of a patient's head, neck, and spine" },
+            { "term": "HIV (Human Immunodeficiency Virus)", "definition": "A bloodborne virus that attacks and weakens the immune system" },
+            { "term": "Jaw Thrust Maneuver", "definition": "A maneuver to open the airway of an unresponsive patient with a suspected neck or spinal injury" },
+            { "term": "Traumatic Brain Injury (TBI)", "definition": "A brain injury that occurs when sudden trauma causes damage to the brain" },
+            { "term": "ICS (Incident Command System)", "definition": "The system Florida implements for multiple agency response in times of disaster" },
+            { "term": "Shaken Baby Syndrome (SBS)", "definition": "A type of abusive head trauma caused by the violent shaking of an infant or young child" },
+            { "term": "Indirect Threat Care (Warm Zone / Tactical Field Care)", "definition": "A scene in which the officer is out of imminent danger but not yet in a safer, fully secured zone" },
+            { "term": "Extruded Eyeball", "definition": "An eyeball that is forced out of its socket" },
+            { "term": "LOC (Level of Consciousness)", "definition": "An indicator used to determine how awake, alert, and aware someone is of their surroundings" },
+            { "term": "Closed Chest Injury", "definition": "An injury resulting from blunt force trauma to the chest area, which can damage internal organs and cause internal bleeding" },
+            { "term": "Logroll", "definition": "A technique to roll a patient onto their back, front, or side while maintaining spinal alignment, ideally performed with at least three people" },
+            { "term": "Flail Chest", "definition": "An injury that occurs when two or more adjacent ribs are fractured in two or more places, causing the broken segment to move opposite to the rest of the chest" },
+            { "term": "Massive Hemorrhage", "definition": "Uncontrolled severe bleeding, which is the number one preventable cause of trauma-related deaths" },
+            { "term": "Open Chest Injury", "definition": "An injury that occurs when there is a penetration through the chest wall" },
+            { "term": "MCI (Mass Casualty Incident)", "definition": "An incident that involves multiple casualties or multiple patients with severe injuries" },
+            { "term": "Sucking Chest Injury", "definition": "A type of open chest injury with a larger hole where air moving through it causes a sucking sound" },
+            { "term": "Mechanism of Injury or Nature of Illness", "definition": "A determination of what happened to a patient, which helps judge the extent of injury or illness" },
+            { "term": "Vented Chest Seal", "definition": "A type of airtight dressing that acts as a one-way valve, allowing air to escape the chest cavity but not enter" },
+            { "term": "Medical patient", "definition": "A person who is ill" },
+            { "term": "Occlusive Dressing", "definition": "An air and water tight dressing" },
+            { "term": "MRSA (Methicillin-Resistant Staphylococcus Aureus)", "definition": "A type of bacteria that is highly contagious, resistant to certain antibiotics, and occurs most frequently among people in hospitals, health-care facilities, and detention facilities" },
+            { "term": "Tension Pneumothorax", "definition": "A situation in which air builds up in the chest cavity, causing tension that can prevent the return of blood to the heart" },
+            { "term": "OSHA (Occupational Safety and Health Administration)", "definition": "The federal agency that requires color-coded bags or containers for storing biomedical waste" },
+            { "term": "Abdominal Evisceration", "definition": "An open wound where the organs protrude from the abdominal cavity" },
+            { "term": "PPE (Personal Protective Equipment)", "definition": "A barrier against infection which includes eye protection, gloves, protective clothing, masks or shields, and biohazard bags" },
+            { "term": "Fracture", "definition": "The medical term for a broken bone" },
+            { "term": "Positional Asphyxia", "definition": "Occurs when a person's body is in a position that interferes with or prevents them from breathing adequately" },
+            { "term": "Open Fracture", "definition": "A fracture where the skin at the injury site is open, and the bone may protrude" },
+            { "term": "Primary assessment", "definition": "A rapid assessment to identify and address any immediate life-threatening conditions" },
+            { "term": "Closed Fracture", "definition": "A fracture where the skin at the injury site remains intact" },
+            { "term": "Recovery Position", "definition": "A position for an unresponsive, breathing patient with no suspected neck or back injuries that helps maintain an open airway" },
+            { "term": "Dislocation", "definition": "An injury that occurs when trauma forces the end of a bone from its normal position at a joint" },
+            { "term": "SALT", "definition": "A method of triage that stands for Sort, Assess, Life-saving interventions, Treatment/transport" },
+            { "term": "Strain", "definition": "An injury to a muscle or a tendon that becomes overstretched, sometimes called a pulled muscle" },
+            { "term": "Secondary assessment", "definition": "A thorough, full head-to-toe assessment of a patient" },
+            { "term": "Sprain", "definition": "An injury to a ligament, or the strong bands of tissue that connect bones together in a joint" },
+            { "term": "Shock", "definition": "A condition that any injury requiring MARCH interventions is likely to result in" },
+            { "term": "Amputation", "definition": "The loss or removal of a limb or body part" },
+            { "term": "Standard Precautions", "definition": "A set of infection control measures by the CDC meant to apply to all patients, under which all bodily fluids (except sweat) should be treated as potentially infectious" },
+            { "term": "Superficial Burn (First-Degree)", "definition": "A burn that damages the first layer of skin, which becomes red and feels very painful" },
+            { "term": "Trauma patient", "definition": "An injured person" },
+            { "term": "Partial-Thickness Burn (Second-Degree)", "definition": "A burn that damages the first two skin layers, causing blisters and red, white, or splotchy skin" },
+            { "term": "Triage", "definition": "The process of sorting and categorizing patients to determine the order in which they receive medical attention" },
+            { "term": "Full-Thickness Burn (Third-Degree)", "definition": "A burn that damages all skin layers and often affects the muscles and nerves underneath, causing the skin to look waxy, white, or charred" },
+            { "term": "Tripod Position", "definition": "A position of comfort where a patient sits down while leaning forward with their arms resting on their knees" },
+            { "term": "Chemical Burn", "definition": "A burn caused by exposure to a liquid or dry powder on the skin" },
+            { "term": "Tuberculosis", "definition": "An airborne disease that affects the respiratory system" },
+            { "term": "Electrical Burn", "definition": "A burn caused by exposure to an electrical current or lightning" },
+            { "term": "Universal Precautions", "definition": "A set of procedures developed by the CDC designed to prevent the transmission of bloodborne pathogens" },
+            { "term": "Inhalation Burn", "definition": "A burn to any part of the airway, caused by exposure to smoke or chemicals through the respiratory system. 373" },
+            { "term": "Vehicle Dump", "definition": "A procedure for loading a patient into a vehicle to transport them to higher care" },
+            { "term": "EMS system (Emergency Medical Services system)", "definition": "A network of trained professionals linked to provide advanced, out-of-hospital care for victims of sudden traumatic injury or illness." },
+            { "term": "Vital Signs", "definition": "A patient's pulse and breathing rate" },
+            { "term": "Duty to Act", "definition": "A duty to take some action to prevent harm to another, and for the failure of which one may be liable, depending on the relationship of the parties and the circumstances. For criminal justice officers, it refers to the contractual or legal obligation to provide care." },
+            { "term": "Hypothermia", "definition": "A condition that can be a concern when treating trauma patients, as rapidly decreasing body temperature can make bleeding symptoms worse. 151" },
+            { "term": "Breach of Duty", "definition": "Occurs when you either fail to act or act inappropriately." },
+            { "term": "Standard or Scope of Care", "definition": "The degree of care that a reasonable person should exercise. It is the care you are expected to provide to the same patient under the same conditions as would any criminal justice first-aid provider with the same level of training." },
+            { "term": "Good Samaritan Act", "definition": "Protects a first-aid provider from liability for emergency care performed in good faith or as expected of another provider with equal training. It does not prevent someone from filing a lawsuit but may provide a defense." },
+            { "term": "Abandonment", "definition": "Giving up a right or interest with the intention of never again claiming it. In first aid, it occurs when you stop providing care without ensuring the patient receives the same or better care." },
+            { "term": "Negligence", "definition": "The failure to exercise the standard of care that a reasonably prudent person would have exercised in a similar situation." },
+            { "term": "Expressed Consent", "definition": "Permission for an action that is clearly and unmistakably stated or written by the patient or legal guardian." },
+            { "term": "Implied Consent", "definition": "The assumption that a person has given permission for an action because of their actions, rather than being explicitly expressed. It also applies to an unresponsive patient at risk of death, where it's assumed they would agree to care." },
+            { "term": "Informed Consent", "definition": "A person's agreement to allow something to happen, made with full knowledge of the facts, benefits, risks, and alternatives." },
+            { "term": "Competent Adult", "definition": "One who can make an informed decision about medical care and understands the questions and implications of those decisions." },
+            { "term": "Minor", "definition": "In Florida, children younger than 18 years of age." },
+            { "term": "Emancipated Minor", "definition": "A minor who is financially independent, married, an active member of the military, or does not live with a parent or caregiver and can provide their own consent for treatment." },
+            { "term": "Do-Not-Resuscitate Order (DNR/DNRO)", "definition": "A document for a terminally or chronically ill patient that states their wish to refuse cardiopulmonary resuscitation (CPR)." },
+            { "term": "Medical Alert", "definition": "A bracelet, necklace, or card that alerts you to a specific medical condition such as an allergy, epilepsy, or diabetes." },
+            { "term": "HIPAA (Health Insurance Portability and Accountability Act)", "definition": "Protects the rights of patients and the release of patient information." },
+            { "term": "Muscular System", "definition": "Gives the body shape, protects internal organs, and allows for body movement." },
+            { "term": "Voluntary Muscles", "definition": "Muscles used for deliberate acts, such as chewing, bending, lifting, and running." },
+            { "term": "Involuntary Muscles (Smooth Muscles)", "definition": "Muscles that carry out automatic body functions and are found in the walls of tube-like organs like ducts and blood vessels." },
+            { "term": "Cardiac Muscles (Smooth Muscles)", "definition": "Involuntary muscles found only in the heart that work constantly to expand and contract it." },
+            { "term": "Nervous System", "definition": "Controls voluntary and involuntary body activity and supports higher mental functions like thought and emotion." },
+            { "term": "Central Nervous System", "definition": "Consists of the brain and the spinal cord; it is the body's 'mainframe computer' where communication and control originate." },
+            { "term": "Peripheral Nervous System", "definition": "Includes nerves that connect to the spinal cord and branch out to every other part of the body, serving as a two-way communication system." },
+            { "term": "Skin", "definition": "The largest organ of the body, which protects everything inside, provides a barrier against bacteria, and regulates body temperature." },
+            { "term": "Asymptomatic", "definition": "Showing no symptoms." },
+            { "term": "Bloodborne Pathogens", "definition": "Microorganisms in human blood that can cause disease in humans." },
+            { "term": "Airborne Pathogens", "definition": "Microorganisms discharged from an infected person that remain suspended in the air and can be breathed in." },
+            { "term": "Advance Directive", "definition": "Documents a patient's request to withhold specific medical care. It is written in advance and signed by the patient and a physician." },
+            { "term": "Epiglottis", "definition": "A small leaf-shaped flap at the upper end of the passageway to the lungs that keeps food and other foreign objects from entering the windpipe." },
+            { "term": "Diaphragm", "definition": "A large muscle below the lungs at the bottom of the chest cavity that helps move air in and out of the lungs." },
+            { "term": "Heart", "definition": "A hollow, muscular organ about the size of your fist that is positioned behind the breastbone." },
+            { "term": "Pathogens", "definition": "Microorganisms, such as bacteria and viruses, that cause disease." },
+            { "term": "Potentially Infectious Materials", "definition": "Include things like bodily fluids, tissues, and organs that may contain pathogens." },
+            { "term": "Universal Precautions", "definition": "A set of procedures developed by the CDC designed to prevent the transmission of bloodborne pathogens to first-aid or health-care providers." },
+            { "term": "Body Substance Isolation (BSI)", "definition": "The practice of isolating yourself from all body substances (not just blood and bodily fluids) of patients undergoing medical treatment. It relies on the use of personal protective equipment (PPE) and practicing personal behaviors that reduce risk." },
+            { "term": "Standard Precautions", "definition": "New infection control measures by the CDC that include elements of universal precautions and BSI, meant to apply to the care of all patients, regardless of suspected or known infection status." },
+            { "term": "Personal Protective Equipment (PPE)", "definition": "A barrier against infection, including eye protection, gloves, protective clothing, masks or shields, and biohazard bags." },
+            { "term": "Hepatitis B Virus", "definition": "A virus that causes hepatitis (inflammation of the liver) and can remain infectious in dried bodily fluids." },
+            { "term": "Hepatitis C Virus", "definition": "The most common chronic bloodborne infection in the United States, primarily transmitted through direct contact with human blood." },
+            { "term": "Human Immunodeficiency Virus (HIV)", "definition": "A bloodborne virus that attacks and weakens the immune system, which can lead to acquired immunodeficiency syndrome (AIDS)." },
+            { "term": "Airborne Disease", "definition": "Any disease that spreads from person to person through the air, often by an infected person talking, coughing, or sneezing." },
+            { "term": "Tuberculosis (TB)", "definition": "An airborne disease that affects the respiratory system and usually transmits through close, confined spaces over extended periods." },
+            { "term": "Methicillin-Resistant Staphylococcus Aureus (MRSA)", "definition": "A type of bacteria that is highly contagious and resistant to certain antibiotics, often causing skin infections." },
+            { "term": "Hepatitis A", "definition": "A highly infectious virus that is primarily spread through person-to-person contact via fecal contamination and oral ingestion." },
+            { "term": "Scene Size-Up", "definition": "A process with four components: scene safety, mechanism of injury or nature of illness, the number of victims, and the need for more rescuers and special equipment." },
+            { "term": "Trauma Patient", "definition": "An injured person." },
+            { "term": "Medical Patient", "definition": "A person who is ill." },
+            { "term": "Patient Assessment", "definition": "The process of evaluating a patient, beginning with a scene size-up and moving from general observation to specific assessments." },
+            { "term": "Level of Consciousness (LOC)", "definition": "A measurement used to indicate how awake, alert, and aware someone is of their surroundings." },
+            { "term": "AVPU", "definition": "An acronym for a scale to measure a patient's level of consciousness: Alert, Verbal, Pain, and Unresponsive." },
+            { "term": "MARCH", "definition": "A mnemonic for the primary assessment priority order: Massive hemorrhage, Airway, Respirations, Circulation, Hypothermia/Head injury." },
+            { "term": "Massive Hemorrhage", "definition": "Uncontrolled severe bleeding, which is the number one preventable cause of trauma-related deaths." },
+            { "term": "Capillary Refill Time", "definition": "A test used to rapidly assess changes in blood flow in the arms and legs by applying pressure to a nail bed." },
+            { "term": "DOTS", "definition": "A mnemonic to use when examining body parts during a secondary assessment: Deformities, Open injuries, Tenderness, and Swelling." },
+            { "term": "PMS", "definition": "A mnemonic to use when examining extremities during a secondary assessment: Pulse, Motor, and Sensory functions." },
+            { "term": "Recovery Position", "definition": "A position for an unresponsive, breathing patient that helps maintain an open airway and may prevent breathing restrictions." },
+            { "term": "Positional Asphyxia", "definition": "Occurs when someone's body is in a position that interferes with or prevents them from breathing adequately." },
+            { "term": "Mass Casualty Incident (MCI)", "definition": "An incident that involves multiple casualties or multiple patients with severe injuries." },
+            { "term": "Triage", "definition": "The process of sorting and categorizing patients to determine the order in which they receive medical attention." },
+            { "term": "START (Simple Triage And Rapid Treatment)", "definition": "A method of triage that assesses patients using RPM (Respiration, Perfusion, Mental status)." },
+            { "term": "Direct Threat Care (Hot Zone)", "definition": "A scene that includes an active threat or any imminent danger where the primary concern is to stop the threat." },
+            { "term": "Indirect Threat Care (Warm Zone)", "definition": "A scene in which an officer is out of imminent danger but not yet in a safer zone; a place of relative safety." },
+            { "term": "Evacuation Care (Cold Zone)", "definition": "A scene in which you are moving towards transporting an injured officer to a medical facility; an area cleared of threats." },
+            { "term": "Fentanyl", "definition": "A synthetic opioid up to 50 times more potent than heroin, which can cause poisoning or overdose." },
+            { "term": "Public Well-Being", "definition": "A key ethical concept mentioned in Lesson 2; placing the public's well-being first helps reduce unethical actions." },
+            { "term": "24/7 Duty to Act", "definition": "A keyword phrase specifying the duty to act for law enforcement officers within their jurisdiction, as opposed to only when on duty for correctional officers." },
+            { "term": "Reasonably Prudent Person", "definition": "A keyword phrase from the definition of negligence that establishes the benchmark for the standard of care." },
+            { "term": "SAMPLE", "definition": "A widely used mnemonic for gathering patient history, the elements of which are described in the text on page 67 (Signs/Symptoms, Allergies, Medications, Past history, Last oral intake, Events leading to injury)." },
+            { "term": "Do the Most for the Most", "definition": "The keyword principle of triage in a Mass Casualty Incident (MCI), emphasizing prioritizing patients to maximize survival across the group." },
+            { "term": "Self-Aid / Self-Application", "definition": "A keyword concept in Care Under Threat, where an injured officer is instructed to render their own first aid (like applying a tourniquet) if capable." },
+            { "term": "High and Tight", "definition": "A keyword phrase for the correct placement of a tourniquet on an extremity in a life-threatening bleeding situation." },
+            { "term": "Wound Packing", "definition": "A keyword technique for controlling bleeding, especially in junctional areas where a tourniquet cannot be used." },
+            { "term": "Burp the Seal", "definition": "A keyword phrase describing the action of lifting the corner of an occlusive dressing to relieve a tension pneumothorax." },
+            { "term": "Respiratory Medical Emergency", "definition": "A keyword phrase describing the primary nature of an opioid overdose, emphasizing the need to ensure the patient is breathing." },
+            { "term": "Overdose", "definition": "When a person takes too much of a substance or more than the recommended amount that the body can safely handle." },
+            { "term": "Opioids", "definition": "A class of drugs used to reduce or relieve pain." },
+            { "term": "Naloxone", "definition": "A medication that rapidly reverses an opioid overdose." },
+            { "term": "Fentanyl", "definition": "A synthetic opioid that mimics morphine but is up to 100 times more potent." },
+            { "term": "Withdrawal", "definition": "A physical, mental, and emotional response to suddenly or slowly quitting the use of substances." },
+            { "term": "Diabetes", "definition": "A chronic illness that influences how the body turns food into energy by affecting how it produces or uses insulin." },
+            { "term": "Insulin", "definition": "A hormone that converts sugar, starches, and other food into energy needed for daily life." },
+            { "term": "Diabetic Emergency", "definition": "A situation caused by a person's blood sugar being too high or too low." },
+            { "term": "Seizure", "definition": "A burst of uncontrolled electrical activity between cells in the brain that causes changes in a person's behavior, awareness, or bodily sensations." },
+            { "term": "Asthma", "definition": "A respiratory condition in which the airway passage narrows due to swelling and mucus, which causes breathing difficulties." },
+            { "term": "Stroke", "definition": "Damage to part of the brain due to the rupture or blockage of a blood vessel." },
+            { "term": "BEFAST", "definition": "A mnemonic to help recognize the signs of a stroke: Balance, Eyes, Face, Arm, Speech, Time." },
+            { "term": "Heart Attack", "definition": "Occurs when a clogged blood vessel blocks blood flow to the heart, preventing it from getting the oxygen it needs." },
+            { "term": "Hyperthermia", "definition": "A condition that occurs when the body cannot recover from fluid loss due to heat, leading to an excessive increase in core body temperature. Its stages include heat cramps, heat exhaustion, and heat stroke." },
+            { "term": "Hypothermia", "definition": "An excessive cooling of the body's core temperature." },
+            { "term": "Frostbite", "definition": "A localized injury from overexposure to extreme cold, causing freezing or near-freezing of a body part." },
+            { "term": "Poisoning", "definition": "A condition that can cause an allergic reaction, injury, or death if a substance is introduced into the body through ingestion, inhalation, injection, or absorption." },
+            { "term": "Anaphylactic Shock (Anaphylaxis)", "definition": "A life-threatening emergency resulting from a severe allergic reaction to substances like insect bites, stings, medications, or certain foods." },
+            { "term": "Epinephrine Auto-Injector", "definition": "A device containing a single dose of epinephrine that, when injected, counteracts an allergic reaction." },
+            { "term": "Labor", "definition": "The process of giving birth, which occurs in stages, with contractions starting in the first stage and delivery of the baby occurring in the second stage." },
+            { "term": "Umbilical Cord", "definition": "A narrow cord of tissue that connects a developing embryo or fetus with the placenta." },
+            { "term": "Placenta", "definition": "An organ that forms during pregnancy and attaches to the uterus, nourishing the fetus through the umbilical cord." },
+            { "term": "Umbilical Cord Prolapse", "definition": "A life-threatening delivery complication where the umbilical cord comes out of the vagina before the newborn." },
+            { "term": "Breech Delivery", "definition": "A delivery complication where the newborn's feet or buttocks present first instead of the head." },
+            { "term": "Abandonment", "definition": "Giving up a right or interest with the intention of never again claiming it; occurs when you stop providing care without ensuring the patient receives the same or better care." },
+            { "term": "Abdominal Evisceration", "definition": "An open wound where the organs protrude from the abdominal cavity." },
+            { "term": "Abrasion", "definition": "An open soft-tissue injury to the outer layer of skin from rubbing or scraping." },
+            { "term": "Acquired Immunodeficiency Syndrome (AIDS)", "definition": "The condition that can develop after the Human Immunodeficiency Virus (HIV) attacks and weakens the immune system." },
+            { "term": "Advance Directive", "definition": "A document for a terminally ill patient, written in advance, that documents their request to withhold specific medical care." },
+            { "term": "Airborne Disease", "definition": "Any disease that spreads from person to person through the air." },
+            { "term": "Airborne Pathogens", "definition": "Microorganisms discharged from an infected person that remain suspended in the air and can be breathed in." },
+            { "term": "Amputation", "definition": "The loss or removal of a limb or body part." },
+            { "term": "Anaphylactic Shock (Anaphylaxis)", "definition": "A severe, life-threatening allergic reaction." },
+            { "term": "Arterial Bleeding", "definition": "Bright red blood spurting from a wound, indicating a severed or damaged artery." },
+            { "term": "Asymptomatic", "definition": "Showing no symptoms of a disease." },
+            { "term": "Asthma", "definition": "A respiratory condition where the airway narrows due to swelling and mucus, causing breathing difficulties." },
+            { "term": "AVPU", "definition": "A mnemonic for a scale to measure a patient's level of consciousness: Alert, Verbal, Pain, Unresponsive." },
+            { "term": "Bandage", "definition": "A covering that holds dressings in place." },
+            { "term": "BEFAST", "definition": "A mnemonic to help recognize the signs of a stroke: Balance, Eyes, Face, Arm, Speech, Time." },
+            { "term": "Bloodborne Pathogens", "definition": "Microorganisms in human blood that can cause disease." },
+            { "term": "Body Substance Isolation (BSI)", "definition": "The practice of isolating yourself from all body substances of all patients." },
+            { "term": "Breach of Duty", "definition": "Occurs when you either fail to act or act inappropriately when having a duty to act." },
+            { "term": "Breech Delivery", "definition": "A delivery where the newborn's feet or buttocks present first." },
+            { "term": "Bruising", "definition": "A closed, discolored injury that is somewhat flat and tender." },
+            { "term": "Burns", "definition": "Tissue damage caused by exposure to heat, chemical or electrical contact, or radiation." },
+            { "term": "Capillary Bleeding", "definition": "Dark red blood oozing slowly from a wound, indicating damaged capillaries." },
+            { "term": "Cardiac Arrest", "definition": "Occurs when the heart is no longer pumping blood throughout the body." },
+            { "term": "Care Under Fire (Direct Threat Care / Hot Zone)", "definition": "A scene that includes an active threat where the primary concern is to stop the threat." },
+            { "term": "CDC (Centers for Disease Control & Prevention)", "definition": "The U.S. agency that developed universal and standard precautions for infection control." },
+            { "term": "Chemical Burn", "definition": "A burn caused by exposure to a liquid or dry powder on the skin." },
+            { "term": "Closed Chest Injury", "definition": "An injury from blunt force trauma to the chest area." },
+            { "term": "Closed Fracture", "definition": "A fracture where the skin at the injury site remains intact." },
+            { "term": "Cold Zone (Evacuation Care)", "definition": "An area cleared of threats where you are moving toward transporting the patient to a medical facility." },
+            { "term": "Competent Adult", "definition": "One who can make an informed decision about medical care." },
+            { "term": "Concussion", "definition": "A term often used to refer to a mild traumatic brain injury (TBI)." },
+            { "term": "Diabetes", "definition": "A chronic illness that influences how the body produces or properly uses insulin." },
+            { "term": "Dislocation", "definition": "An injury where trauma forces the end of a bone from its normal position at a joint." },
+            { "term": "DNR/DNRO (Do-Not-Resuscitate Order)", "definition": "A directive for a terminally ill patient to refuse CPR." },
+            { "term": "DOTS", "definition": "A mnemonic for examining body parts: Deformities, Open injuries, Tenderness, Swelling." },
+            { "term": "Dressing", "definition": "A sterile pad applied directly to a wound." },
+            { "term": "Duty to Act", "definition": "The contractual or legal obligation to provide care." },
+            { "term": "Electrical Burn", "definition": "A burn caused by exposure to an electrical current or lightning." },
+            { "term": "Emancipated Minor", "definition": "A minor who is financially independent, married, in the military, or does not live with a parent and can provide their own consent." },
+            { "term": "EMS (Emergency Medical Services) System", "definition": "A network of trained professionals linked to provide advanced, out-of-hospital care." },
+            { "term": "Epinephrine", "definition": "A medication used to counteract a severe allergic reaction (anaphylaxis)." },
+            { "term": "Evisceration (Abdominal)", "definition": "An open wound where organs protrude from the abdominal cavity." },
+            { "term": "Expressed Consent", "definition": "Permission for an action that is clearly and unmistakably stated or written." },
+            { "term": "Extruded Eyeball", "definition": "An eyeball that is forced out of its socket." },
+            { "term": "Fentanyl", "definition": "A highly potent synthetic opioid." },
+            { "term": "Flail Chest", "definition": "An injury where two or more adjacent ribs are fractured in two or more places." },
+            { "term": "Fracture", "definition": "The medical term for a broken bone." },
+            { "term": "Frostbite", "definition": "A localized injury from overexposure to extreme cold." },
+            { "term": "Full-Thickness Burn (Third-Degree)", "definition": "A burn that damages all skin layers and often affects muscles and nerves." },
+            { "term": "Good Samaritan Act", "definition": "Protects a first-aid provider from liability for care performed in good faith." },
+            { "term": "Heart Attack", "definition": "Occurs when a clogged blood vessel blocks blood flow to the heart." },
+            { "term": "Hemostatic Dressing", "definition": "A wound dressing containing an agent that promotes blood clotting." },
+            { "term": "Hepatitis A, B, and C", "definition": "Viruses that cause inflammation of the liver (hepatitis)." },
+            { "term": "HIPAA (Health Insurance Portability and Accountability Act)", "definition": "Protects the rights of patients and the release of patient information." },
+            { "term": "HIV (Human Immunodeficiency Virus)", "definition": "A bloodborne virus that attacks the immune system." },
+            { "term": "Hot Zone (Direct Threat Care)", "definition": "A scene that includes an active threat." },
+            { "term": "Hyperthermia", "definition": "A condition where the body's core temperature rises to a dangerous level." },
+            { "term": "Hypothermia", "definition": "An excessive cooling of the body's core temperature." },
+            { "term": "ICS (Incident Command System)", "definition": "The system implemented in Florida for multiple agency responses in times of disaster." },
+            { "term": "Impaled Object", "definition": "An object that punctures the soft tissue and stays in place." },
+            { "term": "Implied Consent", "definition": "Consent assumed from a person's actions or in a life-threatening situation where a person is unresponsive." },
+            { "term": "Informed Consent", "definition": "A person's agreement to a procedure after being told the facts, benefits, risks, and alternatives." },
+            { "term": "Inhalation Burn", "definition": "A burn to any part of the airway caused by smoke or chemicals." },
+            { "term": "Insulin", "definition": "A hormone that converts sugar, starches, and other food into energy." },
+            { "term": "Jaw Thrust Maneuver", "definition": "A technique to open the airway of a patient with a suspected spinal injury." },
+            { "term": "Junctional Bleeding", "definition": "Bleeding that occurs where an extremity meets the torso (neck, armpit, groin)." },
+            { "term": "Labor", "definition": "The process of giving birth." },
+            { "term": "Laceration", "definition": "A cut in the skin." },
+            { "term": "Level of Consciousness (LOC)", "definition": "An indicator of how awake, alert, and aware someone is." },
+            { "term": "Log Roll", "definition": "A technique to roll a patient while maintaining spinal alignment." },
+            { "term": "MARCH", "definition": "Mnemonic for primary assessment priorities: Massive hemorrhage, Airway, Respirations, Circulation, Hypothermia/Head injury." },
+            { "term": "Mass Casualty Incident (MCI)", "definition": "An incident involving multiple patients with severe injuries." },
+            { "term": "Medical Patient", "definition": "A person who is ill." },
+            { "term": "MRSA (Methicillin-Resistant Staphylococcus Aureus)", "definition": "A highly contagious, antibiotic-resistant bacteria." },
+            { "term": "Naloxone", "definition": "A medication that rapidly reverses an opioid overdose." },
+            { "term": "Negligence", "definition": "The failure to exercise the standard of care that a reasonably prudent person would have." },
+            { "term": "Occlusive Dressing", "definition": "An air and water tight dressing used for chest wounds." },
+            { "term": "Open Chest Injury", "definition": "An injury where there is penetration through the chest wall." },
+            { "term": "Open Fracture", "definition": "A fracture where the skin at the injury site is broken." },
+            { "term": "Opioids", "definition": "A class of drugs used to reduce or relieve pain." },
+            { "term": "OSHA (Occupational Safety and Health Administration)", "definition": "The federal agency that sets requirements for handling biohazardous wastes." },
+            { "term": "Overdose", "definition": "Taking more of a substance than the body can safely handle." },
+            { "term": "Partial-Thickness Burn (Second-Degree)", "definition": "A burn that damages the first two skin layers and causes blisters." },
+            { "term": "Personal Protective Equipment (PPE)", "definition": "A barrier against infection, including gloves, masks, and eye protection." },
+            { "term": "Placenta", "definition": "The organ that nourishes the fetus during pregnancy." },
+            { "term": "PMS", "definition": "Mnemonic for assessing extremities: Pulse, Motor, Sensory." },
+            { "term": "Poisoning", "definition": "Injury or death from a substance introduced into the body." },
+            { "term": "Positional Asphyxia", "definition": "When a person's body position interferes with their ability to breathe." },
+            { "term": "Puncture Wound", "definition": "An injury from a sharp object that penetrates the skin." },
+            { "term": "Recovery Position", "definition": "A position for an unresponsive, breathing patient to help maintain an open airway." },
+            { "term": "RPM", "definition": "Mnemonic for START triage assessment: Respiration, Perfusion, Mental status." },
+            { "term": "SALT", "definition": "Triage method: Sort, Assess, Life-saving interventions, Treatment/transport." },
+            { "term": "Shaken Baby Syndrome (SBS)", "definition": "A type of abusive head trauma in infants." },
+            { "term": "Shock", "definition": "The failure of the heart and blood vessels to maintain enough oxygen-rich blood flowing to vital organs." },
+            { "term": "Spinal Motion Restriction", "definition": "Minimizing movement of a patient's spine." },
+            { "term": "Sprain", "definition": "An injury to a ligament." },
+            { "term": "Standard Precautions", "definition": "CDC procedures to prevent transmission of both airborne and bloodborne pathogens." },
+            { "term": "START (Simple Triage And Rapid Treatment)", "definition": "A method of triage for mass casualty incidents." },
+            { "term": "Strain", "definition": "An injury to a muscle or a tendon." },
+            { "term": "Stroke", "definition": "Damage to the brain due to rupture or blockage of a blood vessel." },
+            { "term": "Sucking Chest Injury", "definition": "An open chest injury with a larger hole that makes a sucking sound during breathing." },
+            { "term": "Superficial Burn (First-Degree)", "definition": "A burn that damages the first layer of skin." },
+            { "term": "Swelling", "definition": "A closed, discolored injury that is a raised, firm, and painful lump." },
+            { "term": "Tactical Field Care (Indirect Threat Care / Warm Zone)", "definition": "A scene where an officer is out of imminent danger but not yet in a fully safe zone." },
+            { "term": "Tension Pneumothorax", "definition": "A life-threatening condition where air builds up in the chest cavity, creating pressure on the heart." },
+            { "term": "Thermal Burn", "definition": "A burn caused by exposure to heat." },
+            { "term": "Tourniquet", "definition": "A device that restricts blood flow to an extremity to stop life-threatening bleeding." },
+            { "term": "Trauma Patient", "definition": "An injured person." },
+            { "term": "Traumatic Brain Injury (TBI)", "definition": "Damage to the brain from sudden trauma." },
+            { "term": "Triage", "definition": "The process of sorting and categorizing patients based on the severity of their injuries." },
+            { "term": "Tuberculosis (TB)", "definition": "An airborne disease that affects the respiratory system." },
+            { "term": "Umbilical Cord", "definition": "The cord that connects a developing fetus with the placenta." },
+            { "term": "Umbilical Cord Prolapse", "definition": "A delivery complication where the cord comes out before the newborn." },
+            { "term": "Universal Precautions", "definition": "CDC procedures designed to prevent transmission of bloodborne pathogens." },
+            { "term": "Venous Bleeding", "definition": "Dark red blood flowing steadily from a wound, indicating a severed vein." },
+            { "term": "Vented Chest Seal", "definition": "An airtight dressing for chest wounds that acts as a one-way valve." },
+            { "term": "Warm Zone (Indirect Threat Care)", "definition": "An area of relative safety at a scene that is not yet fully secured." },
+            { "term": "Withdrawal", "definition": "The physical, mental, and emotional response to quitting a substance." }
+        ],
+        "listGame": [
+{"question": "What are the primary first-aid duties of a criminal justice officer at the scene of an emergency?", "correctAnswers": ["wearing personal protective equipment (PPE) to help prevent infection", "gaining access to a patient", "assessing a patient for life-threatening injuries", "alerting EMS providers and relaying all relevant medical information", "providing a patient with basic medical care based on needs you identified during your assessment", "remaining with a patient until EMS providers relieve you"], "incorrectAnswers": ["performing advanced medical procedures", "transporting the patient to the hospital in your own vehicle", "diagnosing the patient's condition", "administering prescription medication", "contacting the patient's family members"]},
+{"question": "What conditions must be present for an officer to be found negligent?", "correctAnswers": ["duty to act", "breach of standard of care", "causation", "damages"], "incorrectAnswers": ["expressed consent", "implied consent", "informed consent", "abandonment"]},
+{"question": "What are the three types of consent an officer might encounter when providing first aid?", "correctAnswers": ["Expressed consent", "Implied consent", "Informed consent"], "incorrectAnswers": ["Assumed consent", "Verbal consent only", "Unconscious consent", "Minor consent"]},
+{"question": "What are the four components of a scene size-up?", "correctAnswers": ["scene safety", "mechanism of injury or nature of illness", "the number of victims", "the need for more rescuers and special equipment"], "incorrectAnswers": ["patient's level of consciousness", "identifying all witnesses", "gathering patient's medical history", "documenting the incident"]},
+{"question": "What are the components of the AVPU scale for assessing a patient's level of consciousness?", "correctAnswers": ["Alert", "Verbal", "Pain", "Unresponsive"], "incorrectAnswers": ["Awake", "Vocal", "Physical", "Unconscious"]},
+{"question": "What are the five components of the MARCH primary assessment?", "correctAnswers": ["Massive hemorrhage", "Airway", "Respirations", "Circulation", "Hypothermia/Head injury"], "incorrectAnswers": ["Movement", "Allergies", "Reassessment", "Consciousness", "Heart rate"]},
+{"question": "What are the four major arteries used to check a patient's pulse?", "correctAnswers": ["carotid", "brachial", "femoral", "radial"], "incorrectAnswers": ["aorta", "jugular", "subclavian", "tibial"]},
+{"question": "What are the main components of the skeletal system?", "correctAnswers": ["the skull", "the spinal column", "the shoulder girdle", "the rib cage", "the pelvis", "lower extremities", "upper extremities"], "incorrectAnswers": ["the diaphragm", "the cardiac muscles", "the voluntary muscles", "the central nervous system"]},
+{"question": "What are the three types of muscles in the human body?", "correctAnswers": ["voluntary muscles", "involuntary (smooth) muscles", "cardiac muscles"], "incorrectAnswers": ["skeletal muscles", "tendons", "ligaments", "flexor muscles"]},
+{"question": "What are the two main parts of the nervous system?", "correctAnswers": ["The central nervous system", "The peripheral nervous system"], "incorrectAnswers": ["The autonomic nervous system", "The somatic nervous system", "The sympathetic nervous system", "The parasympathetic nervous system"]},
+{"question": "What are the signs and symptoms of shock?", "correctAnswers": ["anxiety, restlessness, and fainting", "altered mental status in the absence of a head injury", "nausea and vomiting", "excessive thirst", "eyes that are vacant and dull (lackluster) with large (dilated) pupils", "shallow, rapid, and irregular breathing", "pale, cool, or moist (clammy) skin", "weak, rapid, or absent pulse"], "incorrectAnswers": ["flushed, hot, or dry skin", "constricted (pinpoint) pupils", "a slow, bounding pulse", "a sudden burst of energy", "normal breathing pattern"]},
+{"question": "What are the different types of open soft-tissue injuries?", "correctAnswers": ["amputation", "evisceration", "puncture wound", "laceration", "abrasion"], "incorrectAnswers": ["bruising", "swelling", "contusion", "hematoma"]},
+{"question": "What are the three types of bleeding?", "correctAnswers": ["arterial bleeding", "venous bleeding", "capillary bleeding"], "incorrectAnswers": ["internal bleeding", "external bleeding", "major bleeding", "minor bleeding"]},
+{"question": "What are the main tools used to stop bleeding of an open wound?", "correctAnswers": ["tourniquet", "dressings", "hemostatic gauze or dressing", "bandages"], "incorrectAnswers": ["sutures", "staples", "cold packs", "splints"]},
+{"question": "What are the common signs of major, life-threatening external bleeding?", "correctAnswers": ["blood spurting out of the wound (arterial)", "volumes of blood that will not stop or is pooling on the ground", "clothing soaked with blood", "loss of all or part of an arm or leg (amputation)", "a patient who is bleeding and has an altered level of consciousness"], "incorrectAnswers": ["a slow ooze of dark red blood", "a small bruise forming on the skin", "a minor cut that stops bleeding on its own", "a superficial scrape"]},
+{"question": "What are the symptoms of a traumatic brain injury (TBI)?", "correctAnswers": ["changes in LOC/altered mental status", "unequal size of pupils", "discoloration around the eyes and behind the ears", "trouble breathing", "vomiting", "seizures"], "incorrectAnswers": ["a strong, regular pulse", "warm, pink skin", "clear, coherent speech", "normal motor function", "a high fever without other symptoms"]},
+{"question": "What are the four common types of chest injuries?", "correctAnswers": ["closed chest injury", "flail chest injury", "open chest injury", "sucking chest injury"], "incorrectAnswers": ["cardiac contusion", "rib fracture", "pneumonia", "pulmonary embolism"]},
+{"question": "What are the symptoms of a fractured pelvis?", "correctAnswers": ["pain, tenderness, bruising, or swelling in the pelvic bone area", "numbness or tingling in the groin or upper thighs", "discomfort or pain when sitting, standing, or walking", "leg or thigh bone turned outward or inward", "legs are not the same length"], "incorrectAnswers": ["pain radiating down the arm", "difficulty breathing", "a visible deformity in the upper leg", "equal leg length and positioning"]},
+{"question": "What are the two classifications of bone fractures?", "correctAnswers": ["open fracture", "closed fracture"], "incorrectAnswers": ["compound fracture", "simple fracture", "hairline fracture", "stress fracture"]},
+{"question": "What are the three classifications of burns by depth?", "correctAnswers": ["superficial burns (first-degree burn)", "partial-thickness burns (second-degree burn)", "full-thickness burns (third-degree burn)"], "incorrectAnswers": ["critical burns", "minor burns", "major burns", "thermal burns"]},
+{"question": "What are the four common types of burns by cause?", "correctAnswers": ["thermal burns", "inhalation burns", "chemical burns", "electrical burns"], "incorrectAnswers": ["friction burns", "radiation burns", "sunburns", "scald burns"]},
+{"question": "What are the signs and symptoms of a patient experiencing an overdose?", "correctAnswers": ["pinpoint pupils", "blue or purplish black fingernails or lips", "unresponsiveness, inability to speak, but awake", "loss of consciousness, cannot wake up", "breathing or heartbeat has stopped or slowed", "choking sounds or snore-like gurgling", "pale or clammy face", "vomiting, severe stomach pain, or diarrhea", "dizziness, loss of balance or co-ordination, limp", "seizures, hallucinations", "agitation, paranoia"], "incorrectAnswers": ["dilated (large) pupils", "flushed, hot skin", "rapid, pounding heart rate", "hyperactivity and high energy", "clear and rapid speech"]},
+{"question": "What are the signs of a fentanyl poisoning or overdose?", "correctAnswers": ["disorientation", "difficulty speaking or walking", "slowed pulse", "nausea", "slow, shallow breathing", "respiratory arrest"], "incorrectAnswers": ["rapid, pounding heart rate", "hyperactivity and agitation", "enlarged, dilated pupils", "high fever and sweating", "clear and rapid speech"]},
+{"question": "What are the three types of diabetes?", "correctAnswers": ["Type I", "Type II", "Gestational"], "incorrectAnswers": ["Juvenile Diabetes", "Adult-onset Diabetes", "Insulin-dependent Diabetes", "Pre-diabetes"]},
+{"question": "What are some of the various causes of seizures?", "correctAnswers": ["alcohol, illegal drug use (during withdrawal)", "brain abnormalities, tumors", "developmental disorders", "diseases such as epilepsy and diabetes", "flashing lights, moving patterns", "genetic influences", "head trauma", "high fever (predominately in children)", "infections", "lack of sleep", "medications (antidepressants, pain relievers)", "shock", "stroke"], "incorrectAnswers": ["dehydration", "hunger", "loud noises", "bright sunlight", "normal stress levels"]},
+{"question": "What are the signs and symptoms of a heart attack, particularly those experienced by women?", "correctAnswers": ["chest pain that radiates to other parts of the body such as the upper back, shoulder, arm, jaw, neck, or stomach area", "nausea, vomiting, heartburn", "sweating", "difficulty breathing, shortness of breath", "extreme fatigue"], "incorrectAnswers": ["sudden loss of balance", "facial drooping on one side", "slurred speech", "a high fever", "severe headache"]},
+{"question": "What are the two types of cold-related emergencies?", "correctAnswers": ["hypothermia", "frostbite"], "incorrectAnswers": ["heat stroke", "chilblains", "trench foot", "dehydration"]},
+{"question": "What are the signs and symptoms of hypothermia?", "correctAnswers": ["bluish, mottled skin", "changes in pulse rate and breathing", "decreased muscle function", "low energy or drowsiness", "numbness", "shivering", "sluggish pupils", "cardiac arrest"], "incorrectAnswers": ["hot, dry skin", "a rapid, strong pulse", "hyperactivity", "excessive sweating", "red, flushed skin"]},
+{"question": "What are the general signs and symptoms of poisoning?", "correctAnswers": ["difficulty breathing", "diarrhea", "abdominal pain", "dizziness or weakness", "chest pain, cough or burning sensation in the throat", "blue lips and skin or paleness", "nausea, vomiting", "burns around the nose or mouth", "seizures", "shock", "loss of consciousness"], "incorrectAnswers": ["a normal breathing rate", "clear, coherent thoughts", "stable pulse and blood pressure", "good coordination", "pink, warm skin"]},
+{"question": "What are the signs and symptoms of a severe allergic reaction (anaphylactic shock)?", "correctAnswers": ["itching skin and hives", "a weak and rapid pulse", "low blood pressure", "constriction of the airways which causes wheezing and trouble breathing", "swollen eyes, hands, and feet", "swollen mouth, lips, tongue, or throat", "dizziness"], "incorrectAnswers": ["a slow, bounding pulse", "high blood pressure", "clear and easy breathing", "a feeling of alertness", "pinpoint pupils"]},
+{"question": "What are the major complications of delivery an officer should watch for?", "correctAnswers": ["an umbilical cord wrapped around the baby's neck", "an umbilical cord prolapse", "a breech delivery", "excessive bleeding after delivery"], "incorrectAnswers": ["the delivery of twins", "the mother shouting in pain", "a delivery that happens quickly", "the baby crying loudly after birth"]}
+        ],
+        "orderedListGame": [
+    {"question": "Arrange the steps for properly removing disposable gloves in the correct order.", "items": ["Remove the first glove by grasping it just below the cuff on the palm side and rolling the glove off the fingers.", "Place the glove in the palm of the gloved hand.", "Remove the second glove by inserting your ungloved fingers inside the cuff of the palm side without touching the outside of the glove.", "Begin pushing or rolling the glove off the fingers.", "Dispose of gloves properly, and wash hands with soap and water."]},
+    {"question": "Place the four components of a scene size-up in the correct order of assessment.", "items": ["Scene safety", "Mechanism of injury or nature of illness", "The number of victims", "The need for more rescuers and special equipment"]},
+    {"question": "Place the steps for performing a comprehensive head-to-toe physical assessment in the correct order.", "items": ["Head", "Eyes", "Neck", "Shoulders", "Chest and abdomen", "Pelvis and groin", "Lower extremities", "Upper extremities", "Spine and back"]},
+    {"question": "Arrange the steps for placing a patient in the recovery position in the correct order.", "items": ["Position the patient on their back and stand to one side of them.", "Place the patient's arm (left or right) straight up overhead, flat on the floor.", "Place the back of the patient's other hand on their opposite shoulder.", "Grasp the patient on the shoulder and the knee and roll them towards you.", "Pull the patient's knee up and over towards you so that their leg is bending and resting on the floor."]},
+    {"question": "Place the steps for treating a patient for shock in the correct order.", "items": ["Prevent further blood loss by stopping bleeding or treat the underlying cause.", "Maintain an open airway.", "Position the patient on their back and elevate the lower extremities 6-12 inches (if no contraindicating injuries).", "Keep the patient warm by covering them."]},
+    {"question": "Arrange the steps for applying a commercial tourniquet in the correct order.", "items": ["Position the tourniquet as high on the extremity as possible ('high and tight').", "Pull the band tightly and fasten it back on itself.", "Twist the windlass until bleeding has stopped.", "Secure the windlass to lock it in place.", "Check for bleeding and for a pulse below the injury.", "Secure the TIME strap and record the time of application."]},
+    {"question": "Place the steps for treating an impaled object in the correct order.", "items": ["Do not remove the object from the wound unless it obstructs the patient's airway.", "Cut away clothing around the object to expose the injury site.", "Apply proper dressing to prevent further contamination.", "Secure the object by surrounding it with stabilizing dressing.", "Stop bleeding by applying careful pressure to the wound site, not the object itself."]},
+    {"question": "Arrange the steps for performing a jaw thrust maneuver in the correct order.", "items": ["Position yourself at the patient's head and place one hand on each side of the patient's head.", "Grasp the angles of the patient's lower jaw on both sides.", "Use a lifting motion to move the jaw forward with both hands.", "Maintain spinal motion restriction until EMS arrives."]},
+    {"question": "Place the steps for treating an abdominal evisceration in the correct order.", "items": ["Do not touch or reinsert the exposed organ(s).", "Cover the wound with a moist dressing and keep clean.", "Place the patient in a position of comfort, most often on their back with the legs elevated and bent."]},
+    {"question": "Arrange the steps for handling an amputated body part in the correct order.", "items": ["Wrap it in dressing.", "Place it in a plastic bag.", "Keep it cool, but do not place it directly on ice."]},
+    {"question": "Place the steps for responding to a patient experiencing a seizure in the correct order.", "items": ["Begin timing the seizure and relay the information to EMS.", "Clear the area around the patient of sharp or hard objects.", "Place something soft and flat as a barrier between the patient's head and the floor.", "Monitor the patient to ensure the airway is open.", "After the seizure, perform a primary assessment and place in a recovery position if unresponsive."]},
+    {"question": "Arrange the steps for responding to a patient experiencing a heart attack in the correct order.", "items": ["Notify EMS of a possible heart attack and arrange immediate transport.", "Position the patient for comfort and have them stop all activity.", "Assist the patient in taking their prescribed medication if they can do so safely.", "Reassure the patient and be prepared for possible cardiac arrest."]},
+    {"question": "Place the steps for treating a patient with a chemical burn in the correct order.", "items": ["If the patient is able, ask them to remove contaminated clothing, jewelry, and contact lenses.", "If the poison is a dry powder, ask the patient to brush it off.", "Flush the area with a large amount of clean water for at least 20 minutes.", "If the eye area is affected, follow procedures for eye trauma."]},
+    {"question": "Place the steps for assisting with the delivery of a baby in the correct order.", "items": ["Support and gently guide the baby's head out as the patient delivers the baby.", "Be ready to place the newborn baby in a clean towel.", "Place the newborn on the patient's chest and cover them both with a blanket.", "Record the time of the delivery.", "Monitor the patient's bleeding and apply a pad or pressure to stop excessive bleeding.", "Save all dressing and expelled tissue."]},
+    {"question": "Arrange the steps for caring for a newborn immediately after delivery in the correct order.", "items": ["The newborn should start to cry.", "Hold the newborn in a face-down position or on its side to allow fluid to drain.", "Wipe the fluid from their nose and mouth with a clean towel.", "Reassess the patient for blood loss and the status of the newborn every few minutes."]},
+    {"question": "Arrange the steps for the START triage method in the correct order of assessment.", "items": ["Locate and remove all the walking wounded to one location away from the incident.", "Assess respirations of remaining patients.", "Assess perfusion (pulse or capillary refill) of patients with adequate respirations.", "Assess mental status of patients with adequate respirations and perfusion."]},
+    {"question": "Place the steps for performing a shoulder drag in the correct order.", "items": ["If the patient is unconscious, secure their hands by folding them across their chest.", "Stand behind the patient's head and squat by bending your knees.", "Reach under the patient's arms and grasp your own wrist.", "Pull the patient in as close as possible to your chest.", "Stand up, lean back, and walk backwards to drag the patient to safety."]},
+    {"question": "Place the steps for treating a chemical eye burn in the correct order.", "items": ["Position the patient's head so the unaffected eye is above the affected eye.", "Carefully hold the eyelid open.", "Flush the affected eye with water from its inner portion to its outer portion for twenty minutes.", "If both eyes are burned, flush one eye at a time, alternating positions."]},
+    {"question": "Arrange the steps for performing a log roll with three officers.", "items": ["Officer 1 maintains head, neck, and spinal motion restriction.", "Officers 2 and 3 position themselves on the same side of the patient.", "Officers 2 and 3 reach across the patient and grasp the shoulder, hip, and leg.", "Officer 1 issues the command to roll the patient toward Officers 2 and 3."]},
+    {"question": "Place the steps for performing a two-officer extremity lift in the correct order.", "items": ["Officer 1 kneels at the patient's head and lifts them to a sitting position.", "Officer 1 places their hands under the patient's arms and grasps the patient's opposite wrists.", "Officer 2 kneels between the patient's knees and grasps beneath their knees.", "Officer 1 delivers the command to lift.", "Both officers stand simultaneously while lifting the patient."]},
+    {"question": "Arrange the steps for treating a patient with heat stroke in the correct order.", "items": ["Remove the patient from the hot environment.", "Cool the patient immediately by applying cold packs to their neck, armpits, and groin.", "Keep skin wet with towels or wet clothing.", "Place the patient in a position of comfort or a recovery position."]},
+    {"question": "Place the steps for treating a patient with hypothermia in the correct order.", "items": ["Handle the patient gently.", "Remove the patient from the cold environment, if possible.", "Remove wet clothing and dry the patient.", "Warm the body gradually by wrapping the patient in blankets or dry clothing.", "Encourage a fully conscious patient to drink warm, non-alcoholic, non-caffeinated liquids."]},
+    {"question": "Arrange the steps for treating a patient with frostbite in the correct order.", "items": ["Handle affected parts gently.", "Remove wet clothing and cover the patient with blankets or dry clothing.", "If in a remote area, warm the frostbite area in tepid water.", "Cover the affected area with a dry dressing or padding."]},
+    {"question": "Place the steps for treating a patient for an electrical burn in the correct order.", "items": ["Call EMS even if the patient states that they are feeling fine.", "Remove patient clothing from the affected area.", "Check for entrance and exit wounds to help determine the path of the current.", "Treat an electrical burn the same as you would treat a thermal burn."]},
+    {"question": "Arrange the steps for responding to a suspected overdose in the correct order.", "items": ["Perform an ongoing assessment of the patient for life-threatening conditions.", "Be prepared to perform CPR and use an AED if available.", "Administer naloxone if available and authorized by policy."]}
+        ],
+        "statuteGame": [
+    {"prompt": "A network of trained professionals linked to provide advanced, out-of-hospital care for victims of sudden traumatic injury or illness.", "answer": "EMS System", "displayAnswer": "Emergency Medical Services (EMS) System"},
+    {"prompt": "A legal and contractual obligation to provide care to a patient.", "answer": "Duty to Act", "displayAnswer": "Duty to Act"},
+    {"prompt": "The degree of care that a reasonable person should exercise; the care expected of a provider with the same level of training under the same conditions.", "answer": "Standard of Care", "displayAnswer": "Standard of Care"},
+    {"prompt": "Protects a first-aid provider from liability for emergency care performed in good faith.", "answer": "Good Samaritan Act", "displayAnswer": "Good Samaritan Act"},
+    {"prompt": "Stopping care without ensuring the patient receives the same or better care.", "answer": "Abandonment", "displayAnswer": "Abandonment"},
+    {"prompt": "The failure to exercise the standard of care that a reasonably prudent person would have in a similar situation.", "answer": "Negligence", "displayAnswer": "Negligence"},
+    {"prompt": "Permission for an action that is clearly and unmistakably stated or written by the patient.", "answer": "Expressed Consent", "displayAnswer": "Expressed Consent"},
+    {"prompt": "The assumption that a person has given permission for an action because of their actions, rather than explicitly expressed.", "answer": "Implied Consent", "displayAnswer": "Implied Consent"},
+    {"prompt": "A person's agreement to allow something to happen, made with full knowledge of the facts, benefits, risks, and alternatives.", "answer": "Informed Consent", "displayAnswer": "Informed Consent"},
+    {"prompt": "A written and signed directive from a terminally ill patient to refuse CPR.", "answer": "DNRO", "displayAnswer": "Do Not Resuscitate Order (DNR/DNRO)"},
+    {"prompt": "Protects the rights of patients and the release of their confidential medical information.", "answer": "HIPAA", "displayAnswer": "Health Insurance Portability and Accountability Act (HIPAA)"},
+    {"prompt": "The body system that delivers oxygen to and removes carbon dioxide from the blood.", "answer": "Respiratory System", "displayAnswer": "Respiratory System"},
+    {"prompt": "The body system that pumps blood throughout the body, delivering oxygen and nutrients.", "answer": "Circulatory System", "displayAnswer": "Circulatory System"},
+    {"prompt": "The major artery in the neck used to feel for a patient's pulse.", "answer": "Carotid", "displayAnswer": "Carotid artery"},
+    {"prompt": "The major artery in the upper arm used to feel for an infant's pulse.", "answer": "Brachial", "displayAnswer": "Brachial artery"},
+    {"prompt": "The major artery in the wrist used to feel for a conscious patient's pulse.", "answer": "Radial", "displayAnswer": "Radial artery"},
+    {"prompt": "The supporting framework for the body, giving it shape and protecting vital organs.", "answer": "Skeletal System", "displayAnswer": "Skeletal System"},
+    {"prompt": "The body system that controls voluntary and involuntary body activity.", "answer": "Nervous System", "displayAnswer": "Nervous System"},
+    {"prompt": "Microorganisms, such as bacteria and viruses, that cause disease.", "answer": "Pathogens", "displayAnswer": "Pathogens"},
+    {"prompt": "A set of procedures designed to prevent transmission of bloodborne pathogens by assuming all patients are potentially infectious.", "answer": "Universal Precautions", "displayAnswer": "Universal Precautions"},
+    {"prompt": "The practice of isolating yourself from all body substances of patients undergoing medical treatment.", "answer": "BSI", "displayAnswer": "Body Substance Isolation (BSI)"},
+    {"prompt": "The four components of this process are: scene safety, mechanism of injury or nature of illness, number of victims, and need for more rescuers.", "answer": "Scene Size-Up", "displayAnswer": "Scene Size-Up"},
+    {"prompt": "A scale used to quickly check a patient's level of consciousness, standing for Alert, Verbal, Pain, and Unresponsive.", "answer": "AVPU", "displayAnswer": "AVPU Scale"},
+    {"prompt": "The mnemonic for the priority of care in a primary assessment: Massive hemorrhage, Airway, Respirations, Circulation, Hypothermia/Head injury.", "answer": "MARCH", "displayAnswer": "MARCH"},
+    {"prompt": "The mnemonic for examining extremities for Pulse, Motor, and Sensory functions.", "answer": "PMS", "displayAnswer": "PMS"},
+    {"prompt": "The mnemonic for physically assessing a patient for Deformities, Open injuries, Tenderness, and Swelling.", "answer": "DOTS", "displayAnswer": "DOTS"},
+    {"prompt": "A technique to open the airway of an unresponsive patient with a suspected neck or spinal injury.", "answer": "Jaw Thrust Maneuver", "displayAnswer": "Jaw Thrust Maneuver"},
+    {"prompt": "This occurs when someone's body is in a position that interferes or prevents them from breathing adequately.", "answer": "Positional Asphyxia", "displayAnswer": "Positional Asphyxia"},
+    {"prompt": "The process of sorting and categorizing patients to determine the order in which they receive medical attention in an MCI.", "answer": "Triage", "displayAnswer": "Triage"},
+    {"prompt": "A method of sorting patients in a mass casualty incident, standing for Simple Triage And Rapid Treatment.", "answer": "START", "displayAnswer": "Simple Triage and Rapid Treatment (START)"},
+    {"prompt": "The mnemonic used in the START triage method to assess Respiration, Perfusion, and Mental Status.", "answer": "RPM", "displayAnswer": "RPM"},
+    {"prompt": "A care environment that includes an active threat or any imminent danger.", "answer": "Direct Threat Care", "displayAnswer": "Direct Threat Care (Hot Zone)"},
+    {"prompt": "A care environment where an officer is out of imminent danger but not yet in a completely safe zone.", "answer": "Indirect Threat Care", "displayAnswer": "Indirect Threat Care (Warm Zone)"},
+    {"prompt": "A care environment where you are moving an injured officer towards a medical treatment facility.", "answer": "Evacuation Care", "displayAnswer": "Evacuation Care (Cold Zone)"},
+    {"prompt": "The failure of the heart and blood vessels to maintain enough oxygen-rich blood flowing to the vital organs.", "answer": "Shock", "displayAnswer": "Shock"},
+    {"prompt": "Bright red blood spurting from a wound, indicating a severed or damaged artery.", "answer": "Arterial bleeding", "displayAnswer": "Arterial bleeding"},
+    {"prompt": "Dark red blood flowing steadily from a wound, indicating a severed or damaged vein.", "answer": "Venous bleeding", "displayAnswer": "Venous bleeding"},
+    {"prompt": "A device that restricts the flow of blood to an extremity to control life-threatening bleeding.", "answer": "Tourniquet", "displayAnswer": "Tourniquet"},
+    {"prompt": "A wound dressing containing an agent that promotes blood clotting.", "answer": "Hemostatic gauze", "displayAnswer": "Hemostatic gauze or dressing"},
+    {"prompt": "An object that punctures the soft tissue and stays in place.", "answer": "Impaled object", "displayAnswer": "Impaled object"},
+    {"prompt": "The space left by tissue that is destroyed or displaced by the passage of a bullet.", "answer": "Cavity", "displayAnswer": "Cavity"},
+    {"prompt": "A brain injury that occurs when sudden trauma causes damage to the brain.", "answer": "TBI", "displayAnswer": "Traumatic Brain Injury (TBI)"},
+    {"prompt": "A type of head trauma in infants caused by violent shaking or blunt impact, which is a sign of child abuse.", "answer": "SBS", "displayAnswer": "Shaken Baby Syndrome (SBS)"},
+    {"prompt": "A type of airtight dressing applied to a penetrating trauma to the chest cavity.", "answer": "Chest Seal", "displayAnswer": "Chest Seal"},
+    {"prompt": "An open wound where the organs protrude from the abdominal cavity.", "answer": "Evisceration", "displayAnswer": "Abdominal Evisceration"},
+    {"prompt": "The medical term for a broken bone.", "answer": "Fracture", "displayAnswer": "Fracture"},
+    {"prompt": "Damage to the first, or outermost, layer of skin, which becomes red and feels very painful.", "answer": "Superficial burn", "displayAnswer": "Superficial burn (first-degree)"},
+    {"prompt": "Damage to the first two skin layers, which causes swelling and blisters.", "answer": "Partial-thickness burn", "displayAnswer": "Partial-thickness burn (second-degree)"},
+    {"prompt": "Damage to all skin layers, often affecting the muscles and nerves underneath.", "answer": "Full-thickness burn", "displayAnswer": "Full-thickness burn (third-degree)"},
+    {"prompt": "When a person takes too much of a substance or more than the recommended amount.", "answer": "Overdose", "displayAnswer": "Overdose"},
+    {"prompt": "A medication that rapidly reverses an opioid overdose.", "answer": "Naloxone", "displayAnswer": "Naloxone"},
+    {"prompt": "A chronic illness that influences how the body turns food into energy by affecting insulin.", "answer": "Diabetes", "displayAnswer": "Diabetes"},
+    {"prompt": "A burst of uncontrolled electrical activity between cells in the brain.", "answer": "Seizure", "displayAnswer": "Seizure"},
+    {"prompt": "The mnemonic to help recognize the signs of a stroke: Balance, Eyes, Face, Arm, Speech, Time.", "answer": "BEFAST", "displayAnswer": "BEFAST"},
+    {"prompt": "A life-threatening, severe allergic reaction to an insect bite, sting, medication, or other substance.", "answer": "Anaphylactic Shock", "displayAnswer": "Anaphylactic Shock"},
+    {"prompt": "A life-threatening emergency where the umbilical cord comes out of the vagina before the newborn.", "answer": "Umbilical Cord Prolapse", "displayAnswer": "Umbilical Cord Prolapse"},
+    {"prompt": "When the feet or buttocks present first during childbirth instead of the head.", "answer": "Breech Delivery", "displayAnswer": "Breech Delivery"}
+        ]
+    }
+    </script>
+
+    <!-- Header -->
+    <header class="header-bar p-2 shadow-md z-10">
+        <div class="container mx-auto flex justify-between items-center">
+             <svg viewBox="0 0 270 170" class="h-16">
+                <path fill="#2563eb" d="M120.8,11.3l-81.2,49.2c-6.1,3.7-9.8,10.2-9.8,17.2v83.5c0,4.8,3.9,8.7,8.7,8.7h162.3c4.8,0,8.7-3.9,8.7-8.7V77.7c0-7-3.7-13.5-9.8-17.2L119.2,11.3z"/>
+                <path fill="#60a5fa" d="M135,10.5l81.2,49.2c6.1,3.7,9.8,10.2,9.8,17.2v83.5c0,4.8-3.9,8.7-8.7,8.7H135V10.5z"/>
+                <text x="10" y="145" font-family="Arial, sans-serif" font-size="38" fill="#FFFFFF" font-weight="bold">BKRDI-FY</text>
+                <text x="10" y="165" font-family="Arial, sans-serif" font-size="14" fill="#FFFFFF" font-weight="bold">TEST & STUDY</text>
+            </svg>
+            <div id="gameTitle" class="text-lg font-semibold">Home Screen</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="mainContentArea" class="flex-grow container mx-auto p-4 sm:p-6 lg:p-8 overflow-y-auto">
+
+        <!-- Main Menu Page -->
+        <div id="menuPage">
+            <div class="game-card text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold text-slate-800 mb-2">First Aid</h2>
+                <p class="text-lg text-slate-600 mb-8">Interactive Study Guide</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <button onclick="startApp('flashcards')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Flash Cards</span>
+                        <p class="font-normal text-blue-100 mt-1">Review key terms.</p>
+                    </button>
+                    <button onclick="startApp('matching')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                         <span class="text-2xl">Matching Game</span>
+                         <p class="font-normal text-green-100 mt-1">Match terms to definitions.</p>
+                    </button>
+                    <button onclick="startApp('listGameMenu')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                         <span class="text-2xl">List Game</span>
+                         <p class="font-normal text-purple-100 mt-1">Identify items from a list.</p>
+                    </button>
+                     <button onclick="startApp('statuteGame')" class="bg-red-600 hover:bg-red-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Fill In Game</span>
+                        <p class="font-normal text-red-100 mt-1">Fill in the blanks.</p>
+                    </button>
+                    <button onclick="window.open('https://tehcrayz.github.io/soce/FirstAidforCriminalJusticeOfficers.html', '_blank')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Tests & Study</span>
+                        <p class="font-normal text-yellow-100 mt-1">BKRDIFY EXAMS.</p>
+                    </button>
+                    <button onclick="window.open('https://tinyurl.com/fgjdtyjnd', '_blank')" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Chapter Notes</span>
+                        <p class="font-normal text-cyan-100 mt-1">The full deal.</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Game Pages -->
+        <div id="flashcardsPage" class="hidden"></div>
+        <div id="matchingPage" class="hidden"></div>
+        <div id="listGamePage" class="hidden"></div>
+        <div id="orderedListPage" class="hidden"></div>
+        <div id="statuteGamePage" class="hidden"></div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer-bar p-3 shadow-md z-10">
+        <div class="container mx-auto text-center text-sm text-gray-700">
+            BKRDI-Fy Version 1.9.3
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- DATA & DOM ---
+            let data = {};
+            try {
+                data = JSON.parse(document.getElementById('questionBank').textContent);
+            } catch (e) {
+                console.error("Error parsing JSON data:", e);
+                document.body.innerHTML = `<div class="p-4 text-red-700 bg-red-100">Error loading study data. Please check the JSON format.</div>`;
+                return;
+            }
+            
+            const pages = {
+                menuPage: document.getElementById('menuPage'),
+                flashcardsPage: document.getElementById('flashcardsPage'),
+                matchingPage: document.getElementById('matchingPage'),
+                listGamePage: document.getElementById('listGamePage'),
+                orderedListPage: document.getElementById('orderedListPage'),
+                statuteGamePage: document.getElementById('statuteGamePage')
+            };
+            const gameTitle = document.getElementById('gameTitle');
+
+            // --- STATE ---
+            let flashcardGameState = {};
+            let listGameState = {};
+            let statuteGameState = {};
+            let orderedListGameState = {};
+
+            // --- UTILITY ---
+            function shuffle(array) {
+                const newArray = [...array];
+                for (let i = newArray.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+                }
+                return newArray;
+            }
+
+            // --- NAVIGATION ---
+            function showPage(pageId) {
+                Object.values(pages).forEach(page => page && page.classList.add('hidden'));
+                if (pages[pageId]) {
+                    pages[pageId].classList.remove('hidden');
+                }
+            }
+
+            window.goHome = function() {
+                Object.keys(pages).forEach(key => {
+                    if (key !== 'menuPage' && pages[key]) {
+                        pages[key].innerHTML = '';
+                    }
+                });
+                showPage('menuPage');
+                gameTitle.textContent = "Home Screen";
+            }
+
+            window.startApp = function(appType) {
+                const pageMap = {
+                    flashcards: { title: "Flash Cards", renderFunc: renderFlashcardSetup, page: 'flashcardsPage' },
+                    matching: { title: "Matching Game", renderFunc: renderMatchingGame, page: 'matchingPage' },
+                    listGameMenu: { title: "List Game", renderFunc: renderListGameMenu, page: 'listGamePage'},
+                    listGame: { title: "General Lists", renderFunc: renderListGame, page: 'listGamePage' },
+                    orderedListGame: { title: "Ordered Lists", renderFunc: renderOrderedListGame, page: 'orderedListPage'},
+                    statuteGame: { title: "Fill In Game", renderFunc: renderStatuteGame, page: 'statuteGamePage' }
+                };
+                if (pageMap[appType]) {
+                    gameTitle.textContent = pageMap[appType].title;
+                    pageMap[appType].renderFunc();
+                    showPage(pageMap[appType].page);
+                }
+            }
+            
+            // --- FLASHCARD LOGIC ---
+            function renderFlashcardSetup() {
+                pages.flashcardsPage.innerHTML = `<div class="game-card flashcard-container w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Flash Card Setup</h2><div class="mb-6"><label for="cards-per-round" class="block text-lg mb-2">How many cards per round?</label><select id="cards-per-round" class="p-2 border rounded-md"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="${data.flashcards.length}">All (${data.flashcards.length})</option></select></div><button onclick="setupFlashcardGame()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Start Studying</button></div>`;
+            }
+            
+            window.setupFlashcardGame = function() {
+                const cardsPerRound = parseInt(document.getElementById('cards-per-round').value, 10);
+                flashcardGameState = {
+                    mainDeck: shuffle([...data.flashcards]),
+                    currentRoundDeck: [],
+                    roundSize: cardsPerRound,
+                    currentIndex: 0,
+                    carryOver: []
+                };
+                startNewFlashcardRound();
+            }
+
+            window.startNewFlashcardRound = function() {
+                const needed = flashcardGameState.roundSize - flashcardGameState.carryOver.length;
+                let newCards = [];
+                if(needed > 0) {
+                    newCards = flashcardGameState.mainDeck.splice(0, needed);
+                }
+                
+                flashcardGameState.currentRoundDeck = shuffle([...flashcardGameState.carryOver, ...newCards]);
+                flashcardGameState.carryOver = [];
+                flashcardGameState.currentIndex = 0;
+                
+                if (flashcardGameState.currentRoundDeck.length === 0) {
+                     pages.flashcardsPage.innerHTML = `<div class="game-card w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Congratulations!</h2><p class="mb-6">You have mastered all the flashcards!</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                     return;
+                }
+                
+                renderFlashcard();
+            }
+
+            function renderFlashcard() {
+                if (flashcardGameState.currentIndex >= flashcardGameState.currentRoundDeck.length) {
+                    renderEndOfRoundScreen();
+                    return;
+                }
+                const card = flashcardGameState.currentRoundDeck[flashcardGameState.currentIndex];
+                pages.flashcardsPage.innerHTML = `<div class="game-card flashcard-container w-full max-w-2xl mx-auto"><div class="flex justify-between items-center mb-4"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><div class="text-slate-500 font-medium">Card ${flashcardGameState.currentIndex + 1} of ${flashcardGameState.currentRoundDeck.length} (Deck: ${flashcardGameState.mainDeck.length})</div></div><div class="perspective-1000"><div id="flashcard" class="flip-card relative w-full h-80 cursor-pointer rounded-xl" onclick="this.classList.toggle('flipped')"><div class="flip-card-inner relative w-full h-full"><div class="flip-card-front absolute w-full h-full bg-slate-200 rounded-xl flex items-center justify-center p-6 text-center"><p class="text-xl">${card.definition}</p></div><div class="flip-card-back absolute w-full h-full bg-blue-600 text-white rounded-xl flex items-center justify-center p-6 text-center"><h2 class="text-3xl font-bold">${card.term}</h2></div></div></div></div><div class="mt-6 flex justify-center space-x-4"><button onclick="markCardAsKnown()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">I Know This</button><button onclick="markCardAsUnsure()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Not Sure</button></div></div>`;
+            }
+            
+            function renderEndOfRoundScreen() {
+                 pages.flashcardsPage.innerHTML = `<div class="game-card w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Round Complete!</h2><p class="mb-2">${flashcardGameState.carryOver.length} cards from this round will be carried over.</p><p class="mb-6">You have ${flashcardGameState.mainDeck.length} new cards left to learn.</p><button onclick="startNewFlashcardRound()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Start Next Round</button></div>`;
+            }
+
+            window.markCardAsKnown = function() {
+                flashcardGameState.currentIndex++;
+                renderFlashcard();
+            }
+
+            window.markCardAsUnsure = function() {
+                const card = flashcardGameState.currentRoundDeck[flashcardGameState.currentIndex];
+                flashcardGameState.carryOver.push(card);
+                flashcardGameState.currentIndex++;
+                renderFlashcard();
+            }
+
+            // --- STATUTE GAME LOGIC ---
+            window.renderStatuteGame = function() {
+                statuteGameState = {
+                    questions: shuffle([...data.statuteGame]),
+                    currentIndex: 0,
+                    totalScore: 0,
+                    results: []
+                };
+                displayStatuteQuestion();
+            }
+            
+            window.displayStatuteQuestion = function() {
+                if (statuteGameState.currentIndex >= statuteGameState.questions.length) {
+                    displayStatuteResults();
+                    return;
+                }
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                statuteGameState.currentQuestionPoints = 100;
+                statuteGameState.revealedIndices = new Set();
+
+                const answerMask = q.answer.split('').map(char => (char === ' ' ? ' ' : '_')).join('');
+                
+                pages.statuteGamePage.innerHTML = `
+                    <div class="game-card max-w-3xl mx-auto">
+                        <div class="flex justify-between items-center mb-4">
+                            <button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button>
+                             <span class="font-bold">${statuteGameState.currentIndex + 1} out of ${statuteGameState.questions.length} items</span>
+                        </div>
+                        <h2 class="text-center text-xl font-bold my-4">FILL IN THE BLANK</h2>
+                        <div id="statute-score" class="text-center font-bold text-lg mb-4">Question Points: ${statuteGameState.currentQuestionPoints}</div>
+                        <div class="bg-gray-100 p-8 rounded-lg text-center text-lg mb-4">${q.prompt}</div>
+                        <div id="statute-feedback" class="text-center font-bold text-lg h-8 mb-2"></div>
+                        <div class="bg-blue-800 text-white p-4 rounded-lg text-center mb-4">
+                            <p id="statute-answer-display" class="tracking-widest text-2xl font-mono">${answerMask}</p>
+                        </div>
+                        <div class="flex">
+                            <input id="statute-input" type="text" class="fill-blank-input flex-grow p-4 text-xl rounded-l-lg" placeholder="Type your answer here...">
+                            <button id="statute-submit-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold p-4 rounded-r-lg">Submit</button>
+                        </div>
+                        <div class="flex justify-between mt-6 text-sm">
+                            <button onclick="handleHint()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg">Hint (-10 pts)</button>
+                            <button onclick="showStatuteAnswer()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg">Show Answer</button>
+                            <button id="statute-next-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg hidden">Next Term</button>
+                        </div>
+                    </div>`;
+
+                const input = document.getElementById('statute-input');
+                const submitBtn = document.getElementById('statute-submit-btn');
+                input.focus();
+                submitBtn.onclick = checkStatuteAnswer;
+                input.onkeyup = (e) => { if (e.key === 'Enter') checkStatuteAnswer(); };
+            }
+
+            function updateAnswerMask() {
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const display = q.answer.split('').map((char, index) => {
+                    if (char === ' ' || statuteGameState.revealedIndices.has(index)) {
+                        return `<span>${char}</span>`;
+                    }
+                    return '<span>_</span>';
+                }).join('');
+                document.getElementById('statute-answer-display').innerHTML = display;
+            }
+
+            window.handleHint = function() {
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const unrevealed = q.answer.split('').map((c, i) => i).filter(i => !statuteGameState.revealedIndices.has(i) && q.answer[i] !== ' ');
+                
+                if (unrevealed.length > 0) {
+                    statuteGameState.currentQuestionPoints = Math.max(0, statuteGameState.currentQuestionPoints - 10);
+                    document.getElementById('statute-score').textContent = `Question Points: ${statuteGameState.currentQuestionPoints}`;
+                    
+                    for(let i=0; i < 2 && unrevealed.length > 0; i++) {
+                         const randomIndex = Math.floor(Math.random() * unrevealed.length);
+                         const revealIndex = unrevealed.splice(randomIndex, 1)[0];
+                         statuteGameState.revealedIndices.add(revealIndex);
+                    }
+                    updateAnswerMask();
+                }
+            }
+
+            function checkStatuteAnswer() {
+                const input = document.getElementById('statute-input');
+                const feedbackEl = document.getElementById('statute-feedback');
+                const userAnswer = input.value.trim().toLowerCase();
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const isMatch = q.answer.toLowerCase() === userAnswer;
+
+                if (isMatch) {
+                    feedbackEl.textContent = "CORRECT!";
+                    feedbackEl.className = "text-center font-bold text-lg h-8 mb-2 feedback-correct";
+                    statuteGameState.totalScore += statuteGameState.currentQuestionPoints;
+                    statuteGameState.results.push({ question: q, correct: true, score: statuteGameState.currentQuestionPoints });
+                    document.getElementById('statute-answer-display').textContent = q.displayAnswer;
+                    endStatuteQuestion();
+                } else {
+                    feedbackEl.textContent = "INCORRECT - Try again.";
+                    feedbackEl.className = "text-center font-bold text-lg h-8 mb-2 feedback-incorrect";
+                    statuteGameState.currentQuestionPoints = Math.max(0, statuteGameState.currentQuestionPoints - 20);
+                    document.getElementById('statute-score').textContent = `Question Points: ${statuteGameState.currentQuestionPoints}`;
+                    
+                    const correctLetters = userAnswer.split('');
+                    q.answer.split('').forEach((char, index) => {
+                        if (char.toLowerCase() === correctLetters[index]?.toLowerCase()) {
+                            statuteGameState.revealedIndices.add(index);
+                        }
+                    });
+                    updateAnswerMask();
+                }
+            }
+            
+            function endStatuteQuestion() {
+                 const input = document.getElementById('statute-input');
+                 const submitBtn = document.getElementById('statute-submit-btn');
+                 const nextBtn = document.getElementById('statute-next-btn');
+                 if(input) input.disabled = true;
+                 if(submitBtn) submitBtn.disabled = true;
+                 if(nextBtn) {
+                     nextBtn.classList.remove('hidden');
+                     nextBtn.onclick = () => {
+                        statuteGameState.currentIndex++;
+                        displayStatuteQuestion();
+                    };
+                    nextBtn.focus();
+                 }
+            }
+
+            window.showStatuteAnswer = function() {
+                 const q = statuteGameState.questions[statuteGameState.currentIndex];
+                 document.getElementById('statute-answer-display').textContent = q.displayAnswer;
+                 statuteGameState.currentQuestionPoints = 0;
+                 statuteGameState.results.push({ question: q, correct: false, score: 0 });
+                 endStatuteQuestion();
+            }
+            
+            function displayStatuteResults() {
+                let resultsHtml = `<div class="game-card w-full max-w-3xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Game Results</h2><div class="text-lg mb-6">Final Score: ${statuteGameState.totalScore}</div><div class="space-y-4 text-left">`;
+                statuteGameState.results.forEach(res => {
+                    const bgColor = res.correct ? 'bg-green-100' : 'bg-red-100';
+                    const icon = res.correct ? `<span class="text-green-600 font-bold">&#10003;</span>` : `<span class="text-red-600 font-bold">X</span>`;
+                    resultsHtml += `<div class="${bgColor} p-4 rounded-lg"><p class="font-semibold">${res.question.prompt}</p><p>Correct Answer: <span class="font-bold">${res.question.displayAnswer}</span></p><p>Your score: ${res.score} ${icon}</p></div>`;
+                });
+                resultsHtml += `</div><button onclick="renderStatuteGame()" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Play Again</button> <button onclick="goHome()" class="mt-6 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg">Main Menu</button></div>`;
+                pages.statuteGamePage.innerHTML = resultsHtml;
+            }
+
+            // --- MATCHING GAME LOGIC ---
+            let selectedTerm = null;
+            let selectedDef = null;
+            let matchedPairs = 0;
+            let totalPairs = 0;
+            window.renderMatchingGame = function() {
+                const gamePool = shuffle([...data.matching]);
+                const gameSize = Math.min(6, gamePool.length);
+                const gameSet = gamePool.slice(0, gameSize);
+                totalPairs = gameSize;
+                matchedPairs = 0;
+                selectedTerm = null;
+                selectedDef = null;
+                const terms = shuffle(gameSet.map((item, index) => ({ text: item.term, id: index })));
+                const definitions = shuffle(gameSet.map((item, index) => ({ text: item.definition, id: index })));
+                pages.matchingPage.innerHTML = `<div class="game-card w-full max-w-4xl mx-auto"><div class="flex justify-between items-center mb-6"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><h2 class="text-2xl font-bold">Matching Game</h2><button onclick="renderMatchingGame()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New Game</button></div><p id="match-instructions" class="text-center text-slate-600 mb-6">Select a term from the left and its matching definition from the right.</p><div id="win-message" class="hidden text-center p-4 mb-4 bg-green-100 text-green-800 rounded-lg"><p class="font-bold text-lg">Congratulations! You've matched all the pairs!</p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4 md:gap-6"><div id="terms-col" class="flex flex-col gap-3">${terms.map(t => `<div class="match-item p-4 border-2 border-slate-300 rounded-lg cursor-pointer hover:bg-slate-200 transition" data-type="term" data-id="${t.id}" onclick="handleMatchSelection(this)">${t.text}</div>`).join('')}</div><div id="definitions-col" class="flex flex-col gap-3">${definitions.map(d => `<div class="match-item p-4 border-2 border-slate-300 rounded-lg cursor-pointer hover:bg-slate-200 transition" data-type="definition" data-id="${d.id}" onclick="handleMatchSelection(this)">${d.text}</div>`).join('')}</div></div></div>`;
+            }
+            window.handleMatchSelection = function(target) {
+                if (target.classList.contains('matched')) return;
+                const type = target.dataset.type;
+                const id = target.dataset.id;
+                if (target.classList.contains('selected')) {
+                    target.classList.remove('selected');
+                    if (type === 'term') selectedTerm = null;
+                    if (type === 'definition') selectedDef = null;
+                    return;
+                }
+                document.querySelectorAll(`.match-item[data-type="${type}"].selected`).forEach(el => el.classList.remove('selected'));
+                target.classList.add('selected');
+                if (type === 'term') { selectedTerm = { el: target, id: id }; } else { selectedDef = { el: target, id: id }; }
+                if (selectedTerm && selectedDef) checkForMatch();
+            }
+            function checkForMatch() {
+                if (selectedTerm && selectedDef && selectedTerm.id === selectedDef.id) {
+                    selectedTerm.el.classList.add('matched');
+                    selectedDef.el.classList.add('matched');
+                    selectedTerm.el.classList.remove('selected');
+                    selectedDef.el.classList.remove('selected');
+                    matchedPairs++;
+                    if (matchedPairs === totalPairs) {
+                        document.getElementById('win-message').classList.remove('hidden');
+                        document.getElementById('match-instructions').classList.add('hidden');
+                    }
+                } else if (selectedTerm && selectedDef) {
+                    const termEl = selectedTerm.el;
+                    const defEl = selectedDef.el;
+                    termEl.classList.add('incorrect-match');
+                    defEl.classList.add('incorrect-match');
+                    setTimeout(() => {
+                        termEl.classList.remove('incorrect-match', 'selected');
+                        defEl.classList.remove('incorrect-match', 'selected');
+                    }, 500);
+                }
+                selectedTerm = null;
+                selectedDef = null;
+            }
+
+            // --- LIST GAME LOGIC ---
+            function renderListGameMenu() {
+                pages.listGamePage.innerHTML = `<div class="game-card text-center"><h2 class="text-3xl font-bold mb-6">List Games</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><button onclick="startApp('listGame')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105"><span class="text-2xl">General Lists</span><p class="font-normal text-purple-100 mt-1">Identify items from a list.</p></button><button onclick="startApp('orderedListGame')" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105"><span class="text-2xl">Ordered Lists</span><p class="font-normal text-teal-100 mt-1">Put items in the correct order.</p></button></div><button onclick="goHome()" class="mt-8 text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Main Menu</button></div>`;
+                showPage('listGamePage');
+            }
+            
+            window.renderListGame = function(questionIndex = -1) {
+                if (!listGameState.deck || listGameState.deck.length === 0 || questionIndex === -1) {
+                     listGameState.deck = shuffle([...data.listGame]);
+                }
+                
+                if (listGameState.deck.length === 0) {
+                     pages.listGamePage.innerHTML = `<div class="game-card text-center"><h2 class="text-2xl font-bold">All lists completed!</h2><p class="my-4">You've successfully completed all the lists for this session.</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                     return;
+                }
+                
+                const question = listGameState.deck[0];
+                
+                listGameState.currentQuestion = question;
+                listGameState.foundCorrectCount = 0;
+                listGameState.score = 100;
+                listGameState.unseenCorrect = shuffle([...question.correctAnswers]);
+                listGameState.unseenIncorrect = shuffle([...question.incorrectAnswers]);
+                listGameState.nextCorrectSlot = 0;
+                
+                let answerPool = [];
+                const displayCount = 8;
+                for (let i = 0; i < displayCount; i++) {
+                    const newAnswer = getNewAnswer();
+                    if (newAnswer) answerPool.push(newAnswer);
+                }
+
+                const correctPlaceholders = question.correctAnswers.map((_, index) => 
+                    `<div id="correct-slot-${index}" class="correct-placeholder rounded-lg p-2 text-center text-gray-500">[...]</div>`
+                ).join('');
+
+                pages.listGamePage.innerHTML = `<div class="game-card w-full max-w-3xl mx-auto"><div class="flex justify-between items-center mb-4"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><h2 class="text-xl font-bold text-center">General Lists</h2><button onclick="renderListGame()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New List</button></div><div class="text-center p-4 mb-4 bg-blue-50 border-l-4 border-blue-500 text-blue-800 rounded-r-lg"><p class="font-bold text-lg">${question.question}</p><p class="text-sm">Use ✓ to select correct items and X to eliminate incorrect ones.</p></div><div class="mb-6"><h3 class="font-bold text-center mb-2">Correct Answers Found</h3><div id="correct-answers-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">${correctPlaceholders}</div></div><div id="list-game-status" class="flex justify-between items-center font-bold text-lg mb-4 p-2 rounded-lg bg-gray-100"><span>Score: <span id="list-game-score">100</span></span></div><div id="list-game-win-message" class="hidden text-center p-4 mb-4 bg-green-100 text-green-800 rounded-lg"><p class="font-bold text-lg">Great job! You found all correct items for this list!</p></div><div id="next-list-container" class="hidden text-center mt-4"><button onclick="handleNextList()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105">Next List &rarr;</button></div><div id="list-game-answers" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div></div>`;
+                const answersContainer = document.getElementById('list-game-answers');
+                answerPool.forEach(answer => answersContainer.appendChild(createAnswerElement(answer)));
+            }
+
+            window.handleNextList = function() {
+                listGameState.deck.shift();
+                renderListGame();
+            }
+            
+            function getNewAnswer() {
+                if (listGameState.unseenCorrect.length > 0 && Math.random() < 0.4) {
+                    return listGameState.unseenCorrect.pop();
+                }
+                if (listGameState.unseenIncorrect.length > 0) {
+                    return listGameState.unseenIncorrect.pop();
+                }
+                if(listGameState.unseenCorrect.length > 0) {
+                     return listGameState.unseenCorrect.pop();
+                }
+                return null;
+            }
+
+            function createAnswerElement(answerText) {
+                const item = document.createElement('div');
+                item.className = 'list-item flex items-center justify-between p-3 rounded-lg';
+                
+                const textSpan = document.createElement('span');
+                textSpan.className = 'flex-grow mr-4';
+                textSpan.textContent = answerText;
+
+                const btnContainer = document.createElement('div');
+                btnContainer.className = 'list-item-btn-container flex space-x-2';
+
+                const checkBtn = document.createElement('button');
+                checkBtn.className = 'list-item-btn check-btn flex items-center justify-center';
+                checkBtn.innerHTML = '&#10003;'; // Checkmark
+                
+                const xBtn = document.createElement('button');
+                xBtn.className = 'list-item-btn x-btn flex items-center justify-center';
+                xBtn.innerHTML = 'X';
+
+                checkBtn.onclick = () => handleListSelection(item, 'select', answerText);
+                xBtn.onclick = () => handleListSelection(item, 'eliminate', answerText);
+
+                btnContainer.appendChild(checkBtn);
+                btnContainer.appendChild(xBtn);
+                item.appendChild(textSpan);
+                item.appendChild(btnContainer);
+                return item;
+            }
+
+            function replaceAndShuffle(oldElement) {
+                const parent = oldElement.parentNode;
+                const newAnswer = getNewAnswer();
+                if (newAnswer) {
+                    const newItem = createAnswerElement(newAnswer);
+                    parent.replaceChild(newItem, oldElement);
+                } else {
+                    oldElement.remove();
+                }
+                shuffleAnswerBoard();
+            }
+            
+            function shuffleAnswerBoard() {
+                const answersContainer = document.getElementById('list-game-answers');
+                if (!answersContainer) return;
+                const currentItems = Array.from(answersContainer.children);
+                const shuffledItems = shuffle(currentItems);
+                shuffledItems.forEach(item => answersContainer.appendChild(item));
+            }
+
+            window.handleListSelection = function(itemElement, action, answerText) {
+                if (itemElement.dataset.processed) return;
+                itemElement.dataset.processed = true;
+
+                const isCorrect = listGameState.currentQuestion.correctAnswers.includes(answerText);
+                const btnContainer = itemElement.querySelector('.list-item-btn-container');
+
+                if (action === 'select') { 
+                    if (isCorrect) {
+                        itemElement.classList.add('strobing-green');
+                        const correctSlot = document.getElementById(`correct-slot-${listGameState.nextCorrectSlot}`);
+                        if(correctSlot) {
+                           correctSlot.textContent = answerText;
+                           correctSlot.classList.add('filled');
+                        }
+                        listGameState.nextCorrectSlot++;
+                        listGameState.foundCorrectCount++;
+                        setTimeout(() => replaceAndShuffle(itemElement), 1000);
+                    } else {
+                        itemElement.classList.add('strobing-red'); 
+                        listGameState.score = Math.max(0, listGameState.score - 10);
+                        document.getElementById('list-game-score').textContent = listGameState.score;
+                        btnContainer.innerHTML = `<span class="text-2xl text-red-600 font-bold">X</span>`;
+                        setTimeout(() => replaceAndShuffle(itemElement), 2500);
+                    }
+                } else if (action === 'eliminate') { 
+                    if (!isCorrect) {
+                        itemElement.classList.add('fading-out');
+                        setTimeout(() => replaceAndShuffle(itemElement), 500);
+                    } else {
+                        itemElement.classList.add('strobing-purple');
+                        const correctSlot = document.getElementById(`correct-slot-${listGameState.nextCorrectSlot}`);
+                        if(correctSlot) {
+                           correctSlot.textContent = answerText;
+                           correctSlot.classList.add('filled', 'purple');
+                        }
+                        listGameState.nextCorrectSlot++;
+                        listGameState.foundCorrectCount++;
+                        listGameState.score = Math.max(0, listGameState.score - 15);
+                        document.getElementById('list-game-score').textContent = listGameState.score;
+                        setTimeout(() => replaceAndShuffle(itemElement), 1000);
+                    }
+                }
+
+                if (listGameState.foundCorrectCount === listGameState.currentQuestion.correctAnswers.length) {
+                    document.getElementById('list-game-win-message').classList.remove('hidden');
+                    document.getElementById('next-list-container').classList.remove('hidden');
+                }
+            }
+            
+            // --- ORDERED LIST GAME ---
+            window.renderOrderedListGame = function() {
+                orderedListGameState = {
+                    questions: shuffle([...data.orderedListGame]),
+                    currentIndex: 0
+                }
+                setupOrderedListGame();
+            }
+
+            function setupOrderedListGame() {
+                if (orderedListGameState.currentIndex >= orderedListGameState.questions.length) {
+                    pages.orderedListPage.innerHTML = `<div class="game-card text-center"><h2 class="text-2xl font-bold">All lists completed!</h2><p class="my-4">You've successfully completed all the ordered lists.</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                    return;
+                }
+                
+                const question = orderedListGameState.questions[orderedListGameState.currentIndex];
+                orderedListGameState.currentQuestion = question;
+                orderedListGameState.score = 100;
+                
+                const shuffledItems = shuffle([...question.items]);
+
+                let draggableHtml = `<p class="text-lg font-semibold text-center">Steps (Drag These)</p>`;
+                shuffledItems.forEach((itemText) => {
+                    draggableHtml += `<div class="draggable-item p-3 bg-gray-200 rounded-lg shadow cursor-grab" draggable="true">${itemText}</div>`;
+                });
+
+                let dropZoneHtml = `<p class="text-lg font-semibold text-center">Correct Order (Drop Here)</p>`;
+                question.items.forEach((_, index) => {
+                    dropZoneHtml += `<div class="drop-zone p-3 rounded-lg flex items-center min-h-[3.5rem]"><span class="mr-3 font-bold text-lg">${index + 1}.</span></div>`;
+                });
+                
+                pages.orderedListPage.innerHTML = `
+                    <div class="game-card w-full max-w-4xl mx-auto">
+                         <div class="flex justify-between items-center mb-6">
+                            <button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button>
+                            <h2 class="text-2xl font-bold">Ordered List Game</h2>
+                            <button onclick="nextOrderedList()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New List</button>
+                        </div>
+                        <p class="text-center font-bold text-lg mb-4">${question.question}</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div id="draggable-items-container" class="space-y-3 min-h-[10rem] bg-gray-50 p-2 rounded-lg">${draggableHtml}</div>
+                            <div id="drop-zones-container" class="space-y-3">${dropZoneHtml}</div>
+                        </div>
+                         <div id="ordered-list-feedback" class="text-center mt-8">
+                            <button id="check-order-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Check Order</button>
+                            <button id="next-ordered-list-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hidden">Next List</button>
+                        </div>
+                    </div>`;
+
+                addDragAndDropListeners();
+            }
+            
+            window.nextOrderedList = function() {
+                orderedListGameState.currentIndex++;
+                setupOrderedListGame();
+            }
+
+            function addDragAndDropListeners() {
+                const draggables = document.querySelectorAll('.draggable-item');
+                const dropZones = document.querySelectorAll('.drop-zone');
+                const sourceContainer = document.getElementById('draggable-items-container');
+
+                draggables.forEach(draggable => {
+                    draggable.addEventListener('dragstart', e => {
+                        e.dataTransfer.setData('text/plain', e.target.textContent);
+                        setTimeout(() => e.target.classList.add('dragging'), 0);
+                    });
+                    draggable.addEventListener('dragend', e => e.target.classList.remove('dragging'));
+                });
+
+                function handleDragOver(e) {
+                    e.preventDefault();
+                    // 'this' refers to the element the event listener is attached to
+                    if (this.classList.contains('drop-zone') || this.id === 'draggable-items-container') {
+                        this.classList.add('drag-over');
+                    }
+                }
+
+                function handleDragLeave(e) {
+                    // 'this' refers to the element the event listener is attached to
+                     if (this.classList.contains('drop-zone') || this.id === 'draggable-items-container') {
+                        this.classList.remove('drag-over');
+                    }
+                }
+
+                function handleDrop(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                    const draggedText = e.dataTransfer.getData('text/plain');
+                    const draggedEl = document.querySelector(`.draggable-item.dragging`);
+                    
+                    if (this.classList.contains('drop-zone')) { // Dropping on a drop zone
+                        if (this.children.length > 1) { 
+                           const existingItem = this.children[1];
+                           sourceContainer.appendChild(existingItem);
+                        }
+                         if(draggedEl) this.appendChild(draggedEl);
+                    } else if (this.id === 'draggable-items-container') { // Dropping back on source
+                        if(draggedEl) this.appendChild(draggedEl);
+                    }
+                }
+
+                dropZones.forEach(zone => {
+                    zone.addEventListener('dragover', handleDragOver);
+                    zone.addEventListener('dragleave', handleDragLeave);
+                    zone.addEventListener('drop', handleDrop);
+                });
+
+                sourceContainer.addEventListener('dragover', handleDragOver);
+                sourceContainer.addEventListener('dragleave', handleDragLeave);
+                sourceContainer.addEventListener('drop', handleDrop);
+                
+                document.getElementById('check-order-btn').onclick = checkOrder;
+            }
+            
+            function checkOrder() {
+                const dropZones = document.querySelectorAll('#drop-zones-container .drop-zone');
+                const correctOrder = orderedListGameState.currentQuestion.items;
+                const sourceContainer = document.getElementById('draggable-items-container');
+                let allCorrect = true;
+
+                dropZones.forEach((zone, index) => {
+                    const droppedItem = zone.querySelector('.draggable-item');
+                    if (droppedItem && droppedItem.textContent === correctOrder[index]) {
+                        zone.classList.add('correct');
+                        zone.classList.remove('incorrect');
+                        droppedItem.setAttribute('draggable', 'false'); // Lock correct items
+                        droppedItem.style.cursor = 'default';
+                    } else if (droppedItem) {
+                        allCorrect = false;
+                        zone.classList.add('incorrect');
+                        zone.classList.remove('correct');
+                        setTimeout(() => {
+                           zone.classList.remove('incorrect');
+                           sourceContainer.appendChild(droppedItem); // Return incorrect item
+                        }, 1000);
+                    } else {
+                        allCorrect = false; // A slot is empty
+                    }
+                });
+
+                if (allCorrect) {
+                    document.getElementById('check-order-btn').classList.add('hidden');
+                    document.getElementById('next-ordered-list-btn').classList.remove('hidden');
+                    document.getElementById('next-ordered-list-btn').onclick = nextOrderedList;
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Guide: Intro To Corrections </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Arial&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            background: #f4f8fb;
+            color: #1f2937;
+        }
+        .header-bar {
+            background-color: #1f2937;
+            color: white;
+        }
+        .footer-bar {
+            background: #dbeafe;
+        }
+        /* Card styles for menu and games */
+        .game-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 2rem;
+        }
+
+        /* Flip animation for flashcards */
+        .perspective-1000 { perspective: 1000px; }
+        .flip-card-inner { transition: transform 0.6s; transform-style: preserve-3d; }
+        .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
+        .flip-card-front, .flip-card-back { -webkit-backface-visibility: hidden; backface-visibility: hidden; }
+        .flip-card-back { transform: rotateY(180deg); }
+        .flashcard-container.large .flip-card { height: 28rem; }
+        .flashcard-container.large .game-card { max-width: 48rem; }
+
+
+        /* Styles for matching game */
+        .match-item.selected { background-color: #3b82f6; color: white; border-color: #2563eb; }
+        .match-item.matched { background-color: #16a34a; color: white; border-color: #15803d; opacity: 0.7; pointer-events: none; }
+        .match-item.incorrect-match { background-color: #dc2626; color: white; animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Styles for list game */
+        .list-item { transition: all 0.3s ease; border: 1px solid #d1d5db; }
+        .list-item-btn-container { flex-shrink: 0; }
+        .list-item-btn {
+            cursor: pointer;
+            border-radius: 9999px;
+            width: 2rem;
+            height: 2rem;
+            font-weight: bold;
+            transition: all 0.2s ease-in-out;
+            border: 2px solid transparent;
+        }
+        .check-btn { background-color: #dcfce7; color: #15803d; }
+        .check-btn:hover { background-color: #22c55e; color: white; border-color: #15803d; }
+        .x-btn { background-color: #fee2e2; color: #b91c1c; }
+        .x-btn:hover { background-color: #ef4444; color: white; border-color: #991b1b; }
+        
+        .correct-placeholder {
+             background-color: #e5e7eb;
+             border: 2px dashed #9ca3af;
+             transition: all 0.5s ease;
+             min-height: 2.5rem;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             padding: 0.5rem;
+             word-break: break-word;
+        }
+        .correct-placeholder.filled {
+            background-color: #dcfce7;
+            border-color: #16a34a;
+            color: #14532d;
+            font-weight: 600;
+            border-style: solid;
+        }
+        .correct-placeholder.purple {
+            background-color: #f3e8ff;
+            border-color: #8b5cf6;
+            color: #5b21b6;
+        }
+
+        .list-item.strobing-green { animation: strobe-green 1s forwards; }
+        .list-item.strobing-red { animation: incorrect-answer-animation 2.5s forwards; }
+        .list-item.strobing-purple { animation: strobe-purple 1s forwards; }
+        .list-item.fading-out { animation: fade-out 0.5s forwards; }
+        
+        @keyframes fade-out { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(0.9); } }
+        
+        @keyframes strobe-green {
+            0%, 100% { background-color: white; }
+            50% { background-color: #22c55e; color: white; }
+        }
+
+        @keyframes strobe-purple {
+            0%, 100% { background-color: white; }
+            50% { background-color: #a855f7; color: white; }
+        }
+
+        @keyframes incorrect-answer-animation {
+            0% { transform: translateX(0); background-color: #fee2e2; }
+            10%, 30%, 50%, 70% { background-color: #b91c1c; color: white; }
+            20%, 40%, 60%, 80% { background-color: #fee2e2; color: #1f2937; }
+            0%, 20%, 40%, 60% { transform: translateX(5px); }
+            10%, 30%, 50%, 70% { transform: translateX(-5px); }
+            85% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.9); }
+        }
+        
+        /* Fill in the blank game styles */
+        .fill-blank-input {
+            border: 2px solid #ccc;
+            transition: border-color 0.3s;
+        }
+        .fill-blank-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+        .feedback-correct {
+            color: #16a34a;
+        }
+        .feedback-incorrect {
+            color: #dc2626;
+        }
+        #statute-answer-display span {
+            display: inline-block;
+            width: 1.2ch; /* Character unit */
+            text-align: center;
+        }
+
+        /* Ordered List Game Styles */
+        .draggable-item { cursor: grab; }
+        .drop-zone { border: 2px dashed #9ca3af; transition: background-color 0.2s; }
+        .drop-zone.drag-over { background-color: #e0f2fe; }
+        .drop-zone.correct { background-color: #dcfce7; border-color: #16a34a; }
+        .drop-zone.incorrect { background-color: #fee2e2; border-color: #b91c1c; animation: shake 0.5s; }
+        .dragging { opacity: 0.5; }
+
+
+        /* Hide scrollbar for the main content area */
+        #mainContentArea::-webkit-scrollbar { display: none; }
+        #mainContentArea { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen">
+
+    <!-- JSON Question Bank -->
+    <script id="questionBank" type="application/json">
+    {
+        "flashcards": [
+    { "term": "Correctional officer (s. 943.10, F.S.)", "definition": "Any person appointed or employed full time by the state, a political subdivision, or a private entity, whose primary responsibility is the supervision, protection, care, custody, and control of inmates within a correctional institution." },
+    { "term": "Florida Administrative Code (F.A.C.)", "definition": "The body of law that oversees public regulatory agencies and governs the requirements and rules for officers working for the Florida Department of Corrections." },
+    { "term": "Florida Model Jail Standards (FMJS)", "definition": "Standards set by the Florida Sheriffs Association with which all local jails must comply, governing officers who work for county agencies." },
+    { "term": "Criminal Justice Standards and Training Commission (CJSTC)", "definition": "A commission created to oversee the certification, employment, training, and conduct of Florida law enforcement, correctional, and correctional probation officers." },
+    { "term": "s. 943.12, F.S.", "definition": "Explains the duties of the Criminal Justice Standards and Training Commission (CJSTC)." },
+    { "term": "s. 943.13, F.S.", "definition": "Sets the minimum requirements and standards a person must meet before being employed or appointed as a correctional officer." },
+    { "term": "State Officer Certification Examination (SOCE)", "definition": "An exam that must be passed upon completion of a basic recruit training program to be employed or appointed as a correctional officer." },
+    { "term": "nolo contendere", "definition": "When a person does not accept or deny responsibility for charges but agrees to accept punishment." },
+    { "term": "Values", "definition": "Principles, standards, or qualities considered worthwhile or desirable that guide or motivate a person's attitude and actions." },
+    { "term": "Ethics", "definition": "The moral principles that govern a person or group, based on society's understanding of right and wrong." },
+    { "term": "Stereotyping", "definition": "Judging a group of people who are different from you based on your own or others' opinions or encounters." },
+    { "term": "Bias or prejudice", "definition": "A strong belief or feeling about a person, group, or subject, whether positive or negative, that is formed without reviewing all available facts or information." },
+    { "term": "Discrimination", "definition": "The negative behavior toward a person or group that is based on color, race, sex, age, religion, ethnic and national origin, disability, or marital status." },
+    { "term": "Assumption", "definition": "A notion, statement, or belief about a person, group, or event that may or may not be factual." },
+    { "term": "Professionalism", "definition": "Behavior that demonstrates good character and is marked by pride in one's self and career." },
+    { "term": "Chain of command", "definition": "The order of authority within an organization." },
+    { "term": "Organization", "definition": "A group of two or more people who cooperate to accomplish one or more objectives." },
+    { "term": "Insubordination", "definition": "A failure to follow lawful orders from supervisors in your chain of command." },
+    { "term": "Criminal justice", "definition": "The structures, functions, and decision-making processes of those agencies that deal with the management and control of crime and criminal offenders." },
+    { "term": "Law enforcement", "definition": "The component of the criminal justice system responsible for enforcing and maintaining civil order." },
+    { "term": "The court system", "definition": "The component of the criminal justice system responsible for the interpretation of federal and state laws." },
+    { "term": "Corrections", "definition": "The part of the criminal justice system responsible for enforcing penalties as defined by the court system and for the care, custody, and control of inmates and pretrial detainees." },
+    { "term": "Jurisdiction", "definition": "The types of cases in which a court can make decisions." },
+    { "term": "Probation", "definition": "A court-ordered sentence that places a person under the supervision of a probation officer under specified court-ordered terms and conditions." },
+    { "term": "Parole", "definition": "The release of an inmate from a correctional institution before the inmate's court-imposed sentence ends." },
+    { "term": "Community control (house arrest)", "definition": "A form of closely monitored community supervision that is more restrictive than probation or parole." },
+    { "term": "Bill of Rights", "definition": "The first 10 amendments to the U.S. Constitution." },
+    { "term": "Search", "definition": "Governmental intrusion into a place where a person has a reasonable expectation of privacy." },
+    { "term": "Contraband", "definition": "Any unauthorized article or any authorized article in excessive quantities or altered from its intended purpose." },
+    { "term": "Probable cause", "definition": "A fair probability or reasonable grounds to believe that a crime was committed based on the totality of the circumstances." },
+    { "term": "Seizure", "definition": "The act of taking possession of contraband or evidence for a violation of rule or law." },
+    { "term": "Miranda warning", "definition": "Provides the protections of the Fifth Amendment right against self-incrimination when a suspect in custody is interrogated in a criminal investigation." },
+    { "term": "Health Insurance Portability and Accountability Act (HIPAA)", "definition": "A federal act that sets privacy standards, making it a violation to knowingly disclose protected health information of inmates and detainees." },
+    { "term": "Prison Rape Elimination Act (PREA)", "definition": "A federal act enacted to address the problem of sexual abuse of people in custody and to develop national standards for its detection, prevention, reduction, and punishment." },
+    { "term": "Privileged communication", "definition": "Communication between an inmate and an attorney, which is considered protected." },
+    { "term": "Introduction of contraband", "definition": "The introduction, taking, or sending of articles defined as contraband into a correctional facility." },
+    { "term": "Criminal act", "definition": "A violation of the law." },
+    { "term": "Felony", "definition": "Any criminal offense punishable under Florida law by death or imprisonment in a state facility for more than one year." },
+    { "term": "Misdemeanor", "definition": "Any criminal offense punishable under Florida law by imprisonment for less than one year in a county correctional facility." },
+    { "term": "Instrumentalities of a crime", "definition": "Anything used to commit a crime." },
+    { "term": "Fruits of a crime", "definition": "Anything gained or obtained by committing a crime." },
+    { "term": "Evidence", "definition": "Anything that tends to prove or disprove a fact in a judicial case or disciplinary hearing." },
+    { "term": "Direct evidence", "definition": "Evidence that directly proves a fact without inference or assumption." },
+    { "term": "Circumstantial or indirect evidence", "definition": "Evidence based on an inference, not on personal knowledge through observation, and is presumed to be true." },
+    { "term": "Physical evidence", "definition": "Material objects, such as weapons, drugs, or money." },
+    { "term": "Testimonial evidence", "definition": "Verbal evidence obtained from a witness, victim, or suspect." },
+    { "term": "Documentary evidence", "definition": "Printed or written evidence, such as a call log, written property receipt, letter, or recording." },
+    { "term": "Chain of custody", "definition": "The documentation of every person who handled evidence as well as when, why, and what changes, if any, were made to it." },
+    { "term": "Reasonable force", "definition": "The type and amount of force that the officer reasonably believes necessary to overcome resistance." },
+    { "term": "Criminal liability", "definition": "When an officer is found guilty of committing a crime." },
+    { "term": "Civil liability", "definition": "Responsibility for a wrongful act, or the failure to do an act that an officer has a duty to perform, that results in injury or property damage." },
+    { "term": "Negligence", "definition": "The failure to use due or reasonable care in a situation where an officer has a duty to act, resulting in harm to another." },
+    { "term": "Compensatory damages", "definition": "Damages designed to compensate a victim for their injuries, damages, and property loss." },
+    { "term": "Punitive damages", "definition": "Damages awarded as a means to deter and punish the defendant for negligence, recklessness, malice, or deceit." },
+    { "term": "Civil rights violation", "definition": "An unlawful interference with the fundamental rights of another person." },
+    { "term": "Color of law", "definition": "When an officer acts or claims to act in the performance of official duties under any law, ordinance, or regulation." },
+    { "term": "Direct liability", "definition": "An employing agency's negligent hiring, assignment, training, or retention of a problem employee." },
+    { "term": "Vicarious liability", "definition": "An agency being found liable even if it is not directly responsible for the injury." },
+    { "term": "Acting within the scope of employment", "definition": "The range of reasonable and foreseeable activities that an officer does while carrying out the agency's business." },
+    { "term": "Sovereign immunity", "definition": "A law that lists circumstances and requirements that must be met before an agency or its employees can be sued in a state civil action." },
+    { "term": "Qualified immunity", "definition": "Protects government officials from liability for civil damages if their conduct does not violate clearly established statutory or constitutional rights." },
+    { "term": "Emergency doctrine", "definition": "When an emergency requires spontaneous action, an officer is not required to use the same degree of judgment and care as under non-emergency conditions." },
+    { "term": "Rule 11B-27.0011, F.A.C.", "definition": "Defines the standards for maintaining good moral character for a correctional officer." },
+    { "term": "Rule 11B-27.00225, F.A.C.", "definition": "Sets forth the requirements for reliability and integrity in testing for controlled substances." },
+    { "term": "Rule 11B-27.0011(4)(c)1, F.A.C.", "definition": "Defines excessive use of force under color of authority." },
+    { "term": "s. 112.313, F.S.", "definition": "Defines the misuse of an official position." },
+    { "term": "s. 944.35, F.S.", "definition": "Defines sexual misconduct and authorizes when a Department of Corrections employee can apply physical force upon an inmate." },
+    { "term": "Rule 11B-30.009, F.A.C.", "definition": "Pertains to conduct that subverts or attempts to subvert the State Officer Certification Examination (SOCE) process." },
+    { "term": "s. 943.1395, F.S.", "definition": "Governs the revocation of an officer's certification." },
+    { "term": "ss. 944.47 and 951.22, F.S.", "definition": "Identify items that are considered contraband in correctional facilities." },
+    { "term": "s. 775.08, F.S.", "definition": "Designates crimes in Florida as either a felony or a misdemeanor." },
+    { "term": "Chapters 776 and 944, F.S.", "definition": "Govern all use of force by a correctional officer." },
+    { "term": "Graham v. Connor, 490 U.S. 386 (1989)", "definition": "The U.S. Supreme Court case that held all law enforcement use of force cases are to be judged by an objective reasonableness standard based upon the Fourth Amendment." },
+    { "term": "Hudson v. McMillan, 503 U.S. 1 (1992)", "definition": "The U.S. Supreme Court case that established that intent determines reasonableness in use of force situations in correctional settings." },
+    { "term": "s. 776.07, F.S.", "definition": "Justifies a correctional officer's use of force, including deadly force, to prevent the escape of a lawfully detained person from a penal institution." },
+    { "term": "s. 944.105, F.S.", "definition": "Addresses the use of force for private correctional officers." },
+    { "term": "18 U.S.C. § 242", "definition": "A federal law that prohibits an officer acting under color of law from violating an inmate's civil rights." },
+    { "term": "42 U.S.C. s. 1983", "definition": "A federal law that allows an officer who violates an individual's civil rights to be sued in federal court." },
+    { "term": "Chapter 111, F.S.", "definition": "Protects officers charged with civil and criminal actions if those actions occurred within the scope and course of the officer's employment." },
+    { "term": "s. 768.28, F.S.", "definition": "Defines the sovereign immunity law, which provides one of the most important protections for state and county correctional agencies and their employees." },
+    { "term": "Harlow v. Fitzgerald, 457 U.S. 800, 818 (1982)", "definition": "The U.S. Supreme Court case that established the defense of qualified immunity for government officials." },
+    { "term": "Chapter 870, F.S.", "definition": "Provides for the use of force in riots." }
+        ],
+        "matching": [
+    { "term": "Correctional officer (s. 943.10, F.S.)", "definition": "Any person appointed or employed full time by the state, a political subdivision, or a private entity, whose primary responsibility is the supervision, protection, care, custody, and control of inmates within a correctional institution." },
+    { "term": "Florida Administrative Code (F.A.C.)", "definition": "The body of law that oversees public regulatory agencies and governs the requirements and rules for officers working for the Florida Department of Corrections." },
+    { "term": "Florida Model Jail Standards (FMJS)", "definition": "Standards set by the Florida Sheriffs Association with which all local jails must comply, governing officers who work for county agencies." },
+    { "term": "Criminal Justice Standards and Training Commission (CJSTC)", "definition": "A commission created to oversee the certification, employment, training, and conduct of Florida law enforcement, correctional, and correctional probation officers." },
+    { "term": "s. 943.12, F.S.", "definition": "Explains the duties of the Criminal Justice Standards and Training Commission (CJSTC)." },
+    { "term": "s. 943.13, F.S.", "definition": "Sets the minimum requirements and standards a person must meet before being employed or appointed as a correctional officer." },
+    { "term": "State Officer Certification Examination (SOCE)", "definition": "An exam that must be passed upon completion of a basic recruit training program to be employed or appointed as a correctional officer." },
+    { "term": "nolo contendere", "definition": "When a person does not accept or deny responsibility for charges but agrees to accept punishment." },
+    { "term": "Values", "definition": "Principles, standards, or qualities considered worthwhile or desirable that guide or motivate a person's attitude and actions." },
+    { "term": "Ethics", "definition": "The moral principles that govern a person or group, based on society's understanding of right and wrong." },
+    { "term": "Stereotyping", "definition": "Judging a group of people who are different from you based on your own or others' opinions or encounters." },
+    { "term": "Bias or prejudice", "definition": "A strong belief or feeling about a person, group, or subject, whether positive or negative, that is formed without reviewing all available facts or information." },
+    { "term": "Discrimination", "definition": "The negative behavior toward a person or group that is based on color, race, sex, age, religion, ethnic and national origin, disability, or marital status." },
+    { "term": "Assumption", "definition": "A notion, statement, or belief about a person, group, or event that may or may not be factual." },
+    { "term": "Professionalism", "definition": "Behavior that demonstrates good character and is marked by pride in one's self and career." },
+    { "term": "Chain of command", "definition": "The order of authority within an organization." },
+    { "term": "Organization", "definition": "A group of two or more people who cooperate to accomplish one or more objectives." },
+    { "term": "Insubordination", "definition": "A failure to follow lawful orders from supervisors in your chain of command." },
+    { "term": "Criminal justice", "definition": "The structures, functions, and decision-making processes of those agencies that deal with the management and control of crime and criminal offenders." },
+    { "term": "Law enforcement", "definition": "The component of the criminal justice system responsible for enforcing and maintaining civil order." },
+    { "term": "The court system", "definition": "The component of the criminal justice system responsible for the interpretation of federal and state laws." },
+    { "term": "Corrections", "definition": "The part of the criminal justice system responsible for enforcing penalties as defined by the court system and for the care, custody, and control of inmates and pretrial detainees." },
+    { "term": "Jurisdiction", "definition": "The types of cases in which a court can make decisions." },
+    { "term": "Probation", "definition": "A court-ordered sentence that places a person under the supervision of a probation officer under specified court-ordered terms and conditions." },
+    { "term": "Parole", "definition": "The release of an inmate from a correctional institution before the inmate's court-imposed sentence ends." },
+    { "term": "Community control (house arrest)", "definition": "A form of closely monitored community supervision that is more restrictive than probation or parole." },
+    { "term": "Bill of Rights", "definition": "The first 10 amendments to the U.S. Constitution." },
+    { "term": "Search", "definition": "Governmental intrusion into a place where a person has a reasonable expectation of privacy." },
+    { "term": "Contraband", "definition": "Any unauthorized article or any authorized article in excessive quantities or altered from its intended purpose." },
+    { "term": "Probable cause", "definition": "A fair probability or reasonable grounds to believe that a crime was committed based on the totality of the circumstances." },
+    { "term": "Seizure", "definition": "The act of taking possession of contraband or evidence for a violation of rule or law." },
+    { "term": "Miranda warning", "definition": "Provides the protections of the Fifth Amendment right against self-incrimination when a suspect in custody is interrogated in a criminal investigation." },
+    { "term": "Health Insurance Portability and Accountability Act (HIPAA)", "definition": "A federal act that sets privacy standards, making it a violation to knowingly disclose protected health information of inmates and detainees." },
+    { "term": "Prison Rape Elimination Act (PREA)", "definition": "A federal act enacted to address the problem of sexual abuse of people in custody and to develop national standards for its detection, prevention, reduction, and punishment." },
+    { "term": "Privileged communication", "definition": "Communication between an inmate and an attorney, which is considered protected." },
+    { "term": "Introduction of contraband", "definition": "The introduction, taking, or sending of articles defined as contraband into a correctional facility." },
+    { "term": "Criminal act", "definition": "A violation of the law." },
+    { "term": "Felony", "definition": "Any criminal offense punishable under Florida law by death or imprisonment in a state facility for more than one year." },
+    { "term": "Misdemeanor", "definition": "Any criminal offense punishable under Florida law by imprisonment for less than one year in a county correctional facility." },
+    { "term": "Instrumentalities of a crime", "definition": "Anything used to commit a crime." },
+    { "term": "Fruits of a crime", "definition": "Anything gained or obtained by committing a crime." },
+    { "term": "Evidence", "definition": "Anything that tends to prove or disprove a fact in a judicial case or disciplinary hearing." },
+    { "term": "Direct evidence", "definition": "Evidence that directly proves a fact without inference or assumption." },
+    { "term": "Circumstantial or indirect evidence", "definition": "Evidence based on an inference, not on personal knowledge through observation, and is presumed to be true." },
+    { "term": "Physical evidence", "definition": "Material objects, such as weapons, drugs, or money." },
+    { "term": "Testimonial evidence", "definition": "Verbal evidence obtained from a witness, victim, or suspect." },
+    { "term": "Documentary evidence", "definition": "Printed or written evidence, such as a call log, written property receipt, letter, or recording." },
+    { "term": "Chain of custody", "definition": "The documentation of every person who handled evidence as well as when, why, and what changes, if any, were made to it." },
+    { "term": "Reasonable force", "definition": "The type and amount of force that the officer reasonably believes necessary to overcome resistance." },
+    { "term": "Criminal liability", "definition": "When an officer is found guilty of committing a crime." },
+    { "term": "Civil liability", "definition": "Responsibility for a wrongful act, or the failure to do an act that an officer has a duty to perform, that results in injury or property damage." },
+    { "term": "Negligence", "definition": "The failure to use due or reasonable care in a situation where an officer has a duty to act, resulting in harm to another." },
+    { "term": "Compensatory damages", "definition": "Damages designed to compensate a victim for their injuries, damages, and property loss." },
+    { "term": "Punitive damages", "definition": "Damages awarded as a means to deter and punish the defendant for negligence, recklessness, malice, or deceit." },
+    { "term": "Civil rights violation", "definition": "An unlawful interference with the fundamental rights of another person." },
+    { "term": "Color of law", "definition": "When an officer acts or claims to act in the performance of official duties under any law, ordinance, or regulation." },
+    { "term": "Direct liability", "definition": "An employing agency's negligent hiring, assignment, training, or retention of a problem employee." },
+    { "term": "Vicarious liability", "definition": "An agency being found liable even if it is not directly responsible for the injury." },
+    { "term": "Acting within the scope of employment", "definition": "The range of reasonable and foreseeable activities that an officer does while carrying out the agency's business." },
+    { "term": "Sovereign immunity", "definition": "A law that lists circumstances and requirements that must be met before an agency or its employees can be sued in a state civil action." },
+    { "term": "Qualified immunity", "definition": "Protects government officials from liability for civil damages if their conduct does not violate clearly established statutory or constitutional rights." },
+    { "term": "Emergency doctrine", "definition": "When an emergency requires spontaneous action, an officer is not required to use the same degree of judgment and care as under non-emergency conditions." },
+    { "term": "Rule 11B-27.0011, F.A.C.", "definition": "Defines the standards for maintaining good moral character for a correctional officer." },
+    { "term": "Rule 11B-27.00225, F.A.C.", "definition": "Sets forth the requirements for reliability and integrity in testing for controlled substances." },
+    { "term": "Rule 11B-27.0011(4)(c)1, F.A.C.", "definition": "Defines excessive use of force under color of authority." },
+    { "term": "s. 112.313, F.S.", "definition": "Defines the misuse of an official position." },
+    { "term": "s. 944.35, F.S.", "definition": "Defines sexual misconduct and authorizes when a Department of Corrections employee can apply physical force upon an inmate." },
+    { "term": "Rule 11B-30.009, F.A.C.", "definition": "Pertains to conduct that subverts or attempts to subvert the State Officer Certification Examination (SOCE) process." },
+    { "term": "s. 943.1395, F.S.", "definition": "Governs the revocation of an officer's certification." },
+    { "term": "ss. 944.47 and 951.22, F.S.", "definition": "Identify items that are considered contraband in correctional facilities." },
+    { "term": "s. 775.08, F.S.", "definition": "Designates crimes in Florida as either a felony or a misdemeanor." },
+    { "term": "Chapters 776 and 944, F.S.", "definition": "Govern all use of force by a correctional officer." },
+    { "term": "Graham v. Connor, 490 U.S. 386 (1989)", "definition": "The U.S. Supreme Court case that held all law enforcement use of force cases are to be judged by an objective reasonableness standard based upon the Fourth Amendment." },
+    { "term": "Hudson v. McMillan, 503 U.S. 1 (1992)", "definition": "The U.S. Supreme Court case that established that intent determines reasonableness in use of force situations in correctional settings." },
+    { "term": "s. 776.07, F.S.", "definition": "Justifies a correctional officer's use of force, including deadly force, to prevent the escape of a lawfully detained person from a penal institution." },
+    { "term": "s. 944.105, F.S.", "definition": "Addresses the use of force for private correctional officers." },
+    { "term": "18 U.S.C. § 242", "definition": "A federal law that prohibits an officer acting under color of law from violating an inmate's civil rights." },
+    { "term": "42 U.S.C. s. 1983", "definition": "A federal law that allows an officer who violates an individual's civil rights to be sued in federal court." },
+    { "term": "Chapter 111, F.S.", "definition": "Protects officers charged with civil and criminal actions if those actions occurred within the scope and course of the officer's employment." },
+    { "term": "s. 768.28, F.S.", "definition": "Defines the sovereign immunity law, which provides one of the most important protections for state and county correctional agencies and their employees." },
+    { "term": "Harlow v. Fitzgerald, 457 U.S. 800, 818 (1982)", "definition": "The U.S. Supreme Court case that established the defense of qualified immunity for government officials." },
+    { "term": "Chapter 870, F.S.", "definition": "Provides for the use of force in riots." }
+        ],
+        "listGame": [
+{"question": "What are some of the personal characteristics that supervisors look for in new correctional officers?", "correctAnswers": ["work alone with little or no supervision", "perform tasks without getting distracted", "independently make decisions and stand by those decisions", "learn new techniques and procedures", "adapt to change without incurring undue stress", "be attentive to their environment", "be responsible for actions taken as well as the consequences of inaction", "interact appropriately with others"], "incorrectAnswers": ["have advanced tactical and weapons skills", "be physically imposing", "have a college degree in any field", "be willing to bend the rules to get the job done", "maintain a personal distance from all inmates and staff"]},
+{"question": "What are the primary responsibilities of the Criminal Justice Standards and Training Commission (CJSTC)?", "correctAnswers": ["establish uniform minimum standards for the employment and training of officers", "establish and maintain officer training programs, curricula requirements, and certification of training schools", "certify officers who complete a Florida Basic Recruit Training Program", "review and administer appropriate administrative sanctions in instances when an officer is found to be in violation", "set forth rules and procedures to administer the requirements of ss. 943.085-943.255, F.S.", "conduct studies of compensation, education, and training", "maintain a central repository of records of all certified criminal justice officers", "develop, maintain, and administer the State Officer Certification Examination (SOCE)"], "incorrectAnswers": ["prosecute criminal cases against officers", "provide legal defense for officers in civil suits", "set salary and benefit standards for all agencies", "lobby the legislature for changes to criminal statutes", "oversee the daily operations of correctional facilities"]},
+{"question": "What are the requirements a person must meet to become a certified correctional officer in Florida?", "correctAnswers": ["be at least 18", "be a U.S. citizen", "be a high school graduate or its equivalent", "not have been convicted of any felony or misdemeanor that involves perjury or a false statement", "not have received a dishonorable discharge from any of the Armed Forces of the United States", "not have pleaded guilty or nolo contendere or been found guilty of any felony or a specified misdemeanor after July 1, 1981", "have processed fingerprints on file with the employing agency", "have passed a physical examination by a licensed physician", "have a good moral character as determined by a background investigation", "submit an affidavit-of-applicant form", "satisfactorily complete a Commission-approved course of basic recruit training", "satisfactorily pass the SOCE"], "incorrectAnswers": ["be a resident of Florida for at least one year", "pass a psychological screening exam", "have prior law enforcement or military experience", "be no older than 55 at time of application", "pass a comprehensive physical fitness test"]},
+{"question": "To become a certified correctional officer, what four things must a recruit do within four years from the start of training?", "correctAnswers": ["meet all the minimum requirements and standards", "complete the approved basic recruit training", "pass the SOCE", "become actively employed with a correctional facility in an auxiliary, part-time, or full-time officer position"], "incorrectAnswers": ["complete a one-year probationary period", "receive a promotion to a higher rank", "join a professional correctional association", "complete an advanced or specialized training course"]},
+{"question": "The CJSTC may take disciplinary action against an officer's certification for what reasons?", "correctAnswers": ["plead nolo contendere, plead guilty, or are found guilty of any felony", "plead nolo contendere, plead guilty, or are found guilty of a misdemeanor involving perjury or false statement", "fail to maintain good moral character", "commit any act constituting a felony offense, regardless of criminal prosecution", "test positive for controlled substances by a urine or blood test", "are found guilty of excessive use of force under color of authority", "engage in sexual harassment involving physical contact or misuse of official position", "misuse your official position", "engage in sex while on duty", "have unprofessional relationships with an inmate", "make false statements during the employment process", "commit conduct that subverts the SOCE process", "commit conduct that subverts a training or promotional examination process"], "incorrectAnswers": ["receive a written complaint from an inmate", "fail to qualify with a firearm on the first attempt", "be named in a civil lawsuit that is later dismissed", "refuse to work a voluntary overtime shift", "have a verbal disagreement with a supervisor"]},
+{"question": "If the CJSTC imposes discipline on an officer's certification, what penalties could be included?", "correctAnswers": ["written reprimand", "probation", "suspension", "revocation of certification"], "incorrectAnswers": ["a reduction in pay", "mandatory counseling", "a temporary demotion in rank", "a punitive transfer to another facility"]},
+{"question": "What are the examples of often false assumptions that officers should avoid making?", "correctAnswers": ["Young inmates are disrespectful to elders and authority.", "Older inmates pose less threat to officers."], "incorrectAnswers": ["Inmates with gang affiliations are always violent.", "Inmates who are polite are trying to manipulate you.", "Female inmates are less dangerous than male inmates.", "All inmates are guilty of the crimes they are charged with."]},
+{"question": "What are the characteristics of professionalism for a correctional officer?", "correctAnswers": ["service", "integrity", "respect", "quality", "fairness", "honesty", "courage", "compassion", "moral and ethical leadership", "trustworthiness", "common sense"], "incorrectAnswers": ["intimidation", "skepticism", "detachment", "cynicism", "aggression"]},
+{"question": "What are the three main components of the U.S. criminal justice system?", "correctAnswers": ["law enforcement", "the court system", "corrections"], "incorrectAnswers": ["legislature", "executive branch", "judicial branch", "public defenders", "probation services"]},
+{"question": "What are the four levels of law enforcement agencies in the United States?", "correctAnswers": ["local or municipal", "county", "state", "federal (U.S. government agencies)"], "incorrectAnswers": ["special jurisdiction", "tribal", "private security", "campus police", "transit police"]},
+{"question": "What are the four levels of the Florida state court system?", "correctAnswers": ["county courts", "circuit courts", "district courts of appeal (DCA)", "Florida Supreme Court"], "incorrectAnswers": ["magistrate courts", "superior courts", "appellate division", "traffic court", "family court"]},
+{"question": "What are the components of the corrections system in Florida?", "correctAnswers": ["federal and state prisons", "county jails", "county and municipal holding facilities", "treatment and evaluation centers", "probation, parole, and community control", "Juvenile assessment/detention centers"], "incorrectAnswers": ["halfway houses", "private prisons", "boot camps", "youth ranches", "re-entry programs"]},
+{"question": "What types of searches may be used for visitors entering a correctional facility?", "correctAnswers": ["pat search", "canine", "drug", "body scan", "metal detector"], "incorrectAnswers": ["strip search", "cavity search", "vehicle search", "cell search", "property search"]},
+{"question": "According to Florida Statutes, what items are identified as contraband in a correctional facility?", "correctAnswers": ["currency or coins", "tobacco products", "controlled substances", "non-prescribed drugs of any kind or nature", "articles of food or clothing that have been altered or are in excessive quantity", "firearms or dangerous weapons", "cell phones or portable communication devices", "any items used to aid or make an escape"], "incorrectAnswers": ["excessive amounts of legal mail", "photographs of family members", "more than one religious book", "personal hygiene items from an outside vendor", "commissary items traded with other inmates"]},
+{"question": "According to Florida Statutes, what are the approved methods for the final disposition of confiscated contraband?", "correctAnswers": ["destroyed", "converted", "reused"], "incorrectAnswers": ["sold", "donated to the original owner's family", "stored indefinitely as evidence", "returned to the inmate upon release"]},
+{"question": "What are the five major types of evidence usually found in a correctional setting?", "correctAnswers": ["direct evidence", "circumstantial or indirect evidence", "physical evidence", "testimonial evidence", "documentary evidence"], "incorrectAnswers": ["corroborating evidence", "hearsay evidence", "inadmissible evidence", "forensic evidence", "expert witness evidence"]},
+{"question": "What are the key components that must be documented in a chain of custody?", "correctAnswers": ["Who", "What", "When", "Where", "Why", "How"], "incorrectAnswers": ["Cost", "Weight", "Color", "Motive"]},
+{"question": "What are the different types of liabilities an officer can face for excessive use of force?", "correctAnswers": ["criminal", "civil", "civil rights", "administrative"], "incorrectAnswers": ["moral", "ethical", "professional", "departmental"]},
+{"question": "What are the four elements of negligence in a civil lawsuit?", "correctAnswers": ["a duty to act with care", "failure to perform that duty", "proof that the failure caused damages", "actual damages resulted"], "incorrectAnswers": ["criminal intent", "a malicious act", "a violation of policy", "a disregard for safety"]},
+{"question": "What are the two main categories of damages that may be awarded in a civil lawsuit?", "correctAnswers": ["compensatory damages", "punitive damages"], "incorrectAnswers": ["nominal damages", "statutory damages", "liquidated damages", "consequential damages"]},
+{"question": "What are the legal defenses that may protect an officer from civil and criminal liability?", "correctAnswers": ["Acts done in good faith", "Acts done in a reasonable manner", "Acts justified under the law", "Emergency doctrine"], "incorrectAnswers": ["Sovereign immunity", "Qualified immunity", "Contributory negligence", "Assumption of risk"]}
+        ],
+        "orderedListGame": [
+    {"question": "Place the steps of the Ethical Decision-Making Tool in the correct order.", "items": ["Is my action legal?", "Will the result of my action be good?", "Will what I plan to do actually work?", "Is there a less harmful alternative?", "Does it undermine some equal or more important value?", "Does a good end ever justify a bad means?", "Will I be able to justify my action if my decision is made public?"]},
+    {"question": "Arrange the typical rank structure in a correctional agency from highest to lowest.", "items": ["Sheriff or Warden", "Undersheriff or Assistant Warden", "Colonel or Chief of Security", "Major", "Captain", "Lieutenant", "Sergeant", "Corporal", "Deputy or Officer"]},
+    {"question": "Place the components of the chain of custody for documentation in the correct order.", "items": ["Who", "What", "When", "Where", "Why", "How"]}
+        ],
+        "statuteGame": [
+    {"prompt": "The law that defines a correctional officer in Florida.", "answer": "943.10", "displayAnswer": "Section 943.10, F.S."},
+    {"prompt": "The body of law that oversees public regulatory agencies in Florida.", "answer": "FAC", "displayAnswer": "Florida Administrative Code (F.A.C.)"},
+    {"prompt": "Standards set by the Florida Sheriffs Association with which all local jails must comply.", "answer": "FMJS", "displayAnswer": "Florida Model Jail Standards (FMJS)"},
+    {"prompt": "The commission created to oversee the certification, employment, training, and conduct of Florida criminal justice officers.", "answer": "CJSTC", "displayAnswer": "Criminal Justice Standards and Training Commission (CJSTC)"},
+    {"prompt": "Explains the duties of the CJSTC, such as establishing uniform minimum standards for employment and training.", "answer": "943.12", "displayAnswer": "Section 943.12, F.S."},
+    {"prompt": "Sets the minimum requirements and standards a person must meet before being employed as a correctional officer.", "answer": "943.13", "displayAnswer": "Section 943.13, F.S."},
+    {"prompt": "A plea where a person does not accept or deny responsibility for charges but agrees to accept punishment.", "answer": "nolo contendere", "displayAnswer": "nolo contendere"},
+    {"prompt": "The exam a recruit must pass within three attempts to become a certified officer in Florida.", "answer": "SOCE", "displayAnswer": "State Officer Certification Examination (SOCE)"},
+    {"prompt": "The CJSTC rule that defines good moral character for officers.", "answer": "11B-27.0011", "displayAnswer": "CJSTC Rule 11B-27.0011, F.A.C."},
+    {"prompt": "The statute that defines misuse of official position.", "answer": "112.313", "displayAnswer": "Section 112.313, F.S."},
+    {"prompt": "The statute that defines sexual misconduct for correctional officers.", "answer": "944.35", "displayAnswer": "Section 944.35, F.S."},
+    {"prompt": "The statute that outlines the penalties the CJSTC can impose on an officer's certification.", "answer": "943.1395", "displayAnswer": "Section 943.1395, F.S."},
+    {"prompt": "Principles, standards, or qualities considered worthwhile or desirable that guide a person's attitude and actions.", "answer": "Values", "displayAnswer": "Values"},
+    {"prompt": "The moral principles that govern a person or group, based on society's understanding of right and wrong.", "answer": "Ethics", "displayAnswer": "Ethics"},
+    {"prompt": "Judging a group of people who are different from you based on your own or others' opinions or encounters.", "answer": "Stereotyping", "displayAnswer": "Stereotyping"},
+    {"prompt": "A strong belief or feeling about a person, group, or subject, whether positive or negative, that is formed without reviewing all available facts.", "answer": "Bias or prejudice", "displayAnswer": "Bias or prejudice"},
+    {"prompt": "The negative behavior toward a person or group that is based on color, race, sex, age, religion, ethnic and national origin, disability, or marital status.", "answer": "Discrimination", "displayAnswer": "Discrimination"},
+    {"prompt": "A notion, statement, or belief about a person, group, or event that may or may not be factual.", "answer": "Assumption", "displayAnswer": "Assumption"},
+    {"prompt": "Behavior that demonstrates good character and is marked by pride in one's self and career.", "answer": "Professionalism", "displayAnswer": "Professionalism"},
+    {"prompt": "The order of authority within an organization.", "answer": "Chain of command", "displayAnswer": "Chain of command"},
+    {"prompt": "A failure to follow lawful orders from supervisors in your chain of command.", "answer": "Insubordination", "displayAnswer": "Insubordination"},
+    {"prompt": "The structures, functions, and decision-making processes of agencies that deal with the management and control of crime.", "answer": "Criminal justice", "displayAnswer": "Criminal justice"},
+    {"prompt": "The amendment that prohibits unreasonable search and seizure.", "answer": "Fourth Amendment", "displayAnswer": "Fourth Amendment"},
+    {"prompt": "The amendment that prohibits self-incrimination and requires due process of law.", "answer": "Fifth Amendment", "displayAnswer": "Fifth Amendment"},
+    {"prompt": "The amendment that guarantees the right to a speedy and public trial and to counsel.", "answer": "Sixth Amendment", "displayAnswer": "Sixth Amendment"},
+    {"prompt": "The amendment that prohibits excessive bails and fines, and cruel and unusual punishment.", "answer": "Eighth Amendment", "displayAnswer": "Eighth Amendment"},
+    {"prompt": "Any unauthorized article or any authorized article in excessive quantities or altered from its intended purpose.", "answer": "Contraband", "displayAnswer": "Contraband"},
+    {"prompt": "A fair probability or reasonable grounds to believe that a crime was committed based on the totality of the circumstances.", "answer": "Probable cause", "displayAnswer": "Probable cause"},
+    {"prompt": "The act of taking possession of contraband or evidence for a violation of rule or law.", "answer": "Seizure", "displayAnswer": "Seizure"},
+    {"prompt": "The statute that makes the introduction of contraband into a correctional facility a felony crime.", "answer": "944.47", "displayAnswer": "Section 944.47, F.S."},
+    {"prompt": "The statute that designates a crime in Florida as either a felony or a misdemeanor.", "answer": "775.08", "displayAnswer": "Section 775.08, F.S."},
+    {"prompt": "Anything that tends to prove or disprove a fact in a judicial case or disciplinary hearing.", "answer": "Evidence", "displayAnswer": "Evidence"},
+    {"prompt": "The documentation of every person who handled evidence as well as when, why, and what changes were made to it.", "answer": "Chain of custody", "displayAnswer": "Chain of custody"},
+    {"prompt": "The type and amount of force that an officer reasonably believes is necessary to overcome resistance.", "answer": "Reasonable force", "displayAnswer": "Reasonable force"},
+    {"prompt": "The U.S. Supreme Court case that held that all law enforcement use of force cases are to be judged by an objective reasonableness standard.", "answer": "Graham v. Connor", "displayAnswer": "Graham v. Connor"},
+    {"prompt": "The U.S. Supreme Court case that established that intent determines reasonableness in use of force situations in correctional settings.", "answer": "Hudson v. McMillan", "displayAnswer": "Hudson v. McMillan"},
+    {"prompt": "The statute that outlines when a correctional officer is authorized to apply physical force upon an inmate.", "answer": "944.35", "displayAnswer": "Section 944.35, F.S."},
+    {"prompt": "The statute that justifies a correctional officer's use of force, including deadly force, to prevent an escape.", "answer": "776.07", "displayAnswer": "Section 776.07, F.S."},
+    {"prompt": "When an officer is found guilty of committing a crime.", "answer": "Criminal liability", "displayAnswer": "Criminal liability"},
+    {"prompt": "Responsibility for a wrongful act or failure to act that results in injury or damages.", "answer": "Civil liability", "displayAnswer": "Civil liability"},
+    {"prompt": "The failure to use due or reasonable care in a situation where an officer has a duty to act, resulting in harm.", "answer": "Negligence", "displayAnswer": "Negligence"},
+    {"prompt": "The federal law that prohibits an officer acting under color of law from violating an inmate's civil rights.", "answer": "18 U.S.C. 242", "displayAnswer": "18 U.S.C. § 242"},
+    {"prompt": "The federal law under which an officer who violates an individual's civil rights may be sued.", "answer": "42 U.S.C. 1983", "displayAnswer": "42 U.S.C. § 1983"},
+    {"prompt": "The range of reasonable and foreseeable activities that an officer does while carrying out the agency's business.", "answer": "Acting within the scope of employment", "displayAnswer": "Acting within the scope of employment"},
+    {"prompt": "The law that protects state and county correctional agencies and their employees from personal liability in a state lawsuit.", "answer": "Sovereign immunity", "displayAnswer": "Sovereign immunity"},
+    {"prompt": "Protects government officials from liability for civil damages as long as their conduct does not violate clearly established statutory or constitutional rights.", "answer": "Qualified immunity", "displayAnswer": "Qualified immunity"},
+    {"prompt": "When an emergency requires spontaneous action, an officer is not required to use the same degree of judgment and care as in non-emergency conditions.", "answer": "Emergency doctrine", "displayAnswer": "Emergency doctrine"}
+        ]
+    }
+    </script>
+
+    <!-- Header -->
+    <header class="header-bar p-2 shadow-md z-10">
+        <div class="container mx-auto flex justify-between items-center">
+             <svg viewBox="0 0 270 170" class="h-16">
+                <path fill="#2563eb" d="M120.8,11.3l-81.2,49.2c-6.1,3.7-9.8,10.2-9.8,17.2v83.5c0,4.8,3.9,8.7,8.7,8.7h162.3c4.8,0,8.7-3.9,8.7-8.7V77.7c0-7-3.7-13.5-9.8-17.2L119.2,11.3z"/>
+                <path fill="#60a5fa" d="M135,10.5l81.2,49.2c6.1,3.7,9.8,10.2,9.8,17.2v83.5c0,4.8-3.9,8.7-8.7,8.7H135V10.5z"/>
+                <text x="10" y="145" font-family="Arial, sans-serif" font-size="38" fill="#FFFFFF" font-weight="bold">BKRDI-FY</text>
+                <text x="10" y="165" font-family="Arial, sans-serif" font-size="14" fill="#FFFFFF" font-weight="bold">TEST & STUDY</text>
+            </svg>
+            <div id="gameTitle" class="text-lg font-semibold">Home Screen</div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main id="mainContentArea" class="flex-grow container mx-auto p-4 sm:p-6 lg:p-8 overflow-y-auto">
+
+        <!-- Main Menu Page -->
+        <div id="menuPage">
+            <div class="game-card text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold text-slate-800 mb-2">Intro to Corrections</h2>
+                <p class="text-lg text-slate-600 mb-8">Interactive Study Guide</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <button onclick="startApp('flashcards')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Flash Cards</span>
+                        <p class="font-normal text-blue-100 mt-1">Review key terms.</p>
+                    </button>
+                    <button onclick="startApp('matching')" class="bg-green-600 hover:bg-green-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                         <span class="text-2xl">Matching Game</span>
+                         <p class="font-normal text-green-100 mt-1">Match terms to definitions.</p>
+                    </button>
+                    <button onclick="startApp('listGameMenu')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                         <span class="text-2xl">List Game</span>
+                         <p class="font-normal text-purple-100 mt-1">Identify items from a list.</p>
+                    </button>
+                     <button onclick="startApp('statuteGame')" class="bg-red-600 hover:bg-red-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Fill In Game</span>
+                        <p class="font-normal text-red-100 mt-1">Fill in the blanks.</p>
+                    </button>
+                    <button onclick="window.open('https://tehcrayz.github.io/soce/IntroductiontoCorrections.html', '_blank')" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Tests & Study</span>
+                        <p class="font-normal text-yellow-100 mt-1">BKRDIFY EXAMS.</p>
+                    </button>
+                    <button onclick="window.open('https://tinyurl.com/hjtyhtyery/', '_blank')" class="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105">
+                        <span class="text-2xl">Chapter Notes</span>
+                        <p class="font-normal text-cyan-100 mt-1">The full deal.</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dynamic Game Pages -->
+        <div id="flashcardsPage" class="hidden"></div>
+        <div id="matchingPage" class="hidden"></div>
+        <div id="listGamePage" class="hidden"></div>
+        <div id="orderedListPage" class="hidden"></div>
+        <div id="statuteGamePage" class="hidden"></div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer-bar p-3 shadow-md z-10">
+        <div class="container mx-auto text-center text-sm text-gray-700">
+            BKRDI-Fy Version 1.9.3
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- DATA & DOM ---
+            let data = {};
+            try {
+                data = JSON.parse(document.getElementById('questionBank').textContent);
+            } catch (e) {
+                console.error("Error parsing JSON data:", e);
+                document.body.innerHTML = `<div class="p-4 text-red-700 bg-red-100">Error loading study data. Please check the JSON format.</div>`;
+                return;
+            }
+            
+            const pages = {
+                menuPage: document.getElementById('menuPage'),
+                flashcardsPage: document.getElementById('flashcardsPage'),
+                matchingPage: document.getElementById('matchingPage'),
+                listGamePage: document.getElementById('listGamePage'),
+                orderedListPage: document.getElementById('orderedListPage'),
+                statuteGamePage: document.getElementById('statuteGamePage')
+            };
+            const gameTitle = document.getElementById('gameTitle');
+
+            // --- STATE ---
+            let flashcardGameState = {};
+            let listGameState = {};
+            let statuteGameState = {};
+            let orderedListGameState = {};
+
+            // --- UTILITY ---
+            function shuffle(array) {
+                const newArray = [...array];
+                for (let i = newArray.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+                }
+                return newArray;
+            }
+
+            // --- NAVIGATION ---
+            function showPage(pageId) {
+                Object.values(pages).forEach(page => page && page.classList.add('hidden'));
+                if (pages[pageId]) {
+                    pages[pageId].classList.remove('hidden');
+                }
+            }
+
+            window.goHome = function() {
+                Object.keys(pages).forEach(key => {
+                    if (key !== 'menuPage' && pages[key]) {
+                        pages[key].innerHTML = '';
+                    }
+                });
+                showPage('menuPage');
+                gameTitle.textContent = "Home Screen";
+            }
+
+            window.startApp = function(appType) {
+                const pageMap = {
+                    flashcards: { title: "Flash Cards", renderFunc: renderFlashcardSetup, page: 'flashcardsPage' },
+                    matching: { title: "Matching Game", renderFunc: renderMatchingGame, page: 'matchingPage' },
+                    listGameMenu: { title: "List Game", renderFunc: renderListGameMenu, page: 'listGamePage'},
+                    listGame: { title: "General Lists", renderFunc: renderListGame, page: 'listGamePage' },
+                    orderedListGame: { title: "Ordered Lists", renderFunc: renderOrderedListGame, page: 'orderedListPage'},
+                    statuteGame: { title: "Fill In Game", renderFunc: renderStatuteGame, page: 'statuteGamePage' }
+                };
+                if (pageMap[appType]) {
+                    gameTitle.textContent = pageMap[appType].title;
+                    pageMap[appType].renderFunc();
+                    showPage(pageMap[appType].page);
+                }
+            }
+            
+            // --- FLASHCARD LOGIC ---
+            function renderFlashcardSetup() {
+                pages.flashcardsPage.innerHTML = `<div class="game-card flashcard-container w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Flash Card Setup</h2><div class="mb-6"><label for="cards-per-round" class="block text-lg mb-2">How many cards per round?</label><select id="cards-per-round" class="p-2 border rounded-md"><option value="10">10</option><option value="20">20</option><option value="50">50</option><option value="${data.flashcards.length}">All (${data.flashcards.length})</option></select></div><button onclick="setupFlashcardGame()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Start Studying</button></div>`;
+            }
+            
+            window.setupFlashcardGame = function() {
+                const cardsPerRound = parseInt(document.getElementById('cards-per-round').value, 10);
+                flashcardGameState = {
+                    mainDeck: shuffle([...data.flashcards]),
+                    currentRoundDeck: [],
+                    roundSize: cardsPerRound,
+                    currentIndex: 0,
+                    carryOver: []
+                };
+                startNewFlashcardRound();
+            }
+
+            window.startNewFlashcardRound = function() {
+                const needed = flashcardGameState.roundSize - flashcardGameState.carryOver.length;
+                let newCards = [];
+                if(needed > 0) {
+                    newCards = flashcardGameState.mainDeck.splice(0, needed);
+                }
+                
+                flashcardGameState.currentRoundDeck = shuffle([...flashcardGameState.carryOver, ...newCards]);
+                flashcardGameState.carryOver = [];
+                flashcardGameState.currentIndex = 0;
+                
+                if (flashcardGameState.currentRoundDeck.length === 0) {
+                     pages.flashcardsPage.innerHTML = `<div class="game-card w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Congratulations!</h2><p class="mb-6">You have mastered all the flashcards!</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                     return;
+                }
+                
+                renderFlashcard();
+            }
+
+            function renderFlashcard() {
+                if (flashcardGameState.currentIndex >= flashcardGameState.currentRoundDeck.length) {
+                    renderEndOfRoundScreen();
+                    return;
+                }
+                const card = flashcardGameState.currentRoundDeck[flashcardGameState.currentIndex];
+                pages.flashcardsPage.innerHTML = `<div class="game-card flashcard-container w-full max-w-2xl mx-auto"><div class="flex justify-between items-center mb-4"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><div class="text-slate-500 font-medium">Card ${flashcardGameState.currentIndex + 1} of ${flashcardGameState.currentRoundDeck.length} (Deck: ${flashcardGameState.mainDeck.length})</div></div><div class="perspective-1000"><div id="flashcard" class="flip-card relative w-full h-80 cursor-pointer rounded-xl" onclick="this.classList.toggle('flipped')"><div class="flip-card-inner relative w-full h-full"><div class="flip-card-front absolute w-full h-full bg-slate-200 rounded-xl flex items-center justify-center p-6 text-center"><p class="text-xl">${card.definition}</p></div><div class="flip-card-back absolute w-full h-full bg-blue-600 text-white rounded-xl flex items-center justify-center p-6 text-center"><h2 class="text-3xl font-bold">${card.term}</h2></div></div></div></div><div class="mt-6 flex justify-center space-x-4"><button onclick="markCardAsKnown()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">I Know This</button><button onclick="markCardAsUnsure()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Not Sure</button></div></div>`;
+            }
+            
+            function renderEndOfRoundScreen() {
+                 pages.flashcardsPage.innerHTML = `<div class="game-card w-full max-w-2xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Round Complete!</h2><p class="mb-2">${flashcardGameState.carryOver.length} cards from this round will be carried over.</p><p class="mb-6">You have ${flashcardGameState.mainDeck.length} new cards left to learn.</p><button onclick="startNewFlashcardRound()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Start Next Round</button></div>`;
+            }
+
+            window.markCardAsKnown = function() {
+                flashcardGameState.currentIndex++;
+                renderFlashcard();
+            }
+
+            window.markCardAsUnsure = function() {
+                const card = flashcardGameState.currentRoundDeck[flashcardGameState.currentIndex];
+                flashcardGameState.carryOver.push(card);
+                flashcardGameState.currentIndex++;
+                renderFlashcard();
+            }
+
+            // --- STATUTE GAME LOGIC ---
+            window.renderStatuteGame = function() {
+                statuteGameState = {
+                    questions: shuffle([...data.statuteGame]),
+                    currentIndex: 0,
+                    totalScore: 0,
+                    results: []
+                };
+                displayStatuteQuestion();
+            }
+            
+            window.displayStatuteQuestion = function() {
+                if (statuteGameState.currentIndex >= statuteGameState.questions.length) {
+                    displayStatuteResults();
+                    return;
+                }
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                statuteGameState.currentQuestionPoints = 100;
+                statuteGameState.revealedIndices = new Set();
+
+                const answerMask = q.answer.split('').map(char => (char === ' ' ? ' ' : '_')).join('');
+                
+                pages.statuteGamePage.innerHTML = `
+                    <div class="game-card max-w-3xl mx-auto">
+                        <div class="flex justify-between items-center mb-4">
+                            <button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button>
+                             <span class="font-bold">${statuteGameState.currentIndex + 1} out of ${statuteGameState.questions.length} items</span>
+                        </div>
+                        <h2 class="text-center text-xl font-bold my-4">FILL IN THE BLANK</h2>
+                        <div id="statute-score" class="text-center font-bold text-lg mb-4">Question Points: ${statuteGameState.currentQuestionPoints}</div>
+                        <div class="bg-gray-100 p-8 rounded-lg text-center text-lg mb-4">${q.prompt}</div>
+                        <div id="statute-feedback" class="text-center font-bold text-lg h-8 mb-2"></div>
+                        <div class="bg-blue-800 text-white p-4 rounded-lg text-center mb-4">
+                            <p id="statute-answer-display" class="tracking-widest text-2xl font-mono">${answerMask}</p>
+                        </div>
+                        <div class="flex">
+                            <input id="statute-input" type="text" class="fill-blank-input flex-grow p-4 text-xl rounded-l-lg" placeholder="Type your answer here...">
+                            <button id="statute-submit-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold p-4 rounded-r-lg">Submit</button>
+                        </div>
+                        <div class="flex justify-between mt-6 text-sm">
+                            <button onclick="handleHint()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg">Hint (-10 pts)</button>
+                            <button onclick="showStatuteAnswer()" class="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg">Show Answer</button>
+                            <button id="statute-next-btn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg hidden">Next Term</button>
+                        </div>
+                    </div>`;
+
+                const input = document.getElementById('statute-input');
+                const submitBtn = document.getElementById('statute-submit-btn');
+                input.focus();
+                submitBtn.onclick = checkStatuteAnswer;
+                input.onkeyup = (e) => { if (e.key === 'Enter') checkStatuteAnswer(); };
+            }
+
+            function updateAnswerMask() {
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const display = q.answer.split('').map((char, index) => {
+                    if (char === ' ' || statuteGameState.revealedIndices.has(index)) {
+                        return `<span>${char}</span>`;
+                    }
+                    return '<span>_</span>';
+                }).join('');
+                document.getElementById('statute-answer-display').innerHTML = display;
+            }
+
+            window.handleHint = function() {
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const unrevealed = q.answer.split('').map((c, i) => i).filter(i => !statuteGameState.revealedIndices.has(i) && q.answer[i] !== ' ');
+                
+                if (unrevealed.length > 0) {
+                    statuteGameState.currentQuestionPoints = Math.max(0, statuteGameState.currentQuestionPoints - 10);
+                    document.getElementById('statute-score').textContent = `Question Points: ${statuteGameState.currentQuestionPoints}`;
+                    
+                    for(let i=0; i < 2 && unrevealed.length > 0; i++) {
+                         const randomIndex = Math.floor(Math.random() * unrevealed.length);
+                         const revealIndex = unrevealed.splice(randomIndex, 1)[0];
+                         statuteGameState.revealedIndices.add(revealIndex);
+                    }
+                    updateAnswerMask();
+                }
+            }
+
+            function checkStatuteAnswer() {
+                const input = document.getElementById('statute-input');
+                const feedbackEl = document.getElementById('statute-feedback');
+                const userAnswer = input.value.trim().toLowerCase();
+                const q = statuteGameState.questions[statuteGameState.currentIndex];
+                const isMatch = q.answer.toLowerCase() === userAnswer;
+
+                if (isMatch) {
+                    feedbackEl.textContent = "CORRECT!";
+                    feedbackEl.className = "text-center font-bold text-lg h-8 mb-2 feedback-correct";
+                    statuteGameState.totalScore += statuteGameState.currentQuestionPoints;
+                    statuteGameState.results.push({ question: q, correct: true, score: statuteGameState.currentQuestionPoints });
+                    document.getElementById('statute-answer-display').textContent = q.displayAnswer;
+                    endStatuteQuestion();
+                } else {
+                    feedbackEl.textContent = "INCORRECT - Try again.";
+                    feedbackEl.className = "text-center font-bold text-lg h-8 mb-2 feedback-incorrect";
+                    statuteGameState.currentQuestionPoints = Math.max(0, statuteGameState.currentQuestionPoints - 20);
+                    document.getElementById('statute-score').textContent = `Question Points: ${statuteGameState.currentQuestionPoints}`;
+                    
+                    const correctLetters = userAnswer.split('');
+                    q.answer.split('').forEach((char, index) => {
+                        if (char.toLowerCase() === correctLetters[index]?.toLowerCase()) {
+                            statuteGameState.revealedIndices.add(index);
+                        }
+                    });
+                    updateAnswerMask();
+                }
+            }
+            
+            function endStatuteQuestion() {
+                 const input = document.getElementById('statute-input');
+                 const submitBtn = document.getElementById('statute-submit-btn');
+                 const nextBtn = document.getElementById('statute-next-btn');
+                 if(input) input.disabled = true;
+                 if(submitBtn) submitBtn.disabled = true;
+                 if(nextBtn) {
+                     nextBtn.classList.remove('hidden');
+                     nextBtn.onclick = () => {
+                        statuteGameState.currentIndex++;
+                        displayStatuteQuestion();
+                    };
+                    nextBtn.focus();
+                 }
+            }
+
+            window.showStatuteAnswer = function() {
+                 const q = statuteGameState.questions[statuteGameState.currentIndex];
+                 document.getElementById('statute-answer-display').textContent = q.displayAnswer;
+                 statuteGameState.currentQuestionPoints = 0;
+                 statuteGameState.results.push({ question: q, correct: false, score: 0 });
+                 endStatuteQuestion();
+            }
+            
+            function displayStatuteResults() {
+                let resultsHtml = `<div class="game-card w-full max-w-3xl mx-auto text-center"><h2 class="text-2xl font-bold mb-4">Game Results</h2><div class="text-lg mb-6">Final Score: ${statuteGameState.totalScore}</div><div class="space-y-4 text-left">`;
+                statuteGameState.results.forEach(res => {
+                    const bgColor = res.correct ? 'bg-green-100' : 'bg-red-100';
+                    const icon = res.correct ? `<span class="text-green-600 font-bold">&#10003;</span>` : `<span class="text-red-600 font-bold">X</span>`;
+                    resultsHtml += `<div class="${bgColor} p-4 rounded-lg"><p class="font-semibold">${res.question.prompt}</p><p>Correct Answer: <span class="font-bold">${res.question.displayAnswer}</span></p><p>Your score: ${res.score} ${icon}</p></div>`;
+                });
+                resultsHtml += `</div><button onclick="renderStatuteGame()" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Play Again</button> <button onclick="goHome()" class="mt-6 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-8 rounded-lg">Main Menu</button></div>`;
+                pages.statuteGamePage.innerHTML = resultsHtml;
+            }
+
+            // --- MATCHING GAME LOGIC ---
+            let selectedTerm = null;
+            let selectedDef = null;
+            let matchedPairs = 0;
+            let totalPairs = 0;
+            window.renderMatchingGame = function() {
+                const gamePool = shuffle([...data.matching]);
+                const gameSize = Math.min(6, gamePool.length);
+                const gameSet = gamePool.slice(0, gameSize);
+                totalPairs = gameSize;
+                matchedPairs = 0;
+                selectedTerm = null;
+                selectedDef = null;
+                const terms = shuffle(gameSet.map((item, index) => ({ text: item.term, id: index })));
+                const definitions = shuffle(gameSet.map((item, index) => ({ text: item.definition, id: index })));
+                pages.matchingPage.innerHTML = `<div class="game-card w-full max-w-4xl mx-auto"><div class="flex justify-between items-center mb-6"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><h2 class="text-2xl font-bold">Matching Game</h2><button onclick="renderMatchingGame()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New Game</button></div><p id="match-instructions" class="text-center text-slate-600 mb-6">Select a term from the left and its matching definition from the right.</p><div id="win-message" class="hidden text-center p-4 mb-4 bg-green-100 text-green-800 rounded-lg"><p class="font-bold text-lg">Congratulations! You've matched all the pairs!</p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-4 md:gap-6"><div id="terms-col" class="flex flex-col gap-3">${terms.map(t => `<div class="match-item p-4 border-2 border-slate-300 rounded-lg cursor-pointer hover:bg-slate-200 transition" data-type="term" data-id="${t.id}" onclick="handleMatchSelection(this)">${t.text}</div>`).join('')}</div><div id="definitions-col" class="flex flex-col gap-3">${definitions.map(d => `<div class="match-item p-4 border-2 border-slate-300 rounded-lg cursor-pointer hover:bg-slate-200 transition" data-type="definition" data-id="${d.id}" onclick="handleMatchSelection(this)">${d.text}</div>`).join('')}</div></div></div>`;
+            }
+            window.handleMatchSelection = function(target) {
+                if (target.classList.contains('matched')) return;
+                const type = target.dataset.type;
+                const id = target.dataset.id;
+                if (target.classList.contains('selected')) {
+                    target.classList.remove('selected');
+                    if (type === 'term') selectedTerm = null;
+                    if (type === 'definition') selectedDef = null;
+                    return;
+                }
+                document.querySelectorAll(`.match-item[data-type="${type}"].selected`).forEach(el => el.classList.remove('selected'));
+                target.classList.add('selected');
+                if (type === 'term') { selectedTerm = { el: target, id: id }; } else { selectedDef = { el: target, id: id }; }
+                if (selectedTerm && selectedDef) checkForMatch();
+            }
+            function checkForMatch() {
+                if (selectedTerm && selectedDef && selectedTerm.id === selectedDef.id) {
+                    selectedTerm.el.classList.add('matched');
+                    selectedDef.el.classList.add('matched');
+                    selectedTerm.el.classList.remove('selected');
+                    selectedDef.el.classList.remove('selected');
+                    matchedPairs++;
+                    if (matchedPairs === totalPairs) {
+                        document.getElementById('win-message').classList.remove('hidden');
+                        document.getElementById('match-instructions').classList.add('hidden');
+                    }
+                } else if (selectedTerm && selectedDef) {
+                    const termEl = selectedTerm.el;
+                    const defEl = selectedDef.el;
+                    termEl.classList.add('incorrect-match');
+                    defEl.classList.add('incorrect-match');
+                    setTimeout(() => {
+                        termEl.classList.remove('incorrect-match', 'selected');
+                        defEl.classList.remove('incorrect-match', 'selected');
+                    }, 500);
+                }
+                selectedTerm = null;
+                selectedDef = null;
+            }
+
+            // --- LIST GAME LOGIC ---
+            function renderListGameMenu() {
+                pages.listGamePage.innerHTML = `<div class="game-card text-center"><h2 class="text-3xl font-bold mb-6">List Games</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><button onclick="startApp('listGame')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105"><span class="text-2xl">General Lists</span><p class="font-normal text-purple-100 mt-1">Identify items from a list.</p></button><button onclick="startApp('orderedListGame')" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-6 px-4 rounded-xl shadow-md transition-transform transform hover:scale-105"><span class="text-2xl">Ordered Lists</span><p class="font-normal text-teal-100 mt-1">Put items in the correct order.</p></button></div><button onclick="goHome()" class="mt-8 text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Main Menu</button></div>`;
+                showPage('listGamePage');
+            }
+            
+            window.renderListGame = function(questionIndex = -1) {
+                if (!listGameState.deck || listGameState.deck.length === 0 || questionIndex === -1) {
+                     listGameState.deck = shuffle([...data.listGame]);
+                }
+                
+                if (listGameState.deck.length === 0) {
+                     pages.listGamePage.innerHTML = `<div class="game-card text-center"><h2 class="text-2xl font-bold">All lists completed!</h2><p class="my-4">You've successfully completed all the lists for this session.</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                     return;
+                }
+                
+                const question = listGameState.deck[0];
+                
+                listGameState.currentQuestion = question;
+                listGameState.foundCorrectCount = 0;
+                listGameState.score = 100;
+                listGameState.unseenCorrect = shuffle([...question.correctAnswers]);
+                listGameState.unseenIncorrect = shuffle([...question.incorrectAnswers]);
+                listGameState.nextCorrectSlot = 0;
+                
+                let answerPool = [];
+                const displayCount = 8;
+                for (let i = 0; i < displayCount; i++) {
+                    const newAnswer = getNewAnswer();
+                    if (newAnswer) answerPool.push(newAnswer);
+                }
+
+                const correctPlaceholders = question.correctAnswers.map((_, index) => 
+                    `<div id="correct-slot-${index}" class="correct-placeholder rounded-lg p-2 text-center text-gray-500">[...]</div>`
+                ).join('');
+
+                pages.listGamePage.innerHTML = `<div class="game-card w-full max-w-3xl mx-auto"><div class="flex justify-between items-center mb-4"><button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button><h2 class="text-xl font-bold text-center">General Lists</h2><button onclick="renderListGame()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New List</button></div><div class="text-center p-4 mb-4 bg-blue-50 border-l-4 border-blue-500 text-blue-800 rounded-r-lg"><p class="font-bold text-lg">${question.question}</p><p class="text-sm">Use ✓ to select correct items and X to eliminate incorrect ones.</p></div><div class="mb-6"><h3 class="font-bold text-center mb-2">Correct Answers Found</h3><div id="correct-answers-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">${correctPlaceholders}</div></div><div id="list-game-status" class="flex justify-between items-center font-bold text-lg mb-4 p-2 rounded-lg bg-gray-100"><span>Score: <span id="list-game-score">100</span></span></div><div id="list-game-win-message" class="hidden text-center p-4 mb-4 bg-green-100 text-green-800 rounded-lg"><p class="font-bold text-lg">Great job! You found all correct items for this list!</p></div><div id="next-list-container" class="hidden text-center mt-4"><button onclick="handleNextList()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-transform transform hover:scale-105">Next List &rarr;</button></div><div id="list-game-answers" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div></div>`;
+                const answersContainer = document.getElementById('list-game-answers');
+                answerPool.forEach(answer => answersContainer.appendChild(createAnswerElement(answer)));
+            }
+
+            window.handleNextList = function() {
+                listGameState.deck.shift();
+                renderListGame();
+            }
+            
+            function getNewAnswer() {
+                if (listGameState.unseenCorrect.length > 0 && Math.random() < 0.4) {
+                    return listGameState.unseenCorrect.pop();
+                }
+                if (listGameState.unseenIncorrect.length > 0) {
+                    return listGameState.unseenIncorrect.pop();
+                }
+                if(listGameState.unseenCorrect.length > 0) {
+                     return listGameState.unseenCorrect.pop();
+                }
+                return null;
+            }
+
+            function createAnswerElement(answerText) {
+                const item = document.createElement('div');
+                item.className = 'list-item flex items-center justify-between p-3 rounded-lg';
+                
+                const textSpan = document.createElement('span');
+                textSpan.className = 'flex-grow mr-4';
+                textSpan.textContent = answerText;
+
+                const btnContainer = document.createElement('div');
+                btnContainer.className = 'list-item-btn-container flex space-x-2';
+
+                const checkBtn = document.createElement('button');
+                checkBtn.className = 'list-item-btn check-btn flex items-center justify-center';
+                checkBtn.innerHTML = '&#10003;'; // Checkmark
+                
+                const xBtn = document.createElement('button');
+                xBtn.className = 'list-item-btn x-btn flex items-center justify-center';
+                xBtn.innerHTML = 'X';
+
+                checkBtn.onclick = () => handleListSelection(item, 'select', answerText);
+                xBtn.onclick = () => handleListSelection(item, 'eliminate', answerText);
+
+                btnContainer.appendChild(checkBtn);
+                btnContainer.appendChild(xBtn);
+                item.appendChild(textSpan);
+                item.appendChild(btnContainer);
+                return item;
+            }
+
+            function replaceAndShuffle(oldElement) {
+                const parent = oldElement.parentNode;
+                const newAnswer = getNewAnswer();
+                if (newAnswer) {
+                    const newItem = createAnswerElement(newAnswer);
+                    parent.replaceChild(newItem, oldElement);
+                } else {
+                    oldElement.remove();
+                }
+                shuffleAnswerBoard();
+            }
+            
+            function shuffleAnswerBoard() {
+                const answersContainer = document.getElementById('list-game-answers');
+                if (!answersContainer) return;
+                const currentItems = Array.from(answersContainer.children);
+                const shuffledItems = shuffle(currentItems);
+                shuffledItems.forEach(item => answersContainer.appendChild(item));
+            }
+
+            window.handleListSelection = function(itemElement, action, answerText) {
+                if (itemElement.dataset.processed) return;
+                itemElement.dataset.processed = true;
+
+                const isCorrect = listGameState.currentQuestion.correctAnswers.includes(answerText);
+                const btnContainer = itemElement.querySelector('.list-item-btn-container');
+
+                if (action === 'select') { 
+                    if (isCorrect) {
+                        itemElement.classList.add('strobing-green');
+                        const correctSlot = document.getElementById(`correct-slot-${listGameState.nextCorrectSlot}`);
+                        if(correctSlot) {
+                           correctSlot.textContent = answerText;
+                           correctSlot.classList.add('filled');
+                        }
+                        listGameState.nextCorrectSlot++;
+                        listGameState.foundCorrectCount++;
+                        setTimeout(() => replaceAndShuffle(itemElement), 1000);
+                    } else {
+                        itemElement.classList.add('strobing-red'); 
+                        listGameState.score = Math.max(0, listGameState.score - 10);
+                        document.getElementById('list-game-score').textContent = listGameState.score;
+                        btnContainer.innerHTML = `<span class="text-2xl text-red-600 font-bold">X</span>`;
+                        setTimeout(() => replaceAndShuffle(itemElement), 2500);
+                    }
+                } else if (action === 'eliminate') { 
+                    if (!isCorrect) {
+                        itemElement.classList.add('fading-out');
+                        setTimeout(() => replaceAndShuffle(itemElement), 500);
+                    } else {
+                        itemElement.classList.add('strobing-purple');
+                        const correctSlot = document.getElementById(`correct-slot-${listGameState.nextCorrectSlot}`);
+                        if(correctSlot) {
+                           correctSlot.textContent = answerText;
+                           correctSlot.classList.add('filled', 'purple');
+                        }
+                        listGameState.nextCorrectSlot++;
+                        listGameState.foundCorrectCount++;
+                        listGameState.score = Math.max(0, listGameState.score - 15);
+                        document.getElementById('list-game-score').textContent = listGameState.score;
+                        setTimeout(() => replaceAndShuffle(itemElement), 1000);
+                    }
+                }
+
+                if (listGameState.foundCorrectCount === listGameState.currentQuestion.correctAnswers.length) {
+                    document.getElementById('list-game-win-message').classList.remove('hidden');
+                    document.getElementById('next-list-container').classList.remove('hidden');
+                }
+            }
+            
+            // --- ORDERED LIST GAME ---
+            window.renderOrderedListGame = function() {
+                orderedListGameState = {
+                    questions: shuffle([...data.orderedListGame]),
+                    currentIndex: 0
+                }
+                setupOrderedListGame();
+            }
+
+            function setupOrderedListGame() {
+                if (orderedListGameState.currentIndex >= orderedListGameState.questions.length) {
+                    pages.orderedListPage.innerHTML = `<div class="game-card text-center"><h2 class="text-2xl font-bold">All lists completed!</h2><p class="my-4">You've successfully completed all the ordered lists.</p><button onclick="goHome()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg">Back to Menu</button></div>`;
+                    return;
+                }
+                
+                const question = orderedListGameState.questions[orderedListGameState.currentIndex];
+                orderedListGameState.currentQuestion = question;
+                orderedListGameState.score = 100;
+                
+                const shuffledItems = shuffle([...question.items]);
+
+                let draggableHtml = `<p class="text-lg font-semibold text-center">Steps (Drag These)</p>`;
+                shuffledItems.forEach((itemText) => {
+                    draggableHtml += `<div class="draggable-item p-3 bg-gray-200 rounded-lg shadow cursor-grab" draggable="true">${itemText}</div>`;
+                });
+
+                let dropZoneHtml = `<p class="text-lg font-semibold text-center">Correct Order (Drop Here)</p>`;
+                question.items.forEach((_, index) => {
+                    dropZoneHtml += `<div class="drop-zone p-3 rounded-lg flex items-center min-h-[3.5rem]"><span class="mr-3 font-bold text-lg">${index + 1}.</span></div>`;
+                });
+                
+                pages.orderedListPage.innerHTML = `
+                    <div class="game-card w-full max-w-4xl mx-auto">
+                         <div class="flex justify-between items-center mb-6">
+                            <button onclick="goHome()" class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>Back to Menu</button>
+                            <h2 class="text-2xl font-bold">Ordered List Game</h2>
+                            <button onclick="nextOrderedList()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2 px-4 rounded-lg">New List</button>
+                        </div>
+                        <p class="text-center font-bold text-lg mb-4">${question.question}</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div id="draggable-items-container" class="space-y-3 min-h-[10rem] bg-gray-50 p-2 rounded-lg">${draggableHtml}</div>
+                            <div id="drop-zones-container" class="space-y-3">${dropZoneHtml}</div>
+                        </div>
+                         <div id="ordered-list-feedback" class="text-center mt-8">
+                            <button id="check-order-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-lg shadow-md">Check Order</button>
+                            <button id="next-ordered-list-btn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hidden">Next List</button>
+                        </div>
+                    </div>`;
+
+                addDragAndDropListeners();
+            }
+            
+            window.nextOrderedList = function() {
+                orderedListGameState.currentIndex++;
+                setupOrderedListGame();
+            }
+
+            function addDragAndDropListeners() {
+                const draggables = document.querySelectorAll('.draggable-item');
+                const dropZones = document.querySelectorAll('.drop-zone');
+                const sourceContainer = document.getElementById('draggable-items-container');
+
+                draggables.forEach(draggable => {
+                    draggable.addEventListener('dragstart', e => {
+                        e.dataTransfer.setData('text/plain', e.target.textContent);
+                        setTimeout(() => e.target.classList.add('dragging'), 0);
+                    });
+                    draggable.addEventListener('dragend', e => e.target.classList.remove('dragging'));
+                });
+
+                function handleDragOver(e) {
+                    e.preventDefault();
+                    // 'this' refers to the element the event listener is attached to
+                    if (this.classList.contains('drop-zone') || this.id === 'draggable-items-container') {
+                        this.classList.add('drag-over');
+                    }
+                }
+
+                function handleDragLeave(e) {
+                    // 'this' refers to the element the event listener is attached to
+                     if (this.classList.contains('drop-zone') || this.id === 'draggable-items-container') {
+                        this.classList.remove('drag-over');
+                    }
+                }
+
+                function handleDrop(e) {
+                    e.preventDefault();
+                    this.classList.remove('drag-over');
+                    const draggedText = e.dataTransfer.getData('text/plain');
+                    const draggedEl = document.querySelector(`.draggable-item.dragging`);
+                    
+                    if (this.classList.contains('drop-zone')) { // Dropping on a drop zone
+                        if (this.children.length > 1) { 
+                           const existingItem = this.children[1];
+                           sourceContainer.appendChild(existingItem);
+                        }
+                         if(draggedEl) this.appendChild(draggedEl);
+                    } else if (this.id === 'draggable-items-container') { // Dropping back on source
+                        if(draggedEl) this.appendChild(draggedEl);
+                    }
+                }
+
+                dropZones.forEach(zone => {
+                    zone.addEventListener('dragover', handleDragOver);
+                    zone.addEventListener('dragleave', handleDragLeave);
+                    zone.addEventListener('drop', handleDrop);
+                });
+
+                sourceContainer.addEventListener('dragover', handleDragOver);
+                sourceContainer.addEventListener('dragleave', handleDragLeave);
+                sourceContainer.addEventListener('drop', handleDrop);
+                
+                document.getElementById('check-order-btn').onclick = checkOrder;
+            }
+            
+            function checkOrder() {
+                const dropZones = document.querySelectorAll('#drop-zones-container .drop-zone');
+                const correctOrder = orderedListGameState.currentQuestion.items;
+                const sourceContainer = document.getElementById('draggable-items-container');
+                let allCorrect = true;
+
+                dropZones.forEach((zone, index) => {
+                    const droppedItem = zone.querySelector('.draggable-item');
+                    if (droppedItem && droppedItem.textContent === correctOrder[index]) {
+                        zone.classList.add('correct');
+                        zone.classList.remove('incorrect');
+                        droppedItem.setAttribute('draggable', 'false'); // Lock correct items
+                        droppedItem.style.cursor = 'default';
+                    } else if (droppedItem) {
+                        allCorrect = false;
+                        zone.classList.add('incorrect');
+                        zone.classList.remove('correct');
+                        setTimeout(() => {
+                           zone.classList.remove('incorrect');
+                           sourceContainer.appendChild(droppedItem); // Return incorrect item
+                        }, 1000);
+                    } else {
+                        allCorrect = false; // A slot is empty
+                    }
+                });
+
+                if (allCorrect) {
+                    document.getElementById('check-order-btn').classList.add('hidden');
+                    document.getElementById('next-ordered-list-btn').classList.remove('hidden');
+                    document.getElementById('next-ordered-list-btn').onclick = nextOrderedList;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
